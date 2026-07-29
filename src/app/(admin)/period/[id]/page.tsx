@@ -1,4 +1,5 @@
 import { Period } from '@/models/Period';
+import { Import } from '@/models/Import';
 import dbConnect from '@/lib/db';
 import PeriodHubClient from './PeriodHubClient';
 import { notFound } from 'next/navigation';
@@ -12,11 +13,13 @@ export default async function PeriodHubPage(props: { params: Promise<{ id: strin
   const period = await Period.findById(id).lean();
   if (!period) return notFound();
 
+  const existingImport = await Import.findOne({ periodId: id }).lean();
+
   return (
     <PeriodHubClient 
       periodId={id} 
       isLocked={period.status === 'locked'}
-      hasBiometrics={!!period.biometricsUploaded}
+      hasBiometrics={!!existingImport}
     />
   );
 }

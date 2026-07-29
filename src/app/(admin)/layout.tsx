@@ -12,7 +12,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const uniqueCodes = (await Employee.distinct('machineId', { isIgnored: false, endDate: null })).length;
 
   return (
-    <div className="w-[1366px] mx-auto min-h-screen flex bg-surface text-text font-sans text-[13px] leading-[1.45] relative shadow-[0_0_0_1px_var(--color-border)]">
+    <div className="w-full min-h-screen flex bg-surface text-text font-sans text-[13px] leading-[1.45] relative">
       
       {/* Sidebar matching #F5F3F0 and exactly 240px wide */}
       <div className="w-[240px] flex-none bg-panel border-r border-border flex flex-col">
