@@ -215,10 +215,26 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
           </div>
         )}
 
-        {isLocked ? (
-          <button onClick={handleUnlock} disabled={loading} className="bg-surface text-text border border-border-strong rounded-[4px] px-[13px] py-[7px] text-[12.5px] cursor-pointer hover:bg-hover disabled:opacity-50">
-            {loading ? 'Processing...' : 'Unlock Period'}
-          </button>
+        {status === 'locked' ? (
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                const reason = prompt("Enter reason for unlocking this period:");
+                if (reason) handleUnlock(reason);
+              }}
+              disabled={loading}
+              className="px-4 py-2 bg-text text-surface rounded-[4px] text-[13px] font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+            >
+              {loading ? 'Unlocking...' : 'Unlock Period'}
+            </button>
+            <a
+              href={`/api/export/${periodId}`}
+              download={`Salary_Sheet_${periodId}.xlsx`}
+              className="px-4 py-2 bg-success-bg text-success-text border border-success-border rounded-[4px] text-[13px] font-medium hover:opacity-90 transition-opacity flex items-center justify-center"
+            >
+              Export Excel
+            </a>
+          </div>
         ) : (
           <button onClick={handleLock} disabled={loading || exceptionsCount > 0} className="bg-text text-surface border border-text rounded-[4px] px-[13px] py-[7px] text-[12.5px] font-medium cursor-pointer hover:bg-[#332F2A] disabled:opacity-50 disabled:bg-panel disabled:text-text-muted disabled:border-border">
             {loading ? 'Locking...' : 'Lock Period'}

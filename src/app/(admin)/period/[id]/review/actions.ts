@@ -48,7 +48,7 @@ export async function lockPeriod(periodId: string) {
   const { authOptions } = await import('@/lib/auth');
 
   const session = await getServerSession(authOptions);
-  const user = await User.findOne({ email: session?.user?.email }).lean();
+  const user = await User.findOne({ username: session?.user?.name }).lean();
 
   const mongoose = (await import('mongoose')).default;
   const dbSession = await mongoose.startSession();
