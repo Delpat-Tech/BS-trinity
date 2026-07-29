@@ -61,11 +61,11 @@ export async function resolveException(
   reasonText?: string
 ) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.email) throw new Error('Unauthorized');
+  if (!session?.user?.name) throw new Error('Unauthorized');
   
   await dbConnect();
   
-  const user = await User.findOne({ email: session.user.email }).lean();
+  const user = await User.findOne({ username: session.user.name }).lean();
   if (!user) throw new Error('User not found');
 
   if (action === 'PRESENT' || action === 'HALF_DAY' || action === 'ABSENT') {
@@ -102,10 +102,10 @@ export async function resolveException(
 
 export async function bulkMarkPresent(periodId: string, exceptions: { employeeId: string, date: string }[]) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.email) throw new Error('Unauthorized');
+  if (!session?.user?.name) throw new Error('Unauthorized');
   
   await dbConnect();
-  const user = await User.findOne({ email: session.user.email }).lean();
+  const user = await User.findOne({ username: session.user.name }).lean();
   
   const updates = exceptions.map(ex => ({
     updateOne: {
