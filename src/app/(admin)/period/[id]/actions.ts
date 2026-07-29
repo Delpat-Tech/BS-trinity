@@ -32,8 +32,11 @@ export async function uploadBiometrics(periodId: string, formData: FormData) {
   const fileHash = crypto.createHash('sha256').update(buffer).digest('hex');
   
   const existingImport = await Import.findOne({ periodId, fileHash });
-  if (existingImport) {
-    throw new Error('This exact file has already been uploaded for this period.');
+  if (existingImport && existingImport.recordsCreated > 0) {
+    // We allow replacing the file, but we can delete the old import record so we can create a new one
+    await Import.deleteOne({ _id: existingImport._id });
+  } else if (existingImport) {
+    await Import.deleteOne({ _id: existingImport._id });
   }
 
   // Parse file

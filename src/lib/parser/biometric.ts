@@ -117,9 +117,15 @@ export function parseBiometricFile(
   const parsedDays: ParsedDay[] = [];
 
   for (const r of anchors) {
-    const machineIdRaw = rows[r]?.[6];
-    const machineId = parseInt(String(machineIdRaw).trim(), 10);
+    let machineIdRaw = null;
+    for (let c = 2; c < Math.min(20, rows[r].length); c++) {
+      if (rows[r][c] && !isNaN(parseInt(String(rows[r][c]).trim(), 10))) {
+        machineIdRaw = rows[r][c];
+        break;
+      }
+    }
 
+    const machineId = parseInt(String(machineIdRaw).trim(), 10);
     if (isNaN(machineId)) continue;
 
     for (const { col, dateStr } of dateColumns) {
