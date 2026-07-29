@@ -45,7 +45,7 @@ export async function uploadBiometrics(periodId: string, formData: FormData) {
   const records = res.days;
 
   // Find all active employees
-  const employees = await Employee.find({ active: true }).lean();
+  const employees = await Employee.find({ isIgnored: false }).lean();
   const employeeMap = new Map(); // machineId -> employeeId (string)
   employees.forEach(emp => {
     employeeMap.set(emp.machineId, emp._id.toString());

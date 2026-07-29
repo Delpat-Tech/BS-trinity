@@ -35,18 +35,7 @@ export async function openPeriod(formData: FormData) {
     month,
     year,
     divisorDays,
-    ruleset: {
-      shift_start: settings.shift_start,
-      shift_end: settings.shift_end,
-      grace_until: settings.grace_until,
-      half_day_if_in_after: settings.half_day_if_in_after,
-      half_day_if_out_before: settings.half_day_if_out_before,
-      late_strike_window: settings.late_strike_window,
-      early_strike_window: settings.early_strike_window,
-      strikes_per_penalty: settings.strikes_per_penalty,
-      penalty_days_per_trigger: settings.penalty_days_per_trigger,
-      sandwich_skips_weekly_off: settings.sandwich_skips_weekly_off,
-    }
+    ruleset: settings.globalRuleset
   });
 
   revalidatePath('/');

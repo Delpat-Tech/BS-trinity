@@ -1,16 +1,7 @@
 import dbConnect from '@/lib/db';
 import { Employee } from '@/models/Employee';
 import { EmployeeForm } from './EmployeeForm';
-import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,79 +9,98 @@ export default async function EmployeesPage() {
   await dbConnect();
   
   const employeesDoc = await Employee.find({}).sort({ machineId: 1 }).lean();
-  // Stringify and parse to pass to client component securely
   const employees = JSON.parse(JSON.stringify(employeesDoc));
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <>
+      <div className="px-[28px] pt-[20px] pb-[16px] border-b border-border flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight mb-2">Employees</h1>
-          <p className="text-slate-500">
-            Manage your workforce. The biometric machine ID must match the device export exactly.
-          </p>
+          <h1 className="m-0 text-[18px] font-semibold tracking-[-0.015em]">Employees</h1>
+          <div className="text-[12.5px] text-text-secondary mt-[2px]">
+            Manage workforce and biometrics mapping. The machine ID must match the device export exactly.
+          </div>
         </div>
-        <EmployeeForm trigger={<Button>Add Employee</Button>} />
+        <EmployeeForm trigger={
+          <button className="bg-text text-surface border border-text rounded-[4px] px-[13px] py-[7px] text-[12.5px] font-medium cursor-pointer hover:bg-[#332F2A]">
+            Add Employee
+          </button>
+        } />
       </div>
 
-      <div className="border rounded-lg bg-white overflow-hidden shadow-sm">
-        <Table>
-          <TableHeader className="bg-slate-50">
-            <TableRow>
-              <TableHead className="w-[100px]">Mach ID</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Date of Joining</TableHead>
-              <TableHead>Current Salary</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {employees.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-slate-500">
-                  No employees found. Add one to get started.
-                </TableCell>
-              </TableRow>
-            ) : (
-              employees.map((emp: any) => {
-                const latestRev = [...emp.salaryRevisions].sort((a: any, b: any) => b.effectiveFrom.localeCompare(a.effectiveFrom))[0];
-                return (
-                  <TableRow key={emp._id}>
-                    <TableCell className="font-medium text-slate-900">{emp.machineId}</TableCell>
-                    <TableCell className="font-medium text-slate-900">{emp.name}</TableCell>
-                    <TableCell>{emp.dateOfJoining}</TableCell>
-                    <TableCell>₹{latestRev?.fixedSalary?.toLocaleString() || 0}</TableCell>
-                    <TableCell>
-                      {emp.isIgnored ? (
-                        <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-800">
-                          Ignored
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
-                          Active
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <EmployeeForm 
-                        employee={emp} 
-                        trigger={<Button variant="outline" size="sm" className="mr-2">Edit</Button>} 
-                      />
-                      <Link href={`/employees/${emp._id}/history`} passHref>
-                        <Button variant="secondary" size="sm" className="mr-2">History</Button>
-                      </Link>
-                      <Link href={`/employees/${emp._id}/ledger`} passHref>
-                        <Button variant="outline" size="sm" className="border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100">Ledger</Button>
-                      </Link>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
+      <table className="w-full border-collapse text-[13px]">
+        <thead>
+          <tr>
+            <th className="text-left font-medium text-[11.5px] text-text-secondary px-[28px] py-[8px] border-b border-border bg-header w-[100px]">Mach ID</th>
+            <th className="text-left font-medium text-[11.5px] text-text-secondary px-[12px] py-[8px] border-b border-border bg-header">Name</th>
+            <th className="text-left font-medium text-[11.5px] text-text-secondary px-[12px] py-[8px] border-b border-border bg-header w-[150px]">Date of Joining</th>
+            <th className="text-left font-medium text-[11.5px] text-text-secondary px-[12px] py-[8px] border-b border-border bg-header w-[150px]">Current Salary</th>
+            <th className="text-left font-medium text-[11.5px] text-text-secondary px-[12px] py-[8px] border-b border-border bg-header w-[100px]">Status</th>
+            <th className="text-right font-medium text-[11.5px] text-text-secondary px-[12px] py-[8px] border-b border-border bg-header w-[220px]"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {employees.length === 0 && (
+            <tr>
+              <td colSpan={6} className="text-center text-text-muted py-8">
+                No employees found. Add one to get started.
+              </td>
+            </tr>
+          )}
+          {employees.map((emp: any) => {
+            const latestRev = [...emp.salaryRevisions].sort((a: any, b: any) => b.effectiveFrom.localeCompare(a.effectiveFrom))[0];
+            
+            return (
+              <tr key={emp._id} className="hover:bg-header transition-colors">
+                <td className="px-[28px] py-[11px] border-b border-border-subtle font-mono text-[13px] font-medium">
+                  {emp.machineId}
+                </td>
+                <td className="px-[12px] py-[11px] border-b border-border-subtle font-medium text-text">
+                  {emp.name}
+                </td>
+                <td className="px-[12px] py-[11px] border-b border-border-subtle text-text-secondary font-mono text-[12.5px]">
+                  {emp.dateOfJoining}
+                </td>
+                <td className="px-[12px] py-[11px] border-b border-border-subtle text-text-secondary font-mono text-[13px]">
+                  ₹{latestRev?.fixedSalary?.toLocaleString() || 0}
+                </td>
+                <td className="px-[12px] py-[11px] border-b border-border-subtle">
+                  {emp.isIgnored ? (
+                    <span className="inline-block text-[11.5px] font-medium px-[8px] py-[2px] rounded-[10px] bg-alert-bg text-alert-text border border-alert-border">
+                      Ignored
+                    </span>
+                  ) : (
+                    <span className="inline-block text-[11.5px] font-medium px-[8px] py-[2px] rounded-[10px] bg-success-bg text-success-text border border-success-border">
+                      Active
+                    </span>
+                  )}
+                </td>
+                <td className="px-[12px] py-[11px] pr-[28px] border-b border-border-subtle text-right">
+                  <div className="inline-flex gap-[6px]">
+                    <EmployeeForm 
+                      employee={emp} 
+                      trigger={
+                        <button className="bg-surface text-text border border-border-strong rounded-[4px] px-[10px] py-[5px] text-[12px] cursor-pointer hover:bg-hover">
+                          Edit
+                        </button>
+                      } 
+                    />
+                    <Link href={`/employees/${emp._id}/history`}>
+                      <button className="bg-surface text-text border border-border-strong rounded-[4px] px-[10px] py-[5px] text-[12px] cursor-pointer hover:bg-hover">
+                        History
+                      </button>
+                    </Link>
+                    <Link href={`/employees/${emp._id}/ledger`}>
+                      <button className="bg-surface text-text border border-border-strong rounded-[4px] px-[10px] py-[5px] text-[12px] cursor-pointer hover:bg-hover">
+                        Ledger
+                      </button>
+                    </Link>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </>
   );
 }

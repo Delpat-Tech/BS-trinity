@@ -5,16 +5,18 @@ import { notFound } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
-export default async function PeriodHubPage({ params }: { params: { id: string } }) {
+export default async function PeriodHubPage(props: { params: Promise<{ id: string }> }) {
+  const { id } = await props.params;
   await dbConnect();
   
-  const period = await Period.findById(params.id).lean();
+  const period = await Period.findById(id).lean();
   if (!period) return notFound();
 
   return (
     <PeriodHubClient 
-      periodId={params.id} 
-      isLocked={period.status === 'locked'} 
+      periodId={id} 
+      isLocked={period.status === 'locked'}
+      hasBiometrics={!!period.biometricsUploaded}
     />
   );
 }

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin:0; padding:0; background:#E7E2DA; }
+  * { box-sizing:border-box; }
+  a { color:#1C1917; text-decoration:underline; text-underline-offset:2px; }
+  a:hover { color:#B45309; }
+  input, select, button { font-family:inherit; }
+</style>
+</helmet>
+
+<div style="width:1366px; margin:0 auto; background:#F5F2ED; color:#1C1917; font-family:'IBM Plex Sans',sans-serif; font-size:13px; line-height:1.45; border-left:1px solid #DED8CF; border-right:1px solid #DED8CF; padding:0 0 60px;">
+
+  <div style="padding:26px 40px 18px; border-bottom:1px solid #C9C2B7;">
+    <h1 style="margin:0; font-size:22px; font-weight:600; letter-spacing:-0.02em;">Trinity Motors — attendance and payroll design system</h1>
+    <div style="font-size:13px; color:#57534E; margin-top:5px; max-width:760px;">Greyscale everywhere, except where a human decision is needed. Colour marks state, never decoration. When nothing is left to decide, the screen is entirely neutral.</div>
+  </div>
+
+  <div style="padding:24px 40px 0;">
+    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.07em; color:#8A817A; border-bottom:1px solid #DED8CF; padding-bottom:6px;">Colour</div>
+    <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:14px;">
+      <div style="border:1px solid #DED8CF; border-radius:3px; background:#FFFFFF; overflow:hidden;">
+        <div style="height:52px; background:#1C1917;"></div>
+        <div style="padding:8px 10px;"><div style="font-size:12.5px; font-weight:500;">Ink</div><div style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#8A817A;">#1C1917</div><div style="font-size:11px; color:#57534E; margin-top:3px;">Text, primary buttons, progress fill</div></div>
+      </div>
+      <div style="border:1px solid #DED8CF; border-radius:3px; background:#FFFFFF; overflow:hidden;">
+        <div style="height:52px; background:#57534E;"></div>
+        <div style="padding:8px 10px;"><div style="font-size:12.5px; font-weight:500;">Ink soft</div><div style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#8A817A;">#57534E</div><div style="font-size:11px; color:#57534E; margin-top:3px;">Secondary text, table headers</div></div>
+      </div>
+      <div style="border:1px solid #DED8CF; border-radius:3px; background:#FFFFFF; overflow:hidden;">
+        <div style="height:52px; background:#8A817A;"></div>
+        <div style="padding:8px 10px;"><div style="font-size:12.5px; font-weight:500;">Muted</div><div style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#8A817A;">#8A817A</div><div style="font-size:11px; color:#57534E; margin-top:3px;">Labels, machine codes, disabled text</div></div>
+      </div>
+      <div style="border:1px solid #DED8CF; border-radius:3px; background:#FFFFFF; overflow:hidden;">
+        <div style="height:52px; background:#C9C2B7;"></div>
+        <div style="padding:8px 10px;"><div style="font-size:12.5px; font-weight:500;">Line</div><div style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#8A817A;">#C9C2B7 / #DED8CF</div><div style="font-size:11px; color:#57534E; margin-top:3px;">Hairline borders. Strong and light.</div></div>
+      </div>
+      <div style="border:1px solid #DED8CF; border-radius:3px; background:#FFFFFF; overflow:hidden;">
+        <div style="height:52px; background:#F5F2ED;"></div>
+        <div style="padding:8px 10px;"><div style="font-size:12.5px; font-weight:500;">Paper</div><div style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#8A817A;">#F5F2ED</div><div style="font-size:11px; color:#57534E; margin-top:3px;">App background</div></div>
+      </div>
+      <div style="border:1px solid #DED8CF; border-radius:3px; background:#FFFFFF; overflow:hidden;">
+        <div style="height:52px; background:#EDE8E0;"></div>
+        <div style="padding:8px 10px;"><div style="font-size:12.5px; font-weight:500;">Sunken</div><div style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#8A817A;">#EDE8E0 / #F0ECE5</div><div style="font-size:11px; color:#57534E; margin-top:3px;">Sidebar, table head, footer bars</div></div>
+      </div>
+      <div style="border:1px solid #E8D3AE; border-radius:3px; background:#FFFFFF; overflow:hidden;">
+        <div style="height:52px; background:#B45309;"></div>
+        <div style="padding:8px 10px;"><div style="font-size:12.5px; font-weight:500;">Unresolved</div><div style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#8A817A;">#B45309 on #FBF0E0</div><div style="font-size:11px; color:#7C4A15; margin-top:3px;">Only for items awaiting her decision</div></div>
+      </div>
+      <div style="border:1px solid #DED8CF; border-radius:3px; background:#FFFFFF; overflow:hidden;">
+        <div style="height:52px; display:flex;"><div style="flex:1; background:#4D7C0F;"></div><div style="flex:1; background:#A62121;"></div></div>
+        <div style="padding:8px 10px;"><div style="font-size:12.5px; font-weight:500;">Confirmed / destructive</div><div style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:#8A817A;">#4D7C0F · #A62121</div><div style="font-size:11px; color:#57534E; margin-top:3px;">Locked state · end service, remove</div></div>
+      </div>
+    </div>
+    <div style="margin-top:10px; font-size:12px; color:#57534E;">Primary buttons are ink, never accent. The accent appears on a screen only while something is unresolved, and disappears when it is.</div>
+  </div>
+
+  <div style="padding:26px 40px 0;">
+    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.07em; color:#8A817A; border-bottom:1px solid #DED8CF; padding-bottom:6px;">Type</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:14px;">
+      <div style="border:1px solid #DED8CF; border-radius:3px; background:#FFFFFF; padding:14px 16px;">
+        <div style="font-size:12px; color:#8A817A;">UI face — IBM Plex Sans, 400 / 500 / 600</div>
+        <div style="margin-top:10px; display:flex; flex-direction:column; gap:6px;">
+          <div style="font-size:26px; font-weight:600; letter-spacing:-0.02em;">26 / 600 — Rajesh Kumar</div>
+          <div style="font-size:20px; font-weight:600; letter-spacing:-0.015em;">20 / 600 — Attendance rules</div>
+          <div style="font-size:15px; font-weight:600;">15 / 600 — Lock June 2026</div>
+          <div style="font-size:13px;">13 / 400 — Body and table cells, the default</div>
+          <div style="font-size:12px; color:#57534E;">12 / 400 — Secondary and helper copy</div>
+          <div style="font-size:11px; color:#8A817A; text-transform:uppercase; letter-spacing:0.06em;">11 / 400 caps — Section labels</div>
+        </div>
+      </div>
+      <div style="border:1px solid #DED8CF; border-radius:3px; background:#FFFFFF; padding:14px 16px;">
+        <div style="font-size:12px; color:#8A817A;">Number face — IBM Plex Mono. Every time, code, count and figure.</div>
+        <div style="margin-top:10px; font-family:'IBM Plex Mono',monospace; display:flex; flex-direction:column; gap:3px; font-size:14px;">
+          <div style="display:flex; justify-content:space-between; width:280px;"><span style="color:#8A817A;">Rajesh Kumar</span><span>₹28,466.57</span></div>
+          <div style="display:flex; justify-content:space-between; width:280px;"><span style="color:#8A817A;">Imran Shaikh</span><span>₹31,733.22</span></div>
+          <div style="display:flex; justify-content:space-between; width:280px;"><span style="color:#8A817A;">Sunita Kale</span><span>₹29,333.43</span></div>
+          <div style="display:flex; justify-content:space-between; width:280px;"><span style="color:#8A817A;">Kiran Pathare</span><span>₹6,000.00</span></div>
+        </div>
+        <div style="font-size:12px; color:#57534E; margin-top:10px;">Right aligned, tabular. She scans a column vertically hunting for the wrong figure, so the digits must sit on top of each other.</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:26px 40px 0;">
+    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.07em; color:#8A817A; border-bottom:1px solid #DED8CF; padding-bottom:6px;">Spacing and radius</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:14px;">
+      <div style="border:1px solid #DED8CF; border-radius:3px; background:#FFFFFF; padding:14px 16px;">
+        <div style="font-size:12px; color:#8A817A;">Spacing — 2 · 4 · 6 · 8 · 12 · 16 · 24 · 40</div>
+        <div style="display:flex; gap:10px; align-items:flex-end; margin-top:12px;">
+          <div style="width:2px; height:26px; background:#1C1917;"></div>
+          <div style="width:4px; height:26px; background:#1C1917;"></div>
+          <div style="width:6px; height:26px; background:#1C1917;"></div>
+          <div style="width:8px; height:26px; background:#1C1917;"></div>
+          <div style="width:12px; height:26px; background:#1C1917;"></div>
+          <div style="width:16px; height:26px; background:#1C1917;"></div>
+          <div style="width:24px; height:26px; background:#1C1917;"></div>
+          <div style="width:40px; height:26px; background:#1C1917;"></div>
+        </div>
+        <div style="font-size:12px; color:#57534E; margin-top:10px;">Table rows are 6px vertical. Dense on purpose: a sixty-item queue must not become a scrolling exercise.</div>
+      </div>
+      <div style="border:1px solid #DED8CF; border-radius:3px; background:#FFFFFF; padding:14px 16px;">
+        <div style="font-size:12px; color:#8A817A;">Radius — 0 · 2 · 3 · 4 maximum</div>
+        <div style="display:flex; gap:12px; margin-top:12px;">
+          <div style="width:56px; height:40px; border:1px solid #C9C2B7; background:#F5F2ED; border-radius:0; display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace; font-size:12px;">0</div>
+          <div style="width:56px; height:40px; border:1px solid #C9C2B7; background:#F5F2ED; border-radius:2px; display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace; font-size:12px;">2</div>
+          <div style="width:56px; height:40px; border:1px solid #C9C2B7; background:#F5F2ED; border-radius:3px; display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace; font-size:12px;">3</div>
+          <div style="width:56px; height:40px; border:1px solid #C9C2B7; background:#F5F2ED; border-radius:4px; display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace; font-size:12px;">4</div>
+        </div>
+        <div style="font-size:12px; color:#57534E; margin-top:10px;">Inputs 2, containers and buttons 3, dialogs 4. Elevation is a hairline border, never a shadow.</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:26px 40px 0;">
+    <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.07em; color:#8A817A; border-bottom:1px solid #DED8CF; padding-bottom:6px;">Components</div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:14px;">
+
+      <div style="border:1px solid #DED8CF; border-radius:3px; background:#FFFFFF; padding:14px 16px;">
+        <div style="font-size:12.5px; font-weight:500;">Button</div>
+        <div style="display:flex; gap:8px; margin-top:10px; align-items:center; flex-wrap:wrap;">
+          <button style="background:#1C1917; color:#F5F2ED; border:1px solid #1C1917; border-radius:3px; padding:7px 13px; font-size:12.5px; font-weight:500; cursor:pointer;" style-hover="background:#33302C">Lock period</button>
+          <button style="background:#33302C; color:#F5F2ED; border:1px solid #33302C; border-radius:3px; padding:7px 13px; font-size:12.5px; font-weight:500;">Hover</button>
+          <button style="background:#FFFFFF; color:#1C1917; border:1px solid #C9C2B7; border-radius:3px; padding:7px 13px; font-size:12.5px; cursor:pointer;" style-hover="background:#F5F2ED">Export salary sheet</button>
+          <button style="background:#FFFFFF; color:#A62121; border:1px solid #E3C9C4; border-radius:3px; padding:7px 13px; font-size:12.5px; cursor:pointer;" style-hover="background:#FAECEA">End service</button>
+          <button style="background:#E4DED4; color:#A29A90; border:1px solid #D6CFC4; border-radius:3px; padding:7px 13px; font-size:12.5px; cursor:not-allowed;">Disabled</button>
+        </div>
+        <div style="font-size:11.5px; color:#8A817A; margin-top:9px;">Labels name the action. The verb survives into the confirmation: Lock period → Period locked.</div>
+      </div>
+
+      <div style="border:1px solid #DED8CF; border-radius:3px; background:#FFFFFF; padding:14px 16px;">
+        <div style="font-size:12.5px; font-weight:500;">Input and select</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:10px;">
+          <div>
+            <label style="display:block; font-size:11.5px; color:#57534E; margin-bottom:3px;">Default</label>
+            <input value="09:30" style="width:100%; font-family:'IBM Plex Mono',monospace; font-size:13px; padding:6px 8px; border:1px solid #C9C2B7; border-radius:2px;" style-focus="border-color:#1C1917; outline:none" />
+          </div>
+          <div>
+            <label style="display:block; font-size:11.5px; color:#57534E; margin-bottom:3px;">Focus</label>
+            <input value="10:30" style="width:100%; font-family:'IBM Plex Mono',monospace; font-size:13px; padding:6px 8px; border:1px solid #1C1917; border-radius:2px;" />
+          </div>
+          <div>
+            <label style="display:block; font-size:11.5px; color:#57534E; margin-bottom:3px;">Editable cell</label>
+            <input value="1,500" style="width:100%; text-align:right; font-family:'IBM Plex Mono',monospace; font-size:13px; padding:6px 8px; border:1px solid #E0D8C6; border-radius:2px; background:#FFFDF8;" />
+          </div>
+          <div>
+            <label style="display:block; font-size:11.5px; color:#57534E; margin-bottom:3px;">Error</label>
+            <input value="18:70" style="width:100%; font-family:'IBM Plex Mono',monospace; font-size:13px; padding:6px 8px; border:1px solid #A62121; border-radius:2px;" />
+          </div>
+          <div>
+            <label style="display:block; font-size:11.5px; color:#57534E; margin-bottom:3px;">Read-only</label>
+            <input value="933.33" style="width:100%; font-family:'IBM Plex Mono',monospace; font-size:13px; padding:6px 8px; border:1px solid #E4DED4; border-radius:2px; background:#F5F2ED; color:#8A817A;" readonly="readonly" />
+          </div>
+          <div>
+            <label style="display:block; font-size:11.5px; color:#57534E; margin-bottom:3px;">Select</label>
+            <select style="width:100%; font-size:13px; padding:6px 8px; border:1px solid #C9C2B7; border-radius:2px; background:#FFFFFF;">
+              <option>30 — fixed</option>
+            </select>
+          </div>
+        </div>
+        <div style="font-size:11.5px; color:#A62121; margin-top:9px;">18:70 is not a time. Enter it as HH:MM on a 24-hour clock.</div>
+      </div>
+
+      <div style="border:1px solid #DED8CF; border-radius:3px; background:#FFFFFF; padding:14px 16px;">
+        <div style="font-size:12.5px; font-weight:500;">Status pill</div>
+        <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+          <span style="display:inline-block; font-size:11px; font-weight:500; padding:2px 8px; border-radius:2px; background:#F5F2ED; color:#57534E; border:1px solid #DED8CF;">Open</span>
+          <span style="display:inline-block; font-size:11px; font-weight:500; padding:2px 8px; border-radius:2px; background:#FBF0E0; color:#7C4A15; border:1px solid #E8D3AE;">Resolving</span>
+          <span style="display:inline-block; font-size:11px; font-weight:500; padding:2px 8px; border-radius:2px; background:#FBF0E0; color:#7C4A15; border:1px solid #E8D3AE;">Review</span>
+          <span style="display:inline-block; font-size:11px; font-weight:500; padding:2px 8px; border-radius:2px; background:#F0F4E6; color:#3F5E12; border:1px solid #D3DFBC;">Locked</span>
+          <span style="display:inline-block; font-size:11px; font-weight:500; padding:2px 8px; border-radius:2px; background:#FAECEA; color:#A62121; border:1px solid #E3C9C4;">Service ended</span>
+        </div>
+        <div style="font-size:11.5px; color:#8A817A; margin-top:9px;">Open is neutral because nothing is owed yet. Resolving and Review carry the accent because she still has work.</div>
+      </div>
+
+      <div style="border:1px solid #DED8CF; border-radius:3px; background:#FFFFFF; padding:14px 16px;">
+        <div style="font-size:12.5px; font-weight:500;">Sidebar item</div>
+        <div style="width:220px; margin-top:10px; border:1px solid #DED8CF; background:#EDE8E0;">
+          <div style="padding:7px 14px; font-size:13px; border-left:2px solid #1C1917; background:#E0DBD3; font-weight:500;">Periods — selected</div>
+          <div style="padding:7px 14px; font-size:13px; border-left:2px solid transparent; background:#E4DED4;">Employees — hover</div>
+          <div style="padding:7px 14px; font-size:13px; border-left:2px solid transparent;">Settings — rest</div>
+        </div>
+      </div>
+
+      <div style="border:1px solid #DED8CF; border-radius:3px; background:#FFFFFF; padding:14px 16px;">
+        <div style="font-size:12.5px; font-weight:500;">Table row</div>
+        <div style="margin-top:10px; border:1px solid #DED8CF;">
+          <div style="display:grid; grid-template-columns:1fr 70px 90px 90px; background:#F0ECE5; border-bottom:1px solid #C9C2B7; font-size:11px; color:#57534E; padding:6px 10px; gap:8px;"><span>Employee</span><span style="text-align:right;">Paid</span><span style="text-align:right;">Gross</span><span style="text-align:right;">Net</span></div>
+          <div style="display:grid; grid-template-columns:1fr 70px 90px 90px; border-bottom:1px solid #EFEAE2; font-size:12.5px; padding:6px 10px; gap:8px;"><span>Rajesh Kumar</span><span style="font-family:'IBM Plex Mono',monospace; text-align:right;">30.5</span><span style="font-family:'IBM Plex Mono',monospace; text-align:right;">28,466.57</span><span style="font-family:'IBM Plex Mono',monospace; text-align:right; font-weight:600;">27,966.57</span></div>
+          <div style="display:grid; grid-template-columns:1fr 70px 90px 90px; border-bottom:1px solid #EFEAE2; font-size:12.5px; padding:6px 10px; gap:8px; background:#F5F2ED;"><span>Imran Shaikh — hover</span><span style="font-family:'IBM Plex Mono',monospace; text-align:right;">34.0</span><span style="font-family:'IBM Plex Mono',monospace; text-align:right;">31,733.22</span><span style="font-family:'IBM Plex Mono',monospace; text-align:right; font-weight:600;">33,733.22</span></div>
+          <div style="display:grid; grid-template-columns:1fr 70px 90px 90px; border-bottom:1px solid #EFEAE2; font-size:12.5px; padding:6px 10px; gap:8px; background:#FBF0E0; color:#7C4A15;"><span>Sunita Kale — unresolved day</span><span style="font-family:'IBM Plex Mono',monospace; text-align:right;">27.5</span><span style="font-family:'IBM Plex Mono',monospace; text-align:right;">29,333.43</span><span style="font-family:'IBM Plex Mono',monospace; text-align:right; font-weight:600;">26,083.43</span></div>
+          <div style="display:grid; grid-template-columns:1fr 70px 90px 90px; font-size:12.5px; padding:6px 10px; gap:8px; color:#8A817A;"><span>Vikas Jadhav — not in file</span><span style="font-family:'IBM Plex Mono',monospace; text-align:right;">—</span><span style="font-family:'IBM Plex Mono',monospace; text-align:right;">—</span><span style="font-family:'IBM Plex Mono',monospace; text-align:right;">—</span></div>
+        </div>
+      </div>
+
+      <div style="border:1px solid #DED8CF; border-radius:3px; background:#FFFFFF; padding:14px 16px;">
+        <div style="font-size:12.5px; font-weight:500;">Toast</div>
+        <div style="display:flex; flex-direction:column; gap:8px; margin-top:10px; align-items:flex-start;">
+          <div style="background:#1C1917; color:#F5F2ED; border-radius:3px; padding:9px 14px; font-size:12.5px; display:flex; gap:14px; align-items:center;"><span>June 2026 locked. 57 salary lines written.</span><span style="color:#E7C9A0; text-decoration:underline; text-underline-offset:2px;">Undo</span></div>
+          <div style="background:#1C1917; color:#F5F2ED; border-radius:3px; padding:9px 14px; font-size:12.5px; display:flex; gap:14px; align-items:center;"><span>18 June marked present for 57 employees.</span><span style="color:#E7C9A0; text-decoration:underline; text-underline-offset:2px;">Undo</span></div>
+          <div style="background:#FFFFFF; color:#A62121; border:1px solid #E3C9C4; border-radius:3px; padding:9px 14px; font-size:12.5px;">This file was already uploaded on 01 Jul. Upload a different export, or replace the June file.</div>
+        </div>
+      </div>
+
+      <div style="border:1px solid #DED8CF; border-radius:3px; background:#FFFFFF; padding:14px 16px;">
+        <div style="font-size:12.5px; font-weight:500;">Empty state</div>
+        <div style="margin-top:10px; border:1px solid #EFEAE2; background:#FBF9F6; padding:22px 18px;">
+          <div style="font-size:16px; font-weight:600; letter-spacing:-0.015em;">Nothing left to resolve</div>
+          <div style="font-size:12.5px; color:#57534E; margin-top:5px;">61 flagged days resolved, 0 skipped. Attendance for June 2026 is complete.</div>
+          <button style="margin-top:12px; background:#1C1917; color:#F5F2ED; border:1px solid #1C1917; border-radius:3px; padding:6px 12px; font-size:12.5px; font-weight:500; cursor:pointer;" style-hover="background:#33302C">Go to payroll review</button>
+        </div>
+        <div style="font-size:11.5px; color:#8A817A; margin-top:9px;">No illustration, no praise. It states what is true and what comes next.</div>
+      </div>
+
+      <div style="border:1px solid #DED8CF; border-radius:3px; background:#FFFFFF; padding:14px 16px;">
+        <div style="font-size:12.5px; font-weight:500;">Confirmation dialog</div>
+        <div style="margin-top:10px; border:1px solid #C9C2B7; border-radius:4px; background:#FFFFFF;">
+          <div style="padding:14px 16px 12px;">
+            <div style="font-size:14px; font-weight:600;">Lock June 2026</div>
+            <div style="font-size:12.5px; color:#57534E; margin-top:6px;">Locking writes the salary sheet permanently. June can no longer be changed, and reopening the period needs the owner.</div>
+            <div style="margin-top:10px; font-family:'IBM Plex Mono',monospace; font-size:12.5px; display:flex; justify-content:space-between; border-top:1px solid #EFEAE2; padding-top:8px;"><span style="color:#8A817A;">Net payable</span><span style="font-weight:600;">₹14,38,110</span></div>
+          </div>
+          <div style="padding:11px 16px; border-top:1px solid #DED8CF; background:#FBF9F6; display:flex; justify-content:flex-end; gap:8px;">
+            <button style="background:#FFFFFF; color:#1C1917; border:1px solid #C9C2B7; border-radius:3px; padding:6px 11px; font-size:12.5px; cursor:pointer;">Keep editing</button>
+            <button style="background:#1C1917; color:#F5F2ED; border:1px solid #1C1917; border-radius:3px; padding:6px 12px; font-size:12.5px; font-weight:500; cursor:pointer;">Lock period</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1366,&quot;height&quot;:1400}}"></script>
+</body>
+</html>

@@ -1,10 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { resolveException, bulkMarkPresent } from './actions';
+import { useRouter } from 'next/navigation';
 
 type ExceptionObj = {
   employeeId: string;
@@ -19,60 +17,23 @@ type ExceptionObj = {
 
 export default function QueueClient({ periodId, initialExceptions }: { periodId: string, initialExceptions: ExceptionObj[] }) {
   const [exceptions, setExceptions] = useState(initialExceptions);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [skippedCount, setSkippedCount] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [reasonInput, setReasonInput] = useState('');
-  
-  const current = exceptions[currentIndex];
+  const router = useRouter();
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger if typing in an input field
-      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) return;
-      
-      if (loading || !current) return;
+  const total = initialExceptions.length;
+  const remaining = exceptions.length;
+  const progressPct = total > 0 ? ((total - remaining) / total) * 100 : 100;
 
-      const key = e.key.toUpperCase();
-      switch (key) {
-        case '1':
-          handleResolve('PRESENT');
-          break;
-        case '2':
-          handleResolve('HALF_DAY');
-          break;
-        case '3':
-          handleResolve('ABSENT');
-          break;
-        case '4':
-          handleResolve('PAID_LEAVE');
-          break;
-        case 'S':
-          handleSkip();
-          break;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentIndex, exceptions, loading, reasonInput, current]);
+  const cur = exceptions[0];
 
   const handleResolve = async (action: 'PRESENT' | 'HALF_DAY' | 'ABSENT' | 'PAID_LEAVE') => {
+    if (!cur) return;
     setLoading(true);
+    
     try {
-      await resolveException(periodId, current.employeeId, current.date, action, reasonInput);
-      
-      // Remove from queue locally to avoid refetch wait
-      const newExceptions = [...exceptions];
-      newExceptions.splice(currentIndex, 1);
-      setExceptions(newExceptions);
-      
-      setReasonInput('');
-      
-      // Keep index the same, since removing an item shifts the next one into place
-      // If we are at the end, jump to 0
-      if (currentIndex >= newExceptions.length) {
-        setCurrentIndex(0);
-      }
+      await resolveException(periodId, cur.employeeId, cur.date, action, '');
+      setExceptions(prev => prev.slice(1));
     } catch (err) {
       alert('Failed to resolve exception');
     } finally {
@@ -81,16 +42,34 @@ export default function QueueClient({ periodId, initialExceptions }: { periodId:
   };
 
   const handleSkip = () => {
-    setReasonInput('');
-    setCurrentIndex((prev) => (prev + 1) % exceptions.length);
+    if (!cur || loading) return;
+    setExceptions(prev => [...prev.slice(1), cur]); // Move to back of queue
+    setSkippedCount(prev => prev + 1);
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!cur || loading) return;
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      switch (e.key.toLowerCase()) {
+        case 'p': handleResolve('PRESENT'); break;
+        case 'h': handleResolve('HALF_DAY'); break;
+        case 'a': handleResolve('ABSENT'); break;
+        case 'l': handleResolve('PAID_LEAVE'); break;
+        case 's': handleSkip(); break;
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [cur, loading]);
+
   const handleBulkPresent = async () => {
-    if (!confirm(`Mark remaining ${exceptions.length} exceptions as PRESENT?`)) return;
+    if (!confirm(`Mark remaining ${remaining} exceptions as PRESENT?`)) return;
     setLoading(true);
     try {
       await bulkMarkPresent(periodId, exceptions.map(e => ({ employeeId: e.employeeId, date: e.date })));
-      setExceptions([]); // all cleared
+      setExceptions([]);
     } catch (err) {
       alert('Failed bulk update');
     } finally {
@@ -98,94 +77,120 @@ export default function QueueClient({ periodId, initialExceptions }: { periodId:
     }
   };
 
-  if (!current) {
+  if (!cur) {
     return (
-      <div className="p-12 border rounded-lg bg-white shadow-sm text-center">
-        <p className="text-green-600 font-medium mb-4">All exceptions processed!</p>
-        <Button onClick={() => window.location.reload()}>Refresh Queue from Server</Button>
+      <div className="flex-1 flex items-center justify-center py-[70px] px-[28px] bg-surface h-full">
+        <div className="max-w-[430px] text-center">
+          <div className="text-[18px] font-semibold tracking-[-0.015em]">Nothing left to resolve</div>
+          <div className="text-[13px] text-text-secondary mt-[6px]">
+            {total} flagged days resolved. Attendance is complete and the payroll figures are final.
+          </div>
+          <div className="flex gap-[8px] mt-[16px] justify-center">
+            <button onClick={() => router.push(`/period/${periodId}/review`)} className="bg-text text-surface border border-text rounded-[4px] px-[13px] py-[7px] text-[12.5px] font-medium cursor-pointer hover:bg-[#332F2A]">
+              Go to payroll review
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center bg-white p-4 rounded-md border shadow-sm">
-        <p className="font-mono text-sm text-slate-500">
-          Exception {currentIndex + 1} of {exceptions.length}
-        </p>
-        <Button variant="outline" size="sm" onClick={handleBulkPresent} disabled={loading}>
-          Bulk Mark All Present
-        </Button>
+    <div className="flex-1 flex flex-col h-full bg-surface">
+      
+      {/* Progress Bar Header */}
+      <div className="px-[28px] py-[9px] border-b border-border-subtle bg-header flex items-center gap-[16px]">
+        <div className="font-mono text-[12.5px] font-medium">{remaining} left</div>
+        <div className="flex-1 h-[4px] bg-[#E6E2DB] rounded-[2px] overflow-hidden">
+          <div className="h-full bg-text transition-all duration-300" style={{ width: `${progressPct}%` }}></div>
+        </div>
+        <div className="text-[12px] text-text-secondary">{skippedCount} skipped</div>
+        <button onClick={handleBulkPresent} disabled={loading} className="bg-surface text-text border border-border-strong rounded-[4px] px-[10px] py-[5px] text-[12px] cursor-pointer hover:bg-hover disabled:opacity-50">
+          {loading ? 'Processing...' : 'Mark all remaining present'}
+        </button>
       </div>
 
-      <Card className="border-red-200 shadow-md">
-        <CardHeader className="bg-red-50 border-b border-red-100 pb-4">
-          <CardTitle className="text-red-900 flex justify-between">
-            <span>{current.employeeName}</span>
-            <span>{current.date}</span>
-          </CardTitle>
-          <CardDescription className="text-red-700 font-medium text-base pt-2">
-            Flagged reason: {current.reason}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-slate-50 p-3 rounded border">
-              <p className="text-xs text-slate-500 uppercase font-semibold">Machine ID</p>
-              <p className="font-mono font-medium text-lg">{current.machineId}</p>
+      <div className="flex-1 flex">
+        {/* Left Side: Context */}
+        <div className="flex-1 min-w-0 pt-[26px] px-[28px] pb-[30px] flex flex-col">
+          <div className="flex items-baseline gap-[12px]">
+            <div className="text-[24px] font-semibold tracking-[-0.02em]">{cur.employeeName}</div>
+            <div className="text-[13px] text-text-secondary font-mono">#{cur.machineId}</div>
+          </div>
+          <div className="font-mono text-[15px] mt-[5px] text-text-secondary">{cur.date}</div>
+
+          <div className="mt-[22px] grid grid-cols-4 gap-[1px] bg-border border border-border rounded-[4px] overflow-hidden w-max">
+            <div className="bg-surface px-[14px] py-[11px] w-[150px]">
+              <div className="text-[11.5px] text-text-secondary">Punch in</div>
+              <div className="font-mono text-[20px] font-medium mt-[2px]">{cur.inTime || '--:--'}</div>
             </div>
-            <div className="bg-slate-50 p-3 rounded border">
-              <p className="text-xs text-slate-500 uppercase font-semibold">Machine Status</p>
-              <p className="font-mono font-medium text-lg">{current.machineStatus || 'N/A'}</p>
+            <div className="bg-surface px-[14px] py-[11px] w-[150px]">
+              <div className="text-[11.5px] text-text-secondary">Punch out</div>
+              <div className="font-mono text-[20px] font-medium mt-[2px] text-alert-text">{cur.outTime || '--:--'}</div>
             </div>
-            <div className="bg-slate-50 p-3 rounded border">
-              <p className="text-xs text-slate-500 uppercase font-semibold">In Time</p>
-              <p className="font-mono font-medium text-lg text-blue-600">{current.inTime || 'Missing'}</p>
+            <div className="bg-surface px-[14px] py-[11px] w-[150px]">
+              <div className="text-[11.5px] text-text-secondary">Machine status</div>
+              <div className="font-mono text-[20px] font-medium mt-[2px]">{cur.machineStatus || 'None'}</div>
             </div>
-            <div className="bg-slate-50 p-3 rounded border">
-              <p className="text-xs text-slate-500 uppercase font-semibold">Out Time</p>
-              <p className="font-mono font-medium text-lg text-amber-600">{current.outTime || 'Missing'}</p>
+            <div className="bg-surface px-[14px] py-[11px] w-[150px]">
+              <div className="text-[11.5px] text-text-secondary">Shift</div>
+              <div className="font-mono text-[20px] font-medium mt-[2px]">09:30–19:30</div>
             </div>
           </div>
 
-          <div className="space-y-2 mb-8">
-            <label className="text-sm font-medium text-slate-700">Override Reason (Optional, focuses on typing)</label>
-            <Input 
-              placeholder="E.g. Approved leave, machine error..." 
-              value={reasonInput}
-              onChange={e => setReasonInput(e.target.value)}
-              className="bg-amber-50"
-            />
+          <div className="mt-[16px] bg-alert-bg border border-alert-border rounded-[4px] px-[14px] py-[10px] text-[13px] text-alert-text w-max max-w-[620px]">
+            {cur.reason}
           </div>
+          <div className="mt-[12px] text-[12.5px] text-text-secondary max-w-[620px]">
+            Raw data analysis shows incomplete punch records for this date.
+          </div>
+        </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-            <Button onClick={() => handleResolve('PRESENT')} disabled={loading} variant="outline" className="flex flex-col h-auto py-3 bg-green-50 hover:bg-green-100 border-green-200">
-              <kbd className="mb-1 px-2 py-0.5 bg-white border rounded shadow-sm text-xs font-mono text-slate-500">1</kbd>
-              <span className="font-semibold text-green-900">Present</span>
-            </Button>
+        {/* Right Side: Actions */}
+        <div className="w-[340px] flex-none border-l border-border bg-header px-[22px] pt-[22px] pb-[30px] flex flex-col">
+          <div className="text-[11.5px] text-text-secondary font-medium mb-[9px]">Resolve as</div>
+          
+          <div className="flex flex-col gap-[6px]">
+            <button disabled={loading} onClick={() => handleResolve('PRESENT')} className="flex items-center justify-between w-full text-left bg-surface border border-border-strong rounded-[4px] px-[12px] py-[9px] cursor-pointer hover:border-text group disabled:opacity-50">
+              <span>
+                <span className="block text-[13.5px] font-medium text-text group-hover:text-text">Present</span>
+                <span className="block text-[11.5px] text-text-secondary mt-[1px]">Full day</span>
+              </span>
+              <span className="font-mono text-[12px] text-text-secondary border border-[#E0DBD3] rounded-[3px] px-[6px] py-[1px] bg-panel">P</span>
+            </button>
+
+            <button disabled={loading} onClick={() => handleResolve('HALF_DAY')} className="flex items-center justify-between w-full text-left bg-surface border border-border-strong rounded-[4px] px-[12px] py-[9px] cursor-pointer hover:border-text group disabled:opacity-50">
+              <span>
+                <span className="block text-[13.5px] font-medium text-text group-hover:text-text">Half Day</span>
+                <span className="block text-[11.5px] text-text-secondary mt-[1px]">0.5 penalty</span>
+              </span>
+              <span className="font-mono text-[12px] text-text-secondary border border-[#E0DBD3] rounded-[3px] px-[6px] py-[1px] bg-panel">H</span>
+            </button>
+
+            <button disabled={loading} onClick={() => handleResolve('ABSENT')} className="flex items-center justify-between w-full text-left bg-surface border border-border-strong rounded-[4px] px-[12px] py-[9px] cursor-pointer hover:border-text group disabled:opacity-50">
+              <span>
+                <span className="block text-[13.5px] font-medium text-text group-hover:text-text">Absent</span>
+                <span className="block text-[11.5px] text-text-secondary mt-[1px]">1.0 penalty</span>
+              </span>
+              <span className="font-mono text-[12px] text-text-secondary border border-[#E0DBD3] rounded-[3px] px-[6px] py-[1px] bg-panel">A</span>
+            </button>
             
-            <Button onClick={() => handleResolve('HALF_DAY')} disabled={loading} variant="outline" className="flex flex-col h-auto py-3 bg-amber-50 hover:bg-amber-100 border-amber-200">
-              <kbd className="mb-1 px-2 py-0.5 bg-white border rounded shadow-sm text-xs font-mono text-slate-500">2</kbd>
-              <span className="font-semibold text-amber-900">Half Day</span>
-            </Button>
-
-            <Button onClick={() => handleResolve('ABSENT')} disabled={loading} variant="outline" className="flex flex-col h-auto py-3 bg-red-50 hover:bg-red-100 border-red-200">
-              <kbd className="mb-1 px-2 py-0.5 bg-white border rounded shadow-sm text-xs font-mono text-slate-500">3</kbd>
-              <span className="font-semibold text-red-900">Absent</span>
-            </Button>
-
-            <Button onClick={() => handleResolve('PAID_LEAVE')} disabled={loading} variant="outline" className="flex flex-col h-auto py-3 bg-purple-50 hover:bg-purple-100 border-purple-200">
-              <kbd className="mb-1 px-2 py-0.5 bg-white border rounded shadow-sm text-xs font-mono text-slate-500">4</kbd>
-              <span className="font-semibold text-purple-900">Paid Leave</span>
-            </Button>
-
-            <Button onClick={handleSkip} disabled={loading} variant="outline" className="flex flex-col h-auto py-3 bg-slate-100 hover:bg-slate-200 border-slate-300">
-              <kbd className="mb-1 px-2 py-0.5 bg-white border rounded shadow-sm text-xs font-mono text-slate-500">S</kbd>
-              <span className="font-semibold text-slate-700">Skip</span>
-            </Button>
+            <button disabled={loading} onClick={() => handleResolve('PAID_LEAVE')} className="flex items-center justify-between w-full text-left bg-surface border border-border-strong rounded-[4px] px-[12px] py-[9px] cursor-pointer hover:border-text group disabled:opacity-50">
+              <span>
+                <span className="block text-[13.5px] font-medium text-text group-hover:text-text">Paid Leave</span>
+                <span className="block text-[11.5px] text-text-secondary mt-[1px]">No penalty</span>
+              </span>
+              <span className="font-mono text-[12px] text-text-secondary border border-[#E0DBD3] rounded-[3px] px-[6px] py-[1px] bg-panel">L</span>
+            </button>
           </div>
-        </CardContent>
-      </Card>
+
+          <button disabled={loading} onClick={handleSkip} className="mt-[10px] flex items-center justify-between w-full text-left bg-transparent border border-dashed border-border-strong rounded-[4px] px-[12px] py-[8px] cursor-pointer text-text-secondary hover:border-text-muted disabled:opacity-50">
+            <span className="text-[13px]">Skip for now</span>
+            <span className="font-mono text-[12px] border border-[#E0DBD3] rounded-[3px] px-[6px] py-[1px] bg-panel">S</span>
+          </button>
+          
+        </div>
+      </div>
     </div>
   );
 }

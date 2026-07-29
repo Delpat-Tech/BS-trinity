@@ -1,57 +1,42 @@
 import { requireSession } from '@/lib/auth';
-import Link from 'next/link';
+import { Employee } from '@/models/Employee';
+import dbConnect from '@/lib/db';
+import SidebarClient from './SidebarClient';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await requireSession();
+  await dbConnect();
+
+  // Get active employee stats
+  const employeesCount = await Employee.countDocuments({ isIgnored: false, endDate: null });
+  const uniqueCodes = (await Employee.distinct('machineId', { isIgnored: false, endDate: null })).length;
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
-      <header className="sticky top-0 z-40 border-b bg-white">
-        <div className="container flex h-16 items-center justify-between py-4 mx-auto px-4">
-          <div className="flex gap-6 md:gap-10">
-            <Link href="/" className="flex items-center space-x-2">
-              <span className="inline-block font-bold">Trinity Motors</span>
-            </Link>
-            <nav className="flex gap-6">
-              <Link
-                href="/"
-                className="flex items-center text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
-              >
-                Dashboard
-              </Link>
-              <Link
-                href="/employees"
-                className="flex items-center text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
-              >
-                Employees
-              </Link>
-              <Link
-                href="/import"
-                className="flex items-center text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
-              >
-                Import
-              </Link>
-              <Link
-                href="/settings"
-                className="flex items-center text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
-              >
-                Settings
-              </Link>
-            </nav>
-          </div>
-          <div className="flex items-center space-x-4">
-            <span className="text-sm font-medium text-slate-600 border-r pr-4 border-slate-200">
-              Welcome, {session.user?.name}
-            </span>
-            <a href="/api/auth/signout" className="text-sm font-medium text-red-600 hover:text-red-700">
-              Log out
-            </a>
-          </div>
+    <div className="w-[1366px] mx-auto min-h-screen flex bg-surface text-text font-sans text-[13px] leading-[1.45] relative shadow-[0_0_0_1px_var(--color-border)]">
+      
+      {/* Sidebar matching #F5F3F0 and exactly 240px wide */}
+      <div className="w-[240px] flex-none bg-panel border-r border-border flex flex-col">
+        {/* Header */}
+        <div className="px-[18px] py-[16px] border-b border-border">
+          <div className="text-[13.5px] font-semibold tracking-[-0.01em]">Trinity Motors</div>
+          <div className="text-[11.5px] text-text-muted mt-[1px]">Attendance &amp; payroll</div>
         </div>
-      </header>
-      <main className="flex-1 container mx-auto p-4 py-8">
+        
+        {/* Nav Links Wrapper */}
+        <div className="p-[10px] flex flex-col gap-[1px]">
+          <SidebarClient />
+        </div>
+
+        {/* Footer */}
+        <div className="mt-auto px-[18px] py-[14px] border-t border-border text-[11.5px] text-text-muted font-mono">
+          {employeesCount} active · {uniqueCodes} codes
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex-1 min-w-0 flex flex-col bg-surface">
         {children}
-      </main>
+      </div>
     </div>
   );
 }

@@ -1,40 +1,29 @@
 import { getQueueExceptions } from './actions';
 import QueueClient from './QueueClient';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import dbConnect from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
-export default async function QueuePage({ params }: { params: { id: string } }) {
-  const exceptions = await getQueueExceptions(params.id);
+export default async function QueuePage(props: { params: Promise<{ id: string }> }) {
+  const { id } = await props.params;
+  await dbConnect();
 
-  if (exceptions.length === 0) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight mb-2">Resolution Queue</h1>
-          <p className="text-slate-500">All exceptions cleared.</p>
-        </div>
-        <div className="p-12 border rounded-lg bg-white shadow-sm text-center">
-          <p className="text-green-600 font-medium mb-4">No exceptions remaining for this period!</p>
-          <Link href={`/period/${params.id}`} passHref>
-            <Button>Return to Hub</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  const exceptions = await getQueueExceptions(id);
+
+  // We serialize properly to avoid Client Component issues, even though it's technically handled, better safe than sorry.
+  const safeExceptions = JSON.parse(JSON.stringify(exceptions));
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight mb-2">Resolution Queue</h1>
-        <p className="text-slate-500">
-          Use the keyboard to rapidly resolve exceptions.
-        </p>
+    <div className="p-[20px]">
+      <div className="bg-white border border-line rounded-[4px] overflow-hidden">
+        {safeExceptions.length === 0 ? (
+          <div className="p-12 text-center text-muted">
+            No exceptions found. The period is ready for review.
+          </div>
+        ) : (
+          <QueueClient periodId={id} initialExceptions={safeExceptions} />
+        )}
       </div>
-
-      <QueueClient periodId={params.id} initialExceptions={exceptions} />
     </div>
   );
 }

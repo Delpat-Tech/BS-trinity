@@ -4,59 +4,63 @@ import { Period } from '@/models/Period';
 import { PayrollLine } from '@/models/PayrollLine';
 import dbConnect from '@/lib/db';
 import ReviewGridClient from './ReviewGridClient';
+import { notFound } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
 
-export default async function ReviewPage({ params }: { params: { id: string } }) {
+export default async function ReviewGridPage(props: { params: Promise<{ id: string }> }) {
+  const { id } = await props.params;
   await dbConnect();
+  
+  const period = await Period.findById(id).lean();
+  if (!period) return notFound();
 
-  const period = await Period.findById(params.id).lean();
-  if (!period) return null;
+  const isLocked = period.status === 'locked';
 
-  let lines = [];
+  let lines;
   let exceptionsCount = 0;
 
-  if (period.status === 'locked') {
-    lines = await PayrollLine.find({ periodId: params.id }).lean();
+  if (isLocked) {
+    lines = await PayrollLine.find({ periodId: id }).lean();
   } else {
-    const res = await runPayrollCycle(params.id);
+    const res = await runPayrollCycle(id);
     lines = res.lines;
     exceptionsCount = res.exceptions.length;
   }
 
-  // We also need employee names and machine IDs for the grid
-  const employeesDoc = await Employee.find({ isIgnored: false }).lean();
-  const employeesMap = new Map(employeesDoc.map(e => [e._id.toString(), e]));
+  // Enhance lines with employee info
+  const empIds = lines.map(l => l.employeeId);
+  const emps = await Employee.find({ _id: { $in: empIds } }).lean();
+  const empMap = new Map(emps.map(e => [e._id.toString(), e]));
 
-  const enrichedLines = lines.map((line: any) => {
-    const emp = employeesMap.get(line.employeeId.toString()) as any;
+  const enrichedLines = lines.map(l => {
+    const emp = empMap.get(l.employeeId.toString());
+    // Safely extract string IDs to avoid Next.js Client Component serialization errors
+    const safeEmployeeId = l.employeeId.toString();
+    const safePeriodId = l.periodId ? l.periodId.toString() : id;
+    const safeId = l._id ? l._id.toString() : undefined;
+
     return {
-      ...line,
-      employeeId: line.employeeId.toString(), // ensure string for client
+      ...l,
+      _id: safeId,
+      periodId: safePeriodId,
+      employeeId: safeEmployeeId,
       employeeName: emp?.name || 'Unknown',
       machineId: emp?.machineId || 0
     };
   });
+  
+  enrichedLines.sort((a, b) => (a.machineId || 0) - (b.machineId || 0));
+
+  // Final serialization pass to ensure absolutely NO mongoose objects (like Decimal128, ObjectId, etc.) are passed to client
+  const safeLines = JSON.parse(JSON.stringify(enrichedLines));
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight mb-2">
-          Payroll Review {period.status === 'locked' && <span className="ml-2 text-sm font-semibold bg-red-100 text-red-800 px-2 py-1 rounded-full align-middle">LOCKED</span>}
-        </h1>
-        <p className="text-slate-500">
-          {period.status === 'locked' 
-            ? 'This period is locked. The data below is permanently frozen.' 
-            : 'Computed live from the data layer. Any changes you type will recalculate immediately.'}
-        </p>
-      </div>
-
-      <ReviewGridClient 
-        periodId={params.id} 
-        lines={enrichedLines} 
-        exceptionsCount={exceptionsCount}
-        status={period.status}
-      />
-    </div>
+    <ReviewGridClient 
+      periodId={id} 
+      lines={safeLines} 
+      exceptionsCount={exceptionsCount}
+      status={period.status}
+    />
   );
 }

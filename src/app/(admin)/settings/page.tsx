@@ -21,22 +21,27 @@ export default async function SettingsPage() {
     sandwich_skips_weekly_off: true
   };
 
-  // Convert to plain object
   const plainRuleset = JSON.parse(JSON.stringify(ruleset));
 
   return (
-    <div className="max-w-3xl mx-auto">
-      <h1 className="text-3xl font-bold tracking-tight mb-2">Global Settings</h1>
-      <p className="text-slate-500 mb-8">
-        Manage the global payroll ruleset. These settings take effect immediately for all unlocked periods.
-      </p>
-      
-      <div className="bg-amber-50 border-l-4 border-amber-400 p-4 mb-8 text-amber-800 text-sm">
-        <strong>Important:</strong> Day deduction and Rupee debit should not be used simultaneously. 
-        If you plan to use Rupee debits on the payroll review screen, set Penalty Days Per Trigger to 0 here.
+    <>
+      <div className="px-[28px] pt-[20px] pb-[16px] border-b border-border flex flex-col justify-center">
+        <h1 className="m-0 text-[18px] font-semibold tracking-[-0.015em]">Global Settings</h1>
+        <div className="text-[12.5px] text-text-secondary mt-[2px]">
+          Manage the global payroll ruleset. These settings take effect immediately for all unlocked periods.
+        </div>
       </div>
+      
+      <div className="flex-1 overflow-auto bg-header">
+        <div className="p-[28px]">
+          <div className="bg-alert-bg border border-alert-border px-[16px] py-[12px] rounded-[4px] text-alert-text text-[13px] mb-[20px]">
+            <span className="font-semibold">Important:</span> Day deduction and Rupee debit should not be used simultaneously. 
+            If you plan to use Rupee debits on the payroll review screen, set Penalty Days Per Trigger to 0 here.
+          </div>
 
-      <SettingsForm initialData={plainRuleset} />
-    </div>
+          <SettingsForm initialData={plainRuleset} />
+        </div>
+      </div>
+    </>
   );
 }

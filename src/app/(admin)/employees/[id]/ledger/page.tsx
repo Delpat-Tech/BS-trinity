@@ -1,46 +1,51 @@
 import { Employee } from '@/models/Employee';
 import { LedgerEntry } from '@/models/LedgerEntry';
+import { Period } from '@/models/Period';
 import dbConnect from '@/lib/db';
 import { notFound } from 'next/navigation';
 import LedgerClient from './LedgerClient';
 
 export const dynamic = 'force-dynamic';
 
-export default async function EmployeeLedgerPage({ params }: { params: { id: string } }) {
+export default async function EmployeeLedgerPage(props: { params: Promise<{ id: string }> }) {
+  const { id } = await props.params;
   await dbConnect();
-  
-  const emp = await Employee.findById(params.id).lean();
+
+  const emp = await Employee.findById(id).lean();
   if (!emp) return notFound();
 
-  const entries = await LedgerEntry.find({ employeeId: params.id }).sort({ date: 1, createdAt: 1 }).lean();
+  const entries = await LedgerEntry.find({ employeeId: id }).sort({ date: 1, createdAt: 1 }).lean();
 
-  // Compute running balances
-  let runningBalance = 0;
+  const periodIds = [...new Set(entries.map(e => e.periodId?.toString()).filter(Boolean))];
+  const periods = await Period.find({ _id: { $in: periodIds } }).lean();
+  const periodMap = new Map(periods.map(p => [p._id.toString(), p]));
+
+  let balance = 0;
   const enrichedEntries = entries.map(entry => {
     if (entry.type === 'opening' || entry.type === 'advance') {
-      runningBalance += entry.amount;
+      balance += entry.amount;
     } else if (entry.type === 'deduction') {
-      runningBalance -= entry.amount;
+      balance -= entry.amount;
     }
+    const isLocked = entry.periodId ? periodMap.get(entry.periodId.toString())?.status === 'locked' : false;
+    
     return {
-      _id: entry._id.toString(),
-      date: entry.date,
-      type: entry.type,
-      amount: entry.amount,
-      note: entry.note,
-      balance: runningBalance
+      ...entry,
+      runningBalance: balance,
+      isLocked
     };
   });
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-bold">Advance Ledger</h2>
-      <p className="text-sm text-slate-500">
-        Log mid-month advances or opening balances here. 
-        Deductions are automatically created when a payroll period is locked.
-      </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">{emp.name} - Advance Ledger</h1>
+          <p className="text-muted-foreground mt-1">Current Balance: ₹{balance}</p>
+        </div>
+      </div>
 
-      <LedgerClient employeeId={params.id} entries={enrichedEntries.reverse()} />
+      <LedgerClient employeeId={id} entries={enrichedEntries.reverse()} />
     </div>
   );
 }
