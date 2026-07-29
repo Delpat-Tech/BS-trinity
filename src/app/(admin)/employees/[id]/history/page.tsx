@@ -32,6 +32,8 @@ export default async function EmployeeHistoryPage(props: { params: Promise<{ id:
     ...att,
     isLocked: periodMap.get(att.periodId?.toString() || '')?.status === 'locked'
   }));
+  
+  const safeHistory = JSON.parse(JSON.stringify(history));
 
   return (
     <div className="space-y-6">
@@ -47,7 +49,7 @@ export default async function EmployeeHistoryPage(props: { params: Promise<{ id:
         </Link>
       </div>
 
-      <HistoryClient employeeId={params.id} history={history} />
+      <HistoryClient employeeId={id} history={safeHistory} />
     </div>
   );
 }
