@@ -79,7 +79,7 @@ async function seedJune() {
       }]
     });
 
-    emp.save().then(async savedEmp => {
+    emp.save().then(async (savedEmp: any) => {
       // Check column 15 for advance (ADVANCE AS ON 1ST March. 2025)
       const advanceVal = Number(row.getCell(15).value) || 0;
       if (advanceVal > 0) {

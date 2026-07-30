@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const AttendanceDaySchema = new mongoose.Schema({
   periodId: { type: mongoose.Schema.Types.ObjectId, ref: 'Period', required: true },
-  employeeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee', required: true },
+  employeeId: { type: Number, ref: 'Employee', required: true },
   date: { type: String, required: true }, // yyyy-MM-dd
   shift: { type: String, default: null },
   inTime: { type: String, default: null }, // HH:mm:ss
@@ -12,8 +12,7 @@ const AttendanceDaySchema = new mongoose.Schema({
   finalStatus: { type: String, default: null },
   overrideReason: { type: String, default: null },
   overriddenBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
-  overriddenAt: { type: Date, default: null },
-  resolved: { type: Boolean, default: true } // false if missing data prevents calculation (an exception)
+  overriddenAt: { type: Date, default: null }
 });
 
 AttendanceDaySchema.index({ periodId: 1, employeeId: 1, date: 1 }, { unique: true });

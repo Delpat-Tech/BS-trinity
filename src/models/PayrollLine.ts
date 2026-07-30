@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const PayrollLineSchema = new mongoose.Schema({
   periodId: { type: mongoose.Schema.Types.ObjectId, ref: 'Period', required: true },
-  employeeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee', required: true },
+  employeeId: { type: Number, ref: 'Employee', required: true },
   fixedSalary: { type: Number, required: true },
   divisorDays: { type: Number, required: true },
   dailyRate: { type: Number, required: true },

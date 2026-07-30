@@ -1,5 +1,5 @@
 'use client';
-
+import { toast } from 'sonner';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { reopenResolvedDay } from './actions';
@@ -22,7 +22,7 @@ export default function HistoryClient({ employeeId, history }: { employeeId: str
     try {
       await reopenResolvedDay(attendanceId, employeeId);
     } catch (err: any) {
-      alert(err.message || 'Failed to reopen day');
+      toast.error(err.message || 'Failed to reopen day');
     } finally {
       setLoading(null);
     }

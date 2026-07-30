@@ -18,13 +18,13 @@ export function SettingsForm({ initialData }: { initialData: any }) {
 
     const formData = new FormData(e.currentTarget);
     const data = {
-      shift_start: formData.get('shift_start'),
-      shift_end: formData.get('shift_end'),
-      grace_until: formData.get('grace_until'),
-      half_day_if_in_after: formData.get('half_day_if_in_after'),
-      half_day_if_out_before: formData.get('half_day_if_out_before'),
-      late_strike_window: [formData.get('late_strike_start'), formData.get('late_strike_end')],
-      early_strike_window: [formData.get('early_strike_start'), formData.get('early_strike_end')],
+      shift_start: formData.get('shift_start') as string,
+      shift_end: formData.get('shift_end') as string,
+      grace_until: formData.get('grace_until') as string,
+      half_day_if_in_after: formData.get('half_day_if_in_after') as string,
+      half_day_if_out_before: formData.get('half_day_if_out_before') as string,
+      late_strike_window: [formData.get('late_strike_start') as string, formData.get('late_strike_end') as string],
+      early_strike_window: [formData.get('early_strike_start') as string, formData.get('early_strike_end') as string],
       strikes_per_penalty: Number(formData.get('strikes_per_penalty')),
       penalty_days_per_trigger: Number(formData.get('penalty_days_per_trigger')),
       sandwich_skips_weekly_off: formData.get('sandwich_skips_weekly_off') === 'on',

@@ -1,6 +1,8 @@
 import dbConnect from '@/lib/db';
 import { Settings } from '@/models/Settings';
+import { Holiday } from '@/models/Holiday';
 import { SettingsForm } from './SettingsForm';
+import { HolidayClient } from './HolidayClient';
 
 // We force dynamic to ensure settings aren't cached stale
 export const dynamic = 'force-dynamic';
@@ -23,6 +25,9 @@ export default async function SettingsPage() {
 
   const plainRuleset = JSON.parse(JSON.stringify(ruleset));
 
+  const holidayDocs = await Holiday.find().sort({ date: 1 }).lean();
+  const holidays = JSON.parse(JSON.stringify(holidayDocs));
+
   return (
     <>
       <div className="px-[28px] pt-[20px] pb-[16px] border-b border-border flex flex-col justify-center">
@@ -33,13 +38,15 @@ export default async function SettingsPage() {
       </div>
       
       <div className="flex-1 overflow-auto bg-header">
-        <div className="p-[28px]">
-          <div className="bg-alert-bg border border-alert-border px-[16px] py-[12px] rounded-[4px] text-alert-text text-[13px] mb-[20px]">
-            <span className="font-semibold">Important:</span> Day deduction and Rupee debit should not be used simultaneously. 
-            If you plan to use Rupee debits on the payroll review screen, set Penalty Days Per Trigger to 0 here.
+        <div className="p-[28px] flex flex-col gap-[32px]">
+          <div>
+            <blockquote className="bg-alert-bg border-l-4 border-alert-text px-[16px] py-[12px] text-alert-text text-[13px] italic mb-[20px] shadow-sm">
+              Late arrivals are penalised by day deduction. The rupee Late Punch Amount on the payroll sheet is entered manually and is not applied automatically. Do not use both as a policy.
+            </blockquote>
+            <SettingsForm initialData={plainRuleset} />
           </div>
-
-          <SettingsForm initialData={plainRuleset} />
+          
+          <HolidayClient holidays={holidays} />
         </div>
       </div>
     </>

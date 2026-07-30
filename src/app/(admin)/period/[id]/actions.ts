@@ -14,7 +14,7 @@ import crypto from 'crypto';
 import { revalidatePath } from 'next/cache';
 import { runPayrollCycle } from '@/lib/payroll/compute';
 
-export async function uploadBiometrics(periodId: string, formData: FormData) {
+export async function previewBiometrics(periodId: string, formData: FormData) {
   await requireSession();
   await dbConnect();
 
@@ -28,18 +28,90 @@ export async function uploadBiometrics(periodId: string, formData: FormData) {
   const arrayBuffer = await file.arrayBuffer();
   const buffer = Buffer.from(arrayBuffer);
   
-  // Hash check
+  const res = parseBiometricFile(buffer, period.month, period.year);
+  if (!res.ok) {
+    throw new Error(res.errors?.join(', ') || 'Failed to parse file');
+  }
+  
   const fileHash = crypto.createHash('sha256').update(buffer).digest('hex');
   
+  // We can delete existing import if it exists and hasn't been finalized
   const existingImport = await Import.findOne({ periodId, fileHash });
-  if (existingImport && existingImport.recordsCreated > 0) {
-    // We allow replacing the file, but we can delete the old import record so we can create a new one
-    await Import.deleteOne({ _id: existingImport._id });
-  } else if (existingImport) {
+  if (existingImport) {
     await Import.deleteOne({ _id: existingImport._id });
   }
 
-  // Parse file
+  // Create an Import document immediately to store the raw fileData
+  const imp = await Import.create({
+    periodId: period._id,
+    filename: file.name,
+    fileName: file.name,
+    fileHash,
+    fileData: buffer,
+    rowCount: res.days.length,
+    recordsCreated: 0
+  });
+  
+  const records = res.days;
+  const fileName = file.name;
+  
+  const { Employee } = await import('@/models/Employee');
+  
+  const allMachineIds = [...new Set(records.map(r => r.machineId))];
+  const existingEmps = await Employee.find({ isIgnored: false }).lean();
+  const existingEmpIds = new Set(existingEmps.map(e => e.machineId));
+  
+  const unmappedIds = allMachineIds.filter(id => !existingEmpIds.has(id));
+  
+  // Active employees missing from the file
+  const fileMachineIdsSet = new Set(allMachineIds);
+  const periodEnd = `${period.year}-${period.month.toString().padStart(2, '0')}-31`; // Approx
+  
+  const missingActive = existingEmps.filter(e => 
+    e.dateOfJoining <= periodEnd && 
+    (!e.endDate || e.endDate >= `${period.year}-${period.month.toString().padStart(2, '0')}-01`) &&
+    !fileMachineIdsSet.has(e.machineId)
+  ).map(e => ({ machineId: e.machineId, name: e.name }));
+
+  // Return just the top 5 records for preview
+  const topRecords = records.slice(0, 5);
+  
+  const empMap = new Map(existingEmps.map((e: any) => [e.machineId, e.name]));
+
+  const previewData = topRecords.map(r => ({
+    machineId: r.machineId,
+    name: empMap.get(r.machineId) || 'Unknown Employee',
+    date: r.date,
+    inTime: r.inTime,
+    outTime: r.outTime,
+    status: r.machineStatus
+  }));
+
+  return {
+    success: true,
+    importId: imp._id.toString(),
+    fileName,
+    totalRecords: records.length,
+    preview: previewData,
+    unmappedCodes: unmappedIds,
+    missingActive: missingActive
+  };
+}
+
+export async function uploadBiometrics(periodId: string, importId: string) {
+  await requireSession();
+  await dbConnect();
+
+  const period = await Period.findById(periodId);
+  if (!period) throw new Error('Period not found');
+  if (period.status === 'locked') throw new Error('Period is locked');
+
+  const imp = await Import.findById(importId);
+  if (!imp) throw new Error('Import document not found');
+
+  const buffer = imp.fileData;
+
+  // Parse file again from DB buffer
   const res = parseBiometricFile(buffer, period.month, period.year);
   if (!res.ok) {
     throw new Error(res.errors?.join(', ') || 'Failed to parse file');
@@ -60,14 +132,24 @@ export async function uploadBiometrics(periodId: string, formData: FormData) {
 
   const attendanceDocs = [];
 
+  const fileMachineIdsList = [...new Set(records.map(r => r.machineId))];
+  const unmappedIds = fileMachineIdsList.filter(mid => !employeeMap.has(mid));
+  
+  if (unmappedIds.length > 0) {
+    for (const mid of unmappedIds) {
+      const emp = await Employee.create({
+        _id: mid,
+        machineId: mid,
+        name: `Employee ${mid}`,
+        dateOfJoining: `${period.year}-${period.month.toString().padStart(2, '0')}-01`
+      });
+      employeeMap.set(mid, emp._id.toString());
+    }
+  }
   for (const record of records) {
     fileMachineIds.add(record.machineId);
     
     const empId = employeeMap.get(record.machineId);
-    if (!empId) {
-      unmappedMachineIds.add(record.machineId);
-      continue;
-    }
 
     attendanceDocs.push({
       periodId: period._id,
@@ -78,7 +160,7 @@ export async function uploadBiometrics(periodId: string, formData: FormData) {
       outTime: record.outTime,
       durationMins: record.durationMins,
       machineStatus: record.machineStatus,
-      resolved: true // Will update to false if missing data causes an exception in T6
+      resolved: true // Now all are mapped because we auto-created them!
     });
   }
 
@@ -91,10 +173,6 @@ export async function uploadBiometrics(periodId: string, formData: FormData) {
   }
 
   // Insert AttendanceDays safely
-  // If we want to overwrite existing records for this period, maybe we should clear them first? 
-  // Wait, the spec says "It completely wipes the PayrollRecord and AttendanceDay for that month/year, parses the uploaded .xls".
-  // Actually, wait: we might want to clear only the existing AttendanceDays for this period that we are about to overwrite? 
-  // Let's clear ALL AttendanceDays for this period before inserting.
   await AttendanceDay.deleteMany({ periodId: period._id });
   
   let recordsCreated = 0;
@@ -103,12 +181,17 @@ export async function uploadBiometrics(periodId: string, formData: FormData) {
     recordsCreated = result.length;
   }
 
-  // Store import document
-  await Import.create({
-    periodId: period._id,
-    fileName: file.name,
-    fileHash,
-    recordsCreated
+  // Update import document recordsCreated
+  await Import.updateOne({ _id: imp._id }, {
+    $set: { recordsCreated: recordsCreated }
+  });
+
+  // Update Period status and filename
+  await Period.updateOne({ _id: period._id }, { 
+    $set: { 
+      status: 'resolving',
+      uploadedFileName: imp.filename
+    } 
   });
 
   revalidatePath(`/period/${periodId}`);

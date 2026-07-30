@@ -1,5 +1,5 @@
 'use client';
-
+import { toast } from 'sonner';
 import { useState } from 'react';
 import { logLedgerEntry, deleteLedgerEntry } from './actions';
 import { Button } from '@/components/ui/button';
@@ -48,7 +48,7 @@ export default function LedgerClient({ employeeId, entries }: { employeeId: stri
     try {
       await deleteLedgerEntry(employeeId, entryId);
     } catch (err) {
-      alert('Failed to delete');
+      toast.error('Failed to delete');
     }
   };
 

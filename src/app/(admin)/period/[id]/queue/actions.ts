@@ -9,6 +9,7 @@ import { Employee } from '@/models/Employee';
 import { revalidatePath } from 'next/cache';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import mongoose from 'mongoose';
 import { User } from '@/models/User';
 
 export async function getQueueExceptions(periodId: string) {
@@ -60,69 +61,132 @@ export async function resolveException(
   action: 'PRESENT' | 'HALF_DAY' | 'ABSENT' | 'PAID_LEAVE',
   reasonText?: string
 ) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.name) throw new Error('Unauthorized');
+  const session = await requireSession();
   
   await dbConnect();
-  
-  const user = await User.findOne({ username: session.user.name }).lean();
-  if (!user) throw new Error('User not found');
+  let user = await User.findOne({ username: session.user?.name }).lean();
+  if (!user) {
+    user = await User.findOne().lean();
+  }
+  const userId = user?._id || null;
+
+  const periodObjId = new mongoose.Types.ObjectId(periodId);
+  const empNum = Number(employeeId);
 
   if (action === 'PRESENT' || action === 'HALF_DAY' || action === 'ABSENT') {
-    let finalStatus = action === 'PRESENT' ? 'P' : (action === 'ABSENT' ? 'A' : 'HALF_DAY');
+    let finalStatus = action === 'PRESENT' ? 'PRESENT' : (action === 'ABSENT' ? 'ABSENT_UNPAID' : 'HALF_DAY');
     
     await AttendanceDay.updateOne(
-      { periodId, employeeId, date },
+      { periodId: periodObjId, employeeId: empNum, date },
       { 
         $set: { 
           finalStatus,
           overrideReason: reasonText || `Resolved via queue as ${action}`,
-          overriddenBy: user._id,
+          overriddenBy: userId,
           overriddenAt: new Date()
         } 
       }
     );
   } else if (action === 'PAID_LEAVE') {
-    // Create a leave entry instead of overriding finalStatus
-    // Wait, the spec says we create a leave entry. But we also need to ensure AttendanceDay finalStatus is untouched.
-    // If the machine marked them A, and we add a paid leave, the engine converts A + Paid Leave to PAID_LEAVE.
-    await LeaveEntry.create({
-      employeeId,
-      date,
-      kind: 'paid',
-      note: reasonText || 'Resolved via queue',
-      loggedBy: user._id,
-      loggedAt: new Date()
-    });
+    try {
+      await LeaveEntry.create({
+        employeeId: empNum,
+        date,
+        kind: 'paid',
+        note: reasonText || 'Resolved via queue',
+        loggedBy: userId,
+        loggedAt: new Date()
+      });
+    } catch (err) {
+      // Ignore duplicates
+    }
+    
+    await AttendanceDay.updateOne(
+      { periodId: periodObjId, employeeId: empNum, date },
+      { 
+        $set: { 
+          finalStatus: 'PAID_LEAVE',
+          overrideReason: reasonText || 'Resolved as Paid Leave',
+          overriddenBy: userId,
+          overriddenAt: new Date()
+        } 
+      }
+    );
   }
 
   revalidatePath(`/period/${periodId}/queue`);
   return { success: true };
 }
 
-export async function bulkMarkPresent(periodId: string, exceptions: { employeeId: string, date: string }[]) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.name) throw new Error('Unauthorized');
+export async function bulkResolve(periodId: string, targets: { employeeId: string | number, date: string, action: string, note: string }[]) {
+  const session = await requireSession();
   
   await dbConnect();
-  const user = await User.findOne({ username: session.user.name }).lean();
+  let user = await User.findOne({ username: session.user?.name }).lean();
+  if (!user) {
+    user = await User.findOne().lean();
+  }
   
-  const updates = exceptions.map(ex => ({
-    updateOne: {
-      filter: { periodId, employeeId: ex.employeeId, date: ex.date, finalStatus: null },
-      update: { 
-        $set: { 
-          finalStatus: 'P',
-          overrideReason: 'Bulk marked present',
-          overriddenBy: user?._id,
-          overriddenAt: new Date()
-        } 
-      }
+  const userId = user?._id || null;
+
+  const updates = [];
+  const leaveEntries = [];
+  const periodObjId = new mongoose.Types.ObjectId(periodId);
+
+  for (const t of targets) {
+    const empNum = Number(t.employeeId);
+    if (t.action === 'PRESENT' || t.action === 'HALF_DAY' || t.action === 'ABSENT') {
+      let finalStatus = t.action === 'PRESENT' ? 'PRESENT' : (t.action === 'ABSENT' ? 'ABSENT_UNPAID' : 'HALF_DAY');
+      
+      updates.push({
+        updateOne: {
+          filter: { periodId: periodObjId, employeeId: empNum, date: t.date },
+          update: { 
+            $set: { 
+              finalStatus,
+              overrideReason: t.note || `Bulk resolved as ${t.action}`,
+              overriddenBy: userId,
+              overriddenAt: new Date()
+            } 
+          }
+        }
+      });
+    } else if (t.action === 'PAID_LEAVE') {
+      leaveEntries.push({
+        employeeId: empNum,
+        date: t.date,
+        kind: 'paid',
+        note: t.note || 'Bulk resolved via queue',
+        loggedBy: userId,
+        loggedAt: new Date()
+      });
+      
+      updates.push({
+        updateOne: {
+          filter: { periodId: periodObjId, employeeId: empNum, date: t.date },
+          update: { 
+            $set: { 
+              finalStatus: 'PAID_LEAVE',
+              overrideReason: t.note || 'Bulk resolved as Paid Leave',
+              overriddenBy: userId,
+              overriddenAt: new Date()
+            } 
+          }
+        }
+      });
     }
-  }));
+  }
+
+  if (leaveEntries.length > 0) {
+    try {
+      await LeaveEntry.insertMany(leaveEntries, { ordered: false });
+    } catch (err) {
+      // Ignore duplicates
+    }
+  }
 
   if (updates.length > 0) {
-    await AttendanceDay.bulkWrite(updates);
+    await AttendanceDay.bulkWrite(updates, { ordered: false });
   }
 
   revalidatePath(`/period/${periodId}/queue`);

@@ -1,5 +1,5 @@
 'use client';
-
+import { toast } from 'sonner';
 import React, { useState } from 'react';
 import { updatePayrollInput, lockPeriod, unlockPeriod } from './actions';
 import { useRouter } from 'next/navigation';
@@ -9,15 +9,15 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   
-  // Keep track of which row's derivative details are open
   const [openRow, setOpenRow] = useState<string | null>(null);
+  const [openCell, setOpenCell] = useState<'gross' | 'net' | 'paidDays' | 'penalties' | null>(null);
 
   const handleUpdate = async (employeeId: string, field: string, value: number | null) => {
     if (isLocked) return;
     try {
       await updatePayrollInput(periodId, employeeId, field, value);
     } catch (err) {
-      alert('Failed to save input');
+      toast.error('Failed to save input');
     }
   };
 
@@ -28,7 +28,7 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
       await lockPeriod(periodId);
       router.refresh();
     } catch (err: any) {
-      alert(err.message || 'Failed to lock');
+      toast.error(err.message || 'Failed to lock');
     } finally {
       setLoading(false);
     }
@@ -42,21 +42,18 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
       await unlockPeriod(periodId, reason);
       router.refresh();
     } catch (err: any) {
-      alert(err.message || 'Failed to unlock');
+      toast.error(err.message || 'Failed to unlock');
     } finally {
       setLoading(false);
     }
   };
 
-  // Calculate totals
   const totalGross = lines.reduce((sum, r) => sum + (r.gross || 0), 0);
   const totalNet = lines.reduce((sum, r) => sum + (r.net || 0), 0);
   const totalAdvances = lines.reduce((sum, r) => sum + (r.advanceDeduction || 0), 0);
 
   return (
     <div className="flex flex-col h-full bg-surface">
-      
-      {/* Review Header */}
       <div className="px-[28px] py-[9px] border-b border-border-subtle bg-header flex items-center gap-[24px]">
         <div className="text-[12px] text-text-secondary">
           Grey columns are computed. Click a computed figure to see how it was built.
@@ -86,14 +83,17 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
               <th className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Half</th>
               <th className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Abs.</th>
               <th className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">P.L.</th>
-              <th className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">E.W.</th>
+              <th className="text-right font-medium text-[11.5px] text-text px-[10px] py-[7px] border-b border-border bg-panel">E.W.</th>
               <th className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Pen.</th>
               <th className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Paid days</th>
               <th className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Gross</th>
               <th className="text-right font-medium text-[11.5px] text-text px-[10px] py-[7px] border-b border-border bg-panel">Incentive</th>
               <th className="text-right font-medium text-[11.5px] text-text px-[10px] py-[7px] border-b border-border bg-panel">Bonus</th>
+              <th className="text-right font-medium text-[11.5px] text-text px-[10px] py-[7px] border-b border-border bg-panel">Late ₹</th>
               <th className="text-right font-medium text-[11.5px] text-text px-[10px] py-[7px] border-b border-border bg-panel">Adv. taken</th>
               <th className="text-right font-medium text-[11.5px] text-text px-[10px] py-[7px] border-b border-border bg-panel">Other debit</th>
+              <th className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Out. Adv</th>
+              <th className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Carr. Adv</th>
               <th className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] pr-[28px] py-[7px] border-b border-border bg-header">Net</th>
             </tr>
           </thead>
@@ -112,17 +112,36 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
                   <td className="text-right px-[10px] py-[6px] border-b border-border-subtle font-mono text-text">{r.halfDays}</td>
                   <td className="text-right px-[10px] py-[6px] border-b border-border-subtle font-mono text-text">{r.absDays}</td>
                   <td className="text-right px-[10px] py-[6px] border-b border-border-subtle font-mono text-text">{r.paidLeaveDays}</td>
-                  <td className="text-right px-[10px] py-[6px] border-b border-border-subtle font-mono text-text">{r.ewDays}</td>
-                  <td className="text-right px-[10px] py-[6px] border-b border-border-subtle font-mono text-text">{r.penaltyDays}</td>
-                  <td className="text-right px-[10px] py-[6px] border-b border-border-subtle font-mono font-medium text-text">{r.totalPaidDays}</td>
+                  <td className="text-right px-[6px] py-[3px] border-b border-border-subtle">
+                    <input 
+                      disabled={isLocked}
+                      defaultValue={r.ewDays !== null ? r.ewDays : ''}
+                      onBlur={(e) => {
+                        const val = e.target.value === '' ? null : Number(e.target.value);
+                        if (val !== r.ewDays) handleUpdate(r.employeeId.toString(), 'ewDays', val);
+                      }}
+                      className="w-[50px] text-right font-mono text-[12.5px] px-[6px] py-[4px] border border-border-strong rounded-[3px] bg-surface outline-none focus:border-text disabled:bg-panel"
+                    />
+                  </td>
                   <td 
-                    onClick={() => setOpenRow(openRow === r.employeeId ? null : r.employeeId)}
+                    onClick={() => { setOpenRow(openRow === r.employeeId && openCell === 'penalties' ? null : r.employeeId); setOpenCell('penalties'); }}
+                    className="text-right px-[10px] py-[6px] border-b border-border-subtle font-mono cursor-pointer underline decoration-border decoration-dotted underline-offset-4 hover:bg-hover transition-colors"
+                  >
+                    {r.penaltyDays}
+                  </td>
+                  <td 
+                    onClick={() => { setOpenRow(openRow === r.employeeId && openCell === 'paidDays' ? null : r.employeeId); setOpenCell('paidDays'); }}
+                    className="text-right px-[10px] py-[6px] border-b border-border-subtle font-mono font-medium cursor-pointer underline decoration-border decoration-dotted underline-offset-4 hover:bg-hover transition-colors text-text"
+                  >
+                    {r.totalPaidDays}
+                  </td>
+                  <td 
+                    onClick={() => { setOpenRow(openRow === r.employeeId && openCell === 'gross' ? null : r.employeeId); setOpenCell('gross'); }}
                     className="text-right px-[10px] py-[6px] border-b border-border-subtle font-mono cursor-pointer underline decoration-border decoration-dotted underline-offset-4 hover:bg-hover transition-colors"
                   >
                     {r.gross.toLocaleString()}
                   </td>
                   
-                  {/* Editable Inputs */}
                   <td className="text-right px-[6px] py-[3px] border-b border-border-subtle">
                     <input 
                       disabled={isLocked}
@@ -141,6 +160,17 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
                       onBlur={(e) => {
                         const val = e.target.value ? Number(e.target.value) : 0;
                         if (val !== (r.bonus || 0)) handleUpdate(r.employeeId.toString(), 'bonus', val);
+                      }}
+                      className="w-[70px] text-right font-mono text-[12.5px] px-[6px] py-[4px] border border-border-strong rounded-[3px] bg-surface outline-none focus:border-text disabled:bg-panel"
+                    />
+                  </td>
+                  <td className="text-right px-[6px] py-[3px] border-b border-border-subtle">
+                    <input 
+                      disabled={isLocked}
+                      defaultValue={r.latePunchAmt || ''}
+                      onBlur={(e) => {
+                        const val = e.target.value ? Number(e.target.value) : 0;
+                        if (val !== (r.latePunchAmt || 0)) handleUpdate(r.employeeId.toString(), 'latePunchAmt', val);
                       }}
                       className="w-[70px] text-right font-mono text-[12.5px] px-[6px] py-[4px] border border-border-strong rounded-[3px] bg-surface outline-none focus:border-text disabled:bg-panel"
                     />
@@ -167,28 +197,63 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
                       className="w-[70px] text-right font-mono text-[12.5px] px-[6px] py-[4px] border border-border-strong rounded-[3px] bg-surface outline-none focus:border-text disabled:bg-panel"
                     />
                   </td>
+                  <td className="text-right px-[10px] py-[6px] border-b border-border-subtle font-mono text-text-secondary">{r.outstandingAdvance?.toLocaleString() || 0}</td>
+                  <td className="text-right px-[10px] py-[6px] border-b border-border-subtle font-mono text-text-secondary">{r.advanceCarried?.toLocaleString() || 0}</td>
                   
-                  <td className="text-right px-[10px] pr-[28px] py-[6px] border-b border-border-subtle font-mono font-semibold text-text">
+                  <td 
+                    onClick={() => { setOpenRow(openRow === r.employeeId && openCell === 'net' ? null : r.employeeId); setOpenCell('net'); }}
+                    className="text-right px-[10px] pr-[28px] py-[6px] border-b border-border-subtle font-mono font-semibold cursor-pointer underline decoration-border decoration-dotted underline-offset-4 hover:bg-hover transition-colors text-text"
+                  >
                     {r.net.toLocaleString()}
                   </td>
                 </tr>
 
-                {/* Expanded Details Row */}
                 {openRow === r.employeeId && (
                   <tr>
-                    <td colSpan={17} className="p-0 border-b border-border bg-header">
+                    <td colSpan={20} className="p-0 border-b border-border bg-header">
                       <div className="py-[12px] px-[28px] flex gap-[34px] items-start">
-                        <div>
-                          <div className="text-[11.5px] text-text-secondary font-medium">How this gross was built</div>
-                          <div className="font-mono text-[14px] mt-[6px]">{r.totalPaidDays} paid days × ₹{r.dailyRate.toLocaleString()}</div>
-                          <div className="font-mono text-[14px] mt-[3px] text-text-secondary">= ₹{r.gross.toLocaleString()}</div>
-                        </div>
-                        <div className="border-l border-[#E0DBD3] pl-[24px]">
-                          <div className="text-[11.5px] text-text-secondary font-medium">Where the parts come from</div>
-                          <div className="text-[12.5px] text-text-secondary mt-[6px] max-w-[520px]">
-                            {r.totalPaidDays} paid days = {r.presentDays} present + {r.halfDays * 0.5} (from {r.halfDays} half days) + {r.paidLeaveDays} leaves - {r.penaltyDays} penalty
-                          </div>
-                        </div>
+                        {openCell === 'gross' && (
+                          <>
+                            <div>
+                              <div className="text-[11.5px] text-text-secondary font-medium">How gross was built</div>
+                              <div className="font-mono text-[14px] mt-[6px]">{r.totalPaidDays} paid days × ₹{r.dailyRate.toLocaleString()}</div>
+                              <div className="font-mono text-[14px] mt-[3px] text-text-secondary">= ₹{r.gross.toLocaleString()}</div>
+                            </div>
+                            <div className="border-l border-[#E0DBD3] pl-[24px]">
+                              <div className="text-[11.5px] text-text-secondary font-medium">Where the parts come from</div>
+                              <div className="text-[12.5px] text-text-secondary mt-[6px] max-w-[520px]">
+                                {r.totalPaidDays} paid days = {r.presentDays} present + {r.halfDays * 0.5} (from {r.halfDays} half days) + {r.paidLeaveDays} leaves - {r.penaltyDays} penalty
+                              </div>
+                            </div>
+                          </>
+                        )}
+                        {openCell === 'net' && (
+                          <>
+                            <div>
+                              <div className="text-[11.5px] text-text-secondary font-medium">How net was built</div>
+                              <div className="font-mono text-[14px] mt-[6px]">₹{r.gross.toLocaleString()} (Gross) + ₹{r.incentive || 0} (Inc) + ₹{r.bonus || 0} (Bon) - ₹{r.latePunchAmt || 0} (Late) - ₹{r.advanceDeduction || 0} (Adv) - ₹{r.otherDebit || 0} (Other)</div>
+                              <div className="font-mono text-[14px] mt-[3px] text-text-secondary">= ₹{r.net.toLocaleString()}</div>
+                            </div>
+                          </>
+                        )}
+                        {openCell === 'paidDays' && (
+                          <>
+                            <div>
+                              <div className="text-[11.5px] text-text-secondary font-medium">How Paid Days was built</div>
+                              <div className="font-mono text-[14px] mt-[6px]">{r.presentDays} (P) + {r.halfDays * 0.5} (H) + {r.paidLeaveDays} (L) + {r.ewDays} (EW) - {r.penaltyDays} (Pen)</div>
+                              <div className="font-mono text-[14px] mt-[3px] text-text-secondary">= {r.totalPaidDays} days</div>
+                            </div>
+                          </>
+                        )}
+                        {openCell === 'penalties' && (
+                          <>
+                            <div>
+                              <div className="text-[11.5px] text-text-secondary font-medium">How Penalty was built</div>
+                              <div className="font-mono text-[14px] mt-[6px]">{r.lateStrikes} Late Strikes + {r.earlyStrikes} Early Strikes</div>
+                              <div className="font-mono text-[14px] mt-[3px] text-text-secondary">= {r.penaltyDays} penalty days deducted</div>
+                            </div>
+                          </>
+                        )}
                         <div className="ml-auto flex gap-[6px]">
                           <button onClick={() => setOpenRow(null)} className="bg-transparent text-text-secondary border border-transparent rounded-[4px] px-[8px] py-[5px] text-[12px] cursor-pointer hover:bg-panel">
                             Close
@@ -218,10 +283,7 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
         {status === 'locked' ? (
           <div className="flex gap-3">
             <button
-              onClick={() => {
-                const reason = prompt("Enter reason for unlocking this period:");
-                if (reason) handleUnlock(reason);
-              }}
+              onClick={handleUnlock}
               disabled={loading}
               className="px-4 py-2 bg-text text-surface rounded-[4px] text-[13px] font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
             >

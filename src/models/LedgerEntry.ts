@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const LedgerEntrySchema = new mongoose.Schema({
-  employeeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee', required: true },
+  employeeId: { type: Number, ref: 'Employee', required: true },
   periodId: { type: mongoose.Schema.Types.ObjectId, ref: 'Period', default: null },
   date: { type: String, required: true }, // yyyy-MM-dd
   type: { type: String, enum: ['opening', 'advance', 'deduction'], required: true },

@@ -25,17 +25,29 @@ export async function openPeriod(formData: FormData) {
     throw new Error('Period already exists for this month and year');
   }
 
-  // Fetch the global settings to pin the ruleset
-  const settings = await Settings.findOne();
+  let settings = await Settings.findOne();
   if (!settings) {
-    throw new Error('Global settings not found. Please initialize settings first.');
+    settings = await Settings.create({
+      ruleset: {
+        shift_start: "09:30",
+        shift_end: "19:30",
+        grace_until: "09:40",
+        half_day_if_in_after: "11:30",
+        half_day_if_out_before: "15:30",
+        late_strike_window: ["09:41", "11:29"],
+        early_strike_window: ["15:31", "19:29"],
+        strikes_per_penalty: 3,
+        penalty_days_per_trigger: 0.5,
+        sandwich_skips_weekly_off: true
+      }
+    });
   }
 
   const period = await Period.create({
     month,
     year,
     divisorDays,
-    ruleset: settings.globalRuleset
+    ruleset: settings.ruleset
   });
 
   revalidatePath('/');
