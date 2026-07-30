@@ -77,8 +77,8 @@ export function HolidayClient({ holidays }: { holidays: any[] }) {
           className={`
             relative p-[8px] flex flex-col items-center justify-center cursor-pointer min-h-[44px] transition-colors
             border-r border-b border-border-subtle
-            ${!isCurrentMonth ? 'text-text-muted bg-panel opacity-50' : 'text-text hover:bg-hover'}
-            ${isSelected ? 'bg-text text-surface hover:bg-text' : ''}
+            ${!isCurrentMonth ? 'text-text-muted bg-header opacity-50' : 'text-text hover:bg-hover'}
+            ${isSelected ? 'bg-[#E8630A] text-white hover:bg-[#C9540A]' : ''}
             ${isHoliday && !isSelected ? 'bg-alert-bg text-alert-text font-semibold' : ''}
           `}
         >
@@ -122,7 +122,7 @@ export function HolidayClient({ holidays }: { holidays: any[] }) {
               </button>
             </div>
             
-            <div className="grid grid-cols-7 border-b border-border bg-panel">
+            <div className="grid grid-cols-7 border-b border-border bg-header">
               {['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map(d => (
                 <div key={d} className="text-[11px] font-medium text-text-secondary text-center py-[8px]">
                   {d}
@@ -135,7 +135,7 @@ export function HolidayClient({ holidays }: { holidays: any[] }) {
             </div>
 
             {selectedDate && (
-              <div className="p-[16px] bg-panel border-t border-border">
+              <div className="p-[16px] bg-surface border-t border-border">
                 <div className="text-[12.5px] font-semibold mb-[12px] text-text flex items-center gap-[6px]">
                   <span>Add Holiday:</span>
                   <span className="font-mono text-text-secondary bg-surface px-[6px] py-[2px] rounded border border-border">
@@ -151,7 +151,7 @@ export function HolidayClient({ holidays }: { holidays: any[] }) {
                       value={name} 
                       onChange={e => setName(e.target.value)} 
                       required 
-                      className="w-full rounded-[4px] border border-border-strong px-[10px] py-[8px] font-sans text-[13px] outline-none focus:border-text" 
+                      className="w-full rounded-[4px] border border-border-strong px-[10px] py-[8px] font-sans text-[13px] outline-none focus:border-[#E8630A]" 
                       autoFocus
                     />
                   </div>
@@ -160,7 +160,7 @@ export function HolidayClient({ holidays }: { holidays: any[] }) {
                       type="checkbox" 
                       checked={sandwichEligible}
                       onChange={e => setSandwichEligible(e.target.checked)}
-                      className="mt-[2px] w-[13px] h-[13px] accent-text" 
+                      className="mt-[2px] w-[13px] h-[13px] accent-[#E8630A]" 
                     />
                     <span className="text-[12px] font-medium text-text">Sandwich Eligible</span>
                   </label>
@@ -171,7 +171,7 @@ export function HolidayClient({ holidays }: { holidays: any[] }) {
                     <button type="button" onClick={() => setSelectedDate(null)} className="flex-1 px-[12px] py-[8px] border border-border-strong bg-surface rounded-[4px] text-[12.5px] font-medium hover:bg-hover">
                       Cancel
                     </button>
-                    <button type="submit" disabled={loading || !name} className="flex-1 px-[12px] py-[8px] border border-text bg-text text-surface rounded-[4px] text-[12.5px] font-medium hover:bg-[#332F2A] disabled:opacity-50">
+                    <button type="submit" disabled={loading || !name} className="flex-1 px-[12px] py-[8px] bg-[#E8630A] text-white rounded-[6px] text-[12.5px] font-medium hover:bg-[#C9540A] disabled:opacity-50">
                       {loading ? 'Adding...' : 'Save'}
                     </button>
                   </div>
@@ -206,7 +206,7 @@ export function HolidayClient({ holidays }: { holidays: any[] }) {
                           {h.sandwichEligible ? (
                             <span className="inline-block px-[6px] py-[2px] bg-success-bg text-success-text border border-success-border rounded-[4px] text-[11px] font-medium">Yes</span>
                           ) : (
-                            <span className="inline-block px-[6px] py-[2px] bg-panel text-text-secondary border border-border-strong rounded-[4px] text-[11px] font-medium">No</span>
+                            <span className="inline-block px-[6px] py-[2px] bg-header text-text-secondary border border-border-strong rounded-[4px] text-[11px] font-medium">No</span>
                           )}
                         </td>
                         <td className="px-[16px] py-[10px] text-right">

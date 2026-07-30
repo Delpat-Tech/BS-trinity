@@ -82,14 +82,14 @@ export default function PeriodHubClient({
         "flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-xl transition-all duration-200",
         "bg-surface hover:bg-hover hover:border-border-strong border-border-subtle group-hover:shadow-sm"
       )}>
-        <div className="w-16 h-16 rounded-full bg-panel flex items-center justify-center mb-6 shadow-sm border border-border-subtle group-hover:scale-105 transition-transform duration-300">
+        <div className="w-16 h-16 rounded-full bg-header flex items-center justify-center mb-6 shadow-sm border border-border-subtle group-hover:scale-105 transition-transform duration-300">
           <UploadCloud className="w-8 h-8 text-text-muted group-hover:text-text transition-colors" />
         </div>
         <h3 className="text-lg font-semibold text-text mb-2">Upload Biometric Data</h3>
         <p className="text-sm text-text-muted text-center max-w-sm mb-6">
-          Drag and drop your machine's <span className="font-mono text-[13px] bg-panel px-1 py-0.5 rounded border border-border">.xls</span> export file here, or click to browse.
+          Drag and drop your machine's <span className="font-mono text-[13px] bg-header px-1 py-0.5 rounded border border-border">.xls</span> export file here, or click to browse.
         </p>
-        <div className="flex items-center gap-2 text-xs font-medium text-text-muted bg-panel px-3 py-1.5 rounded-full border border-border-subtle">
+        <div className="flex items-center gap-2 text-xs font-medium text-text-muted bg-header px-3 py-1.5 rounded-full border border-border-subtle">
           <FileSpreadsheet className="w-3.5 h-3.5" /> Supported format: strict machine .xls
         </div>
       </div>
@@ -108,7 +108,7 @@ export default function PeriodHubClient({
     <div className="flex flex-col w-full bg-surface border border-border rounded-xl shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
       
       {/* Header */}
-      <div className="p-6 border-b border-border bg-panel flex items-start justify-between">
+      <div className="p-6 border-b border-border bg-header flex items-start justify-between">
         <div className="flex gap-4">
           <div className={cn(
             "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border",
@@ -167,7 +167,7 @@ export default function PeriodHubClient({
                     "inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase border",
                     row.status === 'P' ? "bg-success-bg/50 border-success-border text-[#127a4b]" : 
                     row.status === 'A' ? "bg-alert-bg border-alert-border text-alert-text" : 
-                    "bg-panel border-border-strong text-text-muted"
+                    "bg-header border-border-strong text-text-muted"
                   )}>
                     {row.status === 'P' ? 'Present' : row.status === 'A' ? 'Absent' : row.status}
                   </span>
@@ -179,7 +179,7 @@ export default function PeriodHubClient({
       </div>
       
       {/* Footer message indicating it's just a sample */}
-      <div className="bg-panel px-6 py-3 border-t border-border text-xs text-text-muted text-center italic">
+      <div className="bg-header px-6 py-3 border-t border-border text-xs text-text-muted text-center italic">
         Showing first 5 rows of {data.totalRecords} imported rows.
       </div>
       
@@ -229,14 +229,14 @@ export default function PeriodHubClient({
           <button 
             onClick={() => { setPreviewData(null); setFile(null); }}
             disabled={loading}
-            className="text-sm font-medium text-text-muted hover:text-text px-4 py-2 hover:bg-panel rounded-lg transition-colors disabled:opacity-50"
+            className="text-sm font-medium text-text-muted hover:text-text px-4 py-2 hover:bg-header rounded-lg transition-colors disabled:opacity-50"
           >
             Cancel
           </button>
             <button 
               onClick={handleConfirm}
               disabled={loading}
-              className="flex items-center gap-2 px-5 py-2.5 bg-text text-surface rounded-lg text-sm font-semibold hover:bg-[#332F2A] transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-5 py-2.5 bg-[#E8630A] text-white rounded-lg text-sm font-semibold hover:bg-[#C9540A] transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Confirm & Save Data
               <ChevronRight className="w-4 h-4" />

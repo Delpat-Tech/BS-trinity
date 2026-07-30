@@ -66,7 +66,7 @@ export default function GlobalLeaveClient({ employees }: { employees: any[] }) {
       </div>
 
       <div className="flex-1 overflow-y-auto px-[32px] py-[28px] max-w-[720px]">
-        <form onSubmit={handleSubmit} className="bg-panel border border-border p-6 rounded-lg shadow-sm space-y-6">
+        <form onSubmit={handleSubmit} className="bg-surface border border-border rounded-[8px] shadow-[0_1px_4px_rgba(0,0,0,0.06)] p-6 space-y-6">
           
           {/* Employee Search & Select */}
           <div className="space-y-2">
@@ -170,7 +170,7 @@ export default function GlobalLeaveClient({ employees }: { employees: any[] }) {
             <Button
               type="submit"
               disabled={loading || !selectedEmpId}
-              className="h-[38px] bg-text text-surface hover:bg-[#332F2A] font-medium"
+              className="h-[38px] bg-[#E8630A] text-white hover:bg-[#C9540A] font-medium"
             >
               {loading ? "Recording..." : "Save Leave Entry"}
             </Button>

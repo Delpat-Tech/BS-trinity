@@ -153,17 +153,16 @@ export default function EmployeesListClient({ employees }: { employees: any[] })
     <div className="flex-1 flex flex-col min-h-0 bg-surface">
       <div className="px-[32px] pt-[28px] pb-[20px] flex items-center justify-between flex-none">
         <div>
-          <h1 className="m-0 text-[24px] font-semibold tracking-tight text-text flex items-center gap-2">
-            <Users className="w-6 h-6 text-text-secondary" />
+          <h1 className="m-0 text-[26px] font-semibold tracking-[-0.025em] text-text">
             Employees
           </h1>
-          <div className="text-[14px] text-text-secondary mt-[4px]">
+          <div className="text-[13.5px] text-text-secondary mt-[6px] leading-relaxed">
             Manage workforce, view history, and record global actions.
           </div>
         </div>
         <div className="flex gap-3 items-center">
           <DropdownMenu>
-            <DropdownMenuTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors border border-border text-text hover:bg-hover hover:text-text h-[36px] px-4">
+            <DropdownMenuTrigger className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors border border-border text-text hover:bg-hover hover:text-text h-[36px] rounded-[6px] px-4">
                 <MoreHorizontal className="w-4 h-4 mr-2" />
                 Actions
             </DropdownMenuTrigger>
@@ -181,7 +180,7 @@ export default function EmployeesListClient({ employees }: { employees: any[] })
           <UploadEmployeesModal open={uploadModalOpen} onOpenChange={setUploadModalOpen} />
 
           <EmployeeDrawer trigger={
-            <Button className="bg-text text-surface hover:bg-[#332F2A] h-[36px] shadow-sm">
+            <Button className="bg-[#E8630A] text-white hover:bg-[#C9540A] h-[36px] rounded-[6px] shadow-sm">
               <UserPlus className="w-4 h-4 mr-2" />
               Add Employee
             </Button>
@@ -191,25 +190,25 @@ export default function EmployeesListClient({ employees }: { employees: any[] })
 
       <div className="px-[32px] pb-[16px] flex items-center justify-between flex-none gap-4">
         <div className="flex items-center gap-3">
-          <div className="relative w-[280px] h-[36px]">
+          <div className="relative w-[280px] h-[38px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
             <Input 
               type="text" 
               placeholder="Search by ID or Name..." 
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-              className="pl-9 h-[36px] bg-panel border-border-strong focus-visible:ring-1 focus-visible:ring-text"
+              className="pl-9 h-[38px] rounded-[6px] bg-header border-border-strong focus-visible:ring-1 focus-visible:ring-[#E8630A]"
             />
           </div>
           
           <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v || "all"); setPage(1); }}>
-            <SelectTrigger className="w-[160px] h-[36px] data-[size=default]:h-[36px] bg-panel border-border-strong flex items-center text-[13px] px-3 font-medium">
+            <SelectTrigger className="w-[160px] h-[38px] data-[size=default]:h-[38px] rounded-[6px] bg-header border-border-strong flex items-center text-[13px] px-3 font-medium">
               <div className="flex items-center gap-2">
                 <Filter className="w-3.5 h-3.5 text-text-muted" />
                 <SelectValue placeholder="Status" />
               </div>
             </SelectTrigger>
-            <SelectContent className="bg-panel border-border z-[200] min-w-[180px] text-[13px]">
+            <SelectContent className="bg-header border-border z-[200] min-w-[180px] text-[13px]">
               <SelectItem value="all" className="text-[13px] py-2">All Employees</SelectItem>
               <SelectItem value="active" className="text-[13px] py-2">Active Only</SelectItem>
               <SelectItem value="resigned" className="text-[13px] py-2">Resigned</SelectItem>
@@ -224,36 +223,36 @@ export default function EmployeesListClient({ employees }: { employees: any[] })
       </div>
 
       <div className="flex-1 overflow-auto px-[32px] pb-[32px]">
-        <div className="border border-border rounded-lg bg-panel shadow-sm overflow-hidden">
+        <div className="border border-border rounded-[8px] bg-surface shadow-[0_1px_3px_rgba(0,0,0,0.04)] overflow-hidden">
           <Table className="w-full text-[13px] text-left">
             <TableHeader className="bg-header border-b border-border sticky top-0 z-10">
               <TableRow className="hover:bg-transparent border-0">
                 <TableHead 
-                  className="px-[28px] py-[12px] font-semibold text-text-secondary cursor-pointer hover:text-text transition-colors w-[100px]"
+                  className="px-[28px] py-[12px] font-medium text-[11px] tracking-[0.04em] uppercase text-text-secondary cursor-pointer hover:text-text transition-colors w-[100px]"
                   onClick={() => toggleSort('machineId')}
                 >
                   <div className="flex items-center">Mach. ID {getSortIndicator('machineId')}</div>
                 </TableHead>
                 <TableHead 
-                  className="px-[28px] py-[12px] font-semibold text-text-secondary cursor-pointer hover:text-text transition-colors w-[220px]"
+                  className="px-[28px] py-[12px] font-medium text-[11px] tracking-[0.04em] uppercase text-text-secondary cursor-pointer hover:text-text transition-colors w-[220px]"
                   onClick={() => toggleSort('name')}
                 >
                   <div className="flex items-center">Full Name {getSortIndicator('name')}</div>
                 </TableHead>
                 <TableHead 
-                  className="px-[28px] py-[12px] font-semibold text-text-secondary cursor-pointer hover:text-text transition-colors"
+                  className="px-[28px] py-[12px] font-medium text-[11px] tracking-[0.04em] uppercase text-text-secondary cursor-pointer hover:text-text transition-colors"
                   onClick={() => toggleSort('designation')}
                 >
                   <div className="flex items-center">Designation {getSortIndicator('designation')}</div>
                 </TableHead>
                 <TableHead 
-                  className="px-[28px] py-[12px] font-semibold text-text-secondary cursor-pointer hover:text-text transition-colors text-right"
+                  className="px-[28px] py-[12px] font-medium text-[11px] tracking-[0.04em] uppercase text-text-secondary cursor-pointer hover:text-text transition-colors text-right"
                   onClick={() => toggleSort('salary')}
                 >
                   <div className="flex items-center justify-end">Fixed Salary {getSortIndicator('salary')}</div>
                 </TableHead>
                 <TableHead 
-                  className="px-[28px] py-[12px] font-semibold text-text-secondary cursor-pointer hover:text-text transition-colors text-center"
+                  className="px-[28px] py-[12px] font-medium text-[11px] tracking-[0.04em] uppercase text-text-secondary cursor-pointer hover:text-text transition-colors text-center"
                   onClick={() => toggleSort('isIgnored')}
                 >
                   <div className="flex items-center justify-center">Status {getSortIndicator('isIgnored')}</div>
@@ -284,7 +283,7 @@ export default function EmployeesListClient({ employees }: { employees: any[] })
                             {emp.endDate ? 'Resigned' : 'Ignored'}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-green-100 text-green-700 border border-green-200">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#F0F5E6] text-[#3D5A10] border-[#D8E4C3]">
                             Active
                           </span>
                         )}
@@ -305,7 +304,7 @@ export default function EmployeesListClient({ employees }: { employees: any[] })
           </Table>
 
           {/* Enhanced Pagination Footer */}
-          <div className="flex items-center justify-between px-[24px] py-[12px] bg-header border-t border-border">
+          <div className="flex items-center justify-between px-[24px] py-[12px] bg-[#FAFAF9] border-t border-border">
             <div className="text-[13px] text-text-secondary">
               Showing <span className="font-medium text-text">{paginated.length > 0 ? (page - 1) * rowsPerPage + 1 : 0}</span> to <span className="font-medium text-text">{Math.min(page * rowsPerPage, sorted.length)}</span> of <span className="font-medium text-text">{sorted.length}</span> results
             </div>
@@ -315,7 +314,7 @@ export default function EmployeesListClient({ employees }: { employees: any[] })
                 size="sm"
                 onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={page === 1}
-                className="h-8 border-border-strong text-text"
+                className="h-8 border-border-strong text-text rounded-[6px]"
               >
                 <ChevronLeft className="w-4 h-4 mr-1" />
                 Prev
@@ -328,7 +327,7 @@ export default function EmployeesListClient({ employees }: { employees: any[] })
                 size="sm"
                 onClick={() => setPage(Math.min(totalPages, page + 1))}
                 disabled={page === totalPages}
-                className="h-8 border-border-strong text-text"
+                className="h-8 border-border-strong text-text rounded-[6px]"
               >
                 Next
                 <ChevronRight className="w-4 h-4 ml-1" />

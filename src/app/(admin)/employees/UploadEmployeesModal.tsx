@@ -88,7 +88,7 @@ export default function UploadEmployeesModal({ trigger, open: externalOpen, onOp
               </div>
             </div>
 
-            <div className="flex justify-between items-center bg-panel p-3 rounded border border-border">
+            <div className="flex justify-between items-center bg-header p-3 rounded border border-border">
               <div>
                 <div className="text-[12.5px] font-medium text-text">Employee Panel Schema Template</div>
                 <div className="text-[11px] text-text-muted">Download standard column layout (.xlsx)</div>
@@ -145,7 +145,7 @@ export default function UploadEmployeesModal({ trigger, open: externalOpen, onOp
               <button
                 onClick={handleUpload}
                 disabled={!file || loading}
-                className="px-4 py-2 bg-text text-surface rounded text-[12.5px] font-medium hover:bg-[#332F2A] disabled:opacity-50"
+                className="px-4 py-2 bg-text text-surface rounded text-[12.5px] font-medium hover:bg-[#C9540A] disabled:opacity-50"
               >
                 {loading ? "Uploading..." : "Upload"}
               </button>

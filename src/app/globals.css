@@ -4,37 +4,50 @@
   --font-sans: "IBM Plex Sans", sans-serif;
   --font-mono: "IBM Plex Mono", monospace;
 
-  /* Global background */
-  --color-page: #EEEBE6;
+  /* Page background — workshop concrete, cool gray */
+  --color-page: #ECEEF0;
   
-  /* Primary surface */
+  /* Primary surface — clean white, like a whiteboard in the office */
   --color-surface: #FFFFFF;
   
-  /* Sidebar & secondary panels */
-  --color-panel: #F5F3F0;
+  /* Sidebar & panels — steel gray, slightly darker than page */
+  --color-panel: #1E2328;
   
-  /* Table headers & active states */
-  --color-header: #FAF9F7;
-  --color-hover: #F1EEE9;
+  /* Table headers & hover states */
+  --color-header: #F5F6F8;
+  --color-hover: #EEF0F2;
   
   /* Borders */
-  --color-border: #E5E1DA; /* main structural borders */
-  --color-border-subtle: #EFECE6; /* inner table borders */
-  --color-border-strong: #D8D2C9; /* inputs and subtle buttons */
+  --color-border: #D8DCE2;
+  --color-border-subtle: #E8EAEE;
+  --color-border-strong: #C4CAD3;
   
   /* Text */
-  --color-text: #1A1815; /* primary ink */
-  --color-text-secondary: #6B655D; /* subtext */
-  --color-text-muted: #938D84; /* disabled/mono context */
-  
-  /* Accent States */
-  --color-alert-bg: #FDF3E3;
-  --color-alert-text: #8A4B0B;
-  --color-alert-border: #F0DDBC;
+  --color-text: #0F1923;
+  --color-text-secondary: #4A5568;
+  --color-text-muted: #8896A8;
 
-  --color-success-bg: #F1F5E8;
-  --color-success-text: #3F5E12;
-  --color-success-border: #DCE5C9;
+  /* Primary accent — amber/orange like workshop safety lighting */
+  --color-accent-primary: #E8630A;
+  --color-accent-primary-hover: #C9540A;
+  --color-accent-primary-subtle: #FFF3E8;
+
+  /* Sidebar nav text colours */
+  --color-sidebar-text: #9BAAB8;
+  --color-sidebar-text-active: #FFFFFF;
+  --color-sidebar-hover: rgba(255,255,255,0.06);
+  --color-sidebar-active-indicator: #E8630A;
+  --color-sidebar-border: rgba(255,255,255,0.08);
+
+  /* Accent States — warm amber for warnings */
+  --color-alert-bg: #FFF8F0;
+  --color-alert-text: #C05621;
+  --color-alert-border: #FDDCB5;
+
+  /* Success — oil filter green */
+  --color-success-bg: #F0F7EF;
+  --color-success-text: #2F6B35;
+  --color-success-border: #C3DEC5;
 
   /* Shadcn UI Variable Mappings */
   --color-background: var(--color-page);
@@ -43,22 +56,19 @@
   --color-card-foreground: var(--color-text);
   --color-popover: var(--color-surface);
   --color-popover-foreground: var(--color-text);
-  --color-primary: var(--color-text);
-  --color-primary-foreground: var(--color-surface);
+  --color-primary: var(--color-accent-primary);
+  --color-primary-foreground: #FFFFFF;
   --color-secondary: var(--color-panel);
-  --color-secondary-foreground: var(--color-text);
-  --color-muted: var(--color-panel);
+  --color-secondary-foreground: var(--color-sidebar-text-active);
+  --color-muted: var(--color-header);
   --color-muted-foreground: var(--color-text-muted);
   --color-accent: var(--color-hover);
   --color-accent-foreground: var(--color-text);
   --color-destructive: var(--color-alert-text);
   --color-destructive-foreground: var(--color-alert-bg);
   --color-input: var(--color-border-strong);
-  --color-ring: var(--color-border-strong);
-  
-  /* Use explicit border-border variable from Trinity for shadcn's generic border */
-  --color-border: #E5E1DA; 
-  /* We preserve Trinity's original --color-border mapping */
+  --color-ring: var(--color-accent-primary);
+  --color-border: #D8DCE2;
 }
 
 @layer base {
@@ -69,26 +79,61 @@
     color: var(--color-text);
     font-family: var(--font-sans);
     font-size: 13px;
-    line-height: 1.45;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
   
   * {
     box-sizing: border-box;
   }
 
+  /* Amber-tinted selection */
+  ::selection {
+    background-color: #FDDCB5;
+    color: var(--color-text);
+  }
+
   a {
     color: var(--color-text);
-    text-decoration: underline;
-    text-underline-offset: 2px;
+    text-decoration: none !important;
   }
   
   a:hover {
-    color: #B45309;
+    color: var(--color-text);
   }
 
-  input, select, button {
+  /* Smooth transitions for interactive elements */
+  button, a, input, select, textarea {
     font-family: inherit;
     color: inherit;
+    transition: all 0.15s ease;
+  }
+
+  /* Better focus ring */
+  *:focus-visible {
+    outline: 2px solid var(--color-text);
+    outline-offset: 2px;
+  }
+
+  /* Refined scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border-strong);
+    border-radius: 3px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-muted);
   }
 
   /* Safari Compatibility for Time Inputs */
@@ -105,7 +150,6 @@
     padding: 0;
   }
   
-  /* Ensure the native picker indicator is visible and clickable in Webkit/Safari */
   input[type="time"]::-webkit-calendar-picker-indicator {
     display: block !important;
     width: 16px;
@@ -119,5 +163,10 @@
 
   input[type="time"]::-webkit-calendar-picker-indicator:hover {
     opacity: 1;
+  }
+
+  /* Tabular numbers for data-dense tables */
+  .font-mono {
+    font-variant-numeric: tabular-nums;
   }
 }

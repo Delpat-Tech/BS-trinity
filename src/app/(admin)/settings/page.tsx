@@ -7,7 +7,6 @@ import { HolidayClient } from './HolidayClient';
 // We force dynamic to ensure settings aren't cached stale
 export const dynamic = 'force-dynamic';
 
-import { Settings as SettingsIcon } from 'lucide-react';
 
 export default async function SettingsPage() {
   await dbConnect();
@@ -33,11 +32,10 @@ export default async function SettingsPage() {
   return (
     <>
       <div className="px-[32px] pt-[28px] pb-[20px] border-b border-border flex flex-col justify-center">
-        <h1 className="m-0 text-[24px] font-semibold tracking-tight text-text flex items-center gap-2">
-          <SettingsIcon className="w-6 h-6 text-text-secondary" />
+        <h1 className="m-0 text-[26px] font-semibold tracking-[-0.025em] text-text">
           Global Settings
         </h1>
-        <div className="text-[14px] text-text-secondary mt-[4px]">
+        <div className="text-[13.5px] text-text-secondary mt-[6px] leading-relaxed">
           Manage the global payroll ruleset. These settings take effect immediately for all unlocked periods.
         </div>
       </div>
@@ -45,7 +43,7 @@ export default async function SettingsPage() {
       <div className="flex-1 overflow-auto bg-header">
         <div className="p-[32px] flex flex-col gap-[32px]">
           <div>
-            <blockquote className="bg-alert-bg border-l-4 border-alert-text px-[16px] py-[12px] text-alert-text text-[13px] italic mb-[20px] shadow-sm">
+            <blockquote className="bg-alert-bg border-l-[3px] border-alert-text px-[16px] py-[12px] text-alert-text text-[13px] italic mb-[20px] rounded-[6px] shadow-sm">
               Late arrivals are penalised by day deduction. The rupee Late Punch Amount on the payroll sheet is entered manually and is not applied automatically. Do not use both as a policy.
             </blockquote>
             <SettingsForm initialData={plainRuleset} />

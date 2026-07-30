@@ -17,7 +17,7 @@ export default function LedgerClient({ employeeId, entries }: { employeeId: stri
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const currentOutstanding = entries.length > 0 ? entries[0].balance : 0;
+  const currentOutstanding = entries.length > 0 ? (entries[0].balance ?? 0) : 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,7 +106,7 @@ export default function LedgerClient({ employeeId, entries }: { employeeId: stri
             {error && <p className="col-span-2 text-xs text-red-600 font-medium">{error}</p>}
 
             <div className="col-span-2 flex justify-end pt-1">
-              <Button type="submit" disabled={loading || !date || !amount || !note} className="h-[36px] bg-text text-surface hover:bg-[#332F2A] px-6">
+              <Button type="submit" disabled={loading || !date || !amount || !note} className="h-[36px] bg-[#E8630A] text-white hover:bg-[#C9540A] px-6">
                 {loading ? 'Logging...' : 'Log Ledger Entry'}
               </Button>
             </div>

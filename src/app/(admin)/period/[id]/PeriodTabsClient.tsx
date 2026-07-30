@@ -130,7 +130,7 @@ export default function PeriodTabsClient({
                     "text-[10px] font-semibold px-2.5 py-0.5 rounded-full transition-colors",
                     isCompleted ? "bg-success-bg/60 text-[#127a4b]" :
                     isCurrent ? "bg-[#e5efff] text-[#2c65d1]" :
-                    "bg-panel text-text-muted"
+                    "bg-header text-text-muted"
                   )}>
                     {step.status}
                   </span>

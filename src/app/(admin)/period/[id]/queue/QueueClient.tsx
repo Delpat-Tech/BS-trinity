@@ -38,7 +38,7 @@ export default function QueueClient({ periodId, initialExceptions, uploadedFileN
             All flagged days resolved. Attendance is complete and the payroll figures are final.
           </div>
           <div className="flex gap-[8px] mt-[16px] justify-center">
-            <button onClick={() => router.push(`/period/${periodId}/review`)} className="bg-text text-surface border border-text rounded-[4px] px-[13px] py-[7px] text-[12.5px] font-medium cursor-pointer hover:bg-[#332F2A]">
+            <button onClick={() => router.push(`/period/${periodId}/review`)} className="bg-[#E8630A] text-white rounded-[6px] px-[13px] py-[7px] text-[12.5px] font-medium cursor-pointer hover:bg-[#C9540A]">
               Go to payroll review
             </button>
           </div>
@@ -84,7 +84,7 @@ export default function QueueClient({ periodId, initialExceptions, uploadedFileN
 
   return (
     <div className="flex flex-col h-full bg-surface">
-      <div className="flex items-center justify-between px-[20px] py-[16px] border-b border-border bg-panel">
+      <div className="flex items-center justify-between px-[20px] py-[16px] border-b border-border bg-header">
         <div className="flex items-center gap-[12px]">
           <h2 className="text-[15px] font-medium m-0">Exception Queue</h2>
           <span className="text-[12px] bg-alert-bg text-alert-text px-[8px] py-[2px] rounded-full border border-alert-border">
@@ -96,13 +96,13 @@ export default function QueueClient({ periodId, initialExceptions, uploadedFileN
         </div>
         <div className="flex gap-[8px] items-center">
           <Select value={filter} onValueChange={(v) => { setFilter(v || "all"); setSelected(new Set()); }}>
-            <SelectTrigger className="w-[180px] h-[34px] bg-panel border-border-strong text-[12.5px]">
+            <SelectTrigger className="w-[180px] h-[34px] bg-header border-border-strong text-[12.5px]">
               <div className="flex items-center gap-2">
                 <Filter className="w-3.5 h-3.5 text-text-muted" />
                 <SelectValue placeholder="Filter by Issue" />
               </div>
             </SelectTrigger>
-            <SelectContent className="bg-panel border-border">
+            <SelectContent className="bg-header border-border">
               <SelectItem value="all">All Exceptions</SelectItem>
               <SelectItem value="orphan_punch">Missing Punch</SelectItem>
               <SelectItem value="conflict">Leave Conflict</SelectItem>
@@ -114,14 +114,14 @@ export default function QueueClient({ periodId, initialExceptions, uploadedFileN
           <button 
             disabled={selected.size === 0 || loading}
             onClick={() => handleBulkAction('ABSENT')}
-            className="text-[12.5px] px-[12px] py-[6px] bg-surface border border-border rounded hover:bg-panel disabled:opacity-50"
+            className="text-[12.5px] px-[12px] py-[6px] bg-surface border border-border rounded hover:bg-header disabled:opacity-50"
           >
             Mark Absent
           </button>
           <button 
             disabled={selected.size === 0 || loading}
             onClick={() => handleBulkAction('HALF_DAY')}
-            className="text-[12.5px] px-[12px] py-[6px] bg-surface border border-border rounded hover:bg-panel disabled:opacity-50"
+            className="text-[12.5px] px-[12px] py-[6px] bg-surface border border-border rounded hover:bg-header disabled:opacity-50"
           >
             Mark Half-Day
           </button>
@@ -158,7 +158,7 @@ export default function QueueClient({ periodId, initialExceptions, uploadedFileN
             {filteredExceptions.map(exc => {
               const key = `${exc.employeeId}_${exc.date}`;
               return (
-                <tr key={key} className={`border-b border-border-subtle transition-colors hover:bg-panel ${selected.has(key) ? 'bg-panel' : ''}`}>
+                <tr key={key} className={`border-b border-border-subtle transition-colors hover:bg-header ${selected.has(key) ? 'bg-header' : ''}`}>
                   <td className="px-[20px] py-[10px]">
                     <input 
                       type="checkbox" 

@@ -64,7 +64,7 @@ export default function PublicLeavePage() {
   if (submitted) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-header p-6">
-        <div className="max-w-md w-full bg-panel border border-border p-8 rounded-xl shadow-lg text-center space-y-6 animate-in fade-in-50 zoom-in-95 duration-200">
+        <div className="max-w-md w-full bg-header border border-border p-8 rounded-xl shadow-lg text-center space-y-6 animate-in fade-in-50 zoom-in-95 duration-200">
           <div className="flex justify-center">
             <div className="p-3 bg-green-50 rounded-full text-green-600">
               <CheckCircle2 className="w-12 h-12" />
@@ -82,7 +82,7 @@ export default function PublicLeavePage() {
               setDate(new Date().toISOString().split("T")[0]);
               setNote("");
             }}
-            className="w-full h-[40px] bg-text text-surface hover:bg-[#332F2A] font-medium rounded-lg"
+            className="w-full h-[40px] bg-[#E8630A] text-white hover:bg-[#C9540A] font-medium rounded-lg"
           >
             Submit Another Request
           </Button>
@@ -93,7 +93,7 @@ export default function PublicLeavePage() {
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-header p-6">
-      <div className="max-w-[480px] w-full bg-panel border border-border rounded-xl shadow-lg overflow-hidden">
+      <div className="max-w-[480px] w-full bg-header border border-border rounded-xl shadow-lg overflow-hidden">
         
         {/* Banner Header */}
         <div className="bg-text text-surface p-6 flex items-center gap-3">
@@ -219,7 +219,7 @@ export default function PublicLeavePage() {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full h-[40px] mt-2 bg-text text-surface hover:bg-[#332F2A] font-semibold rounded-lg shadow-sm"
+            className="w-full h-[40px] mt-2 bg-[#E8630A] text-white hover:bg-[#C9540A] font-semibold rounded-lg shadow-sm"
           >
             {loading ? "Verifying..." : "Verify & Submit Leave"}
           </Button>

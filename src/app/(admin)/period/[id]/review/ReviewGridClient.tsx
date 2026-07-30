@@ -83,15 +83,15 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
               <th title="Count of Half Days Worked" className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Half</th>
               <th title="Number of Unpaid Absent Days" className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Abs.</th>
               <th title="Paid Leave Days Approved" className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">P.L.</th>
-              <th title="Extra Working (E.W.) Days - Pre-filled from Worked Weekly Offs" className="text-right font-medium text-[11.5px] text-text px-[10px] py-[7px] border-b border-border bg-panel cursor-help">E.W.</th>
+              <th title="Extra Working (E.W.) Days - Pre-filled from Worked Weekly Offs" className="text-right font-medium text-[11.5px] text-text px-[10px] py-[7px] border-b border-border bg-header cursor-help">E.W.</th>
               <th title="Penalty Day Deductions from Late/Early Strike Rules" className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Pen.</th>
               <th title="Total Paid Days = Pres. - Pen. + E.W." className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Paid days</th>
               <th title="Gross Earnings = floor(Daily Rate × Total Paid Days)" className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Gross</th>
-              <th title="Performance Incentive (₹)" className="text-right font-medium text-[11.5px] text-text px-[10px] py-[7px] border-b border-border bg-panel cursor-help">Incentive</th>
-              <th title="Additional Bonus (₹)" className="text-right font-medium text-[11.5px] text-text px-[10px] py-[7px] border-b border-border bg-panel cursor-help">Bonus</th>
-              <th title="Manual Rupee Deduction for Late Punches (₹)" className="text-right font-medium text-[11.5px] text-text px-[10px] py-[7px] border-b border-border bg-panel cursor-help">Late ₹</th>
-              <th title="Salary Advance Deduction Applied This Month (₹)" className="text-right font-medium text-[11.5px] text-text px-[10px] py-[7px] border-b border-border bg-panel cursor-help">Adv. taken</th>
-              <th title="Miscellaneous Debit Deductions (₹)" className="text-right font-medium text-[11.5px] text-text px-[10px] py-[7px] border-b border-border bg-panel cursor-help">Other debit</th>
+              <th title="Performance Incentive (₹)" className="text-right font-medium text-[11.5px] text-text px-[10px] py-[7px] border-b border-border bg-header cursor-help">Incentive</th>
+              <th title="Additional Bonus (₹)" className="text-right font-medium text-[11.5px] text-text px-[10px] py-[7px] border-b border-border bg-header cursor-help">Bonus</th>
+              <th title="Manual Rupee Deduction for Late Punches (₹)" className="text-right font-medium text-[11.5px] text-text px-[10px] py-[7px] border-b border-border bg-header cursor-help">Late ₹</th>
+              <th title="Salary Advance Deduction Applied This Month (₹)" className="text-right font-medium text-[11.5px] text-text px-[10px] py-[7px] border-b border-border bg-header cursor-help">Adv. taken</th>
+              <th title="Miscellaneous Debit Deductions (₹)" className="text-right font-medium text-[11.5px] text-text px-[10px] py-[7px] border-b border-border bg-header cursor-help">Other debit</th>
               <th title="Total Outstanding Advance Balance (₹)" className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Out. Adv</th>
               <th title="Remaining Advance Carried Forward (₹)" className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Carr. Adv</th>
               <th title="Final Net Salary Payable = Gross + Inc + Bonus - Adv - Late - Debit" className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] pr-[28px] py-[7px] border-b border-border bg-header">Net</th>
@@ -120,7 +120,7 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
                         const val = e.target.value === '' ? null : Number(e.target.value);
                         if (val !== r.ewDays) handleUpdate(r.employeeId.toString(), 'ewDays', val);
                       }}
-                      className="w-[50px] text-right font-mono text-[12.5px] px-[6px] py-[4px] border border-border-strong rounded-[3px] bg-surface outline-none focus:border-text disabled:bg-panel"
+                      className="w-[50px] text-right font-mono text-[12.5px] px-[6px] py-[4px] border border-border-strong rounded-[3px] bg-surface outline-none focus:border-[#E8630A] disabled:bg-header"
                     />
                   </td>
                   <td 
@@ -150,7 +150,7 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
                         const val = e.target.value ? Number(e.target.value) : 0;
                         if (val !== (r.incentive || 0)) handleUpdate(r.employeeId.toString(), 'incentive', val);
                       }}
-                      className="w-[78px] text-right font-mono text-[12.5px] px-[6px] py-[4px] border border-border-strong rounded-[3px] bg-surface outline-none focus:border-text disabled:bg-panel"
+                      className="w-[78px] text-right font-mono text-[12.5px] px-[6px] py-[4px] border border-border-strong rounded-[3px] bg-surface outline-none focus:border-[#E8630A] disabled:bg-header"
                     />
                   </td>
                   <td className="text-right px-[6px] py-[3px] border-b border-border-subtle">
@@ -161,7 +161,7 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
                         const val = e.target.value ? Number(e.target.value) : 0;
                         if (val !== (r.bonus || 0)) handleUpdate(r.employeeId.toString(), 'bonus', val);
                       }}
-                      className="w-[70px] text-right font-mono text-[12.5px] px-[6px] py-[4px] border border-border-strong rounded-[3px] bg-surface outline-none focus:border-text disabled:bg-panel"
+                      className="w-[70px] text-right font-mono text-[12.5px] px-[6px] py-[4px] border border-border-strong rounded-[3px] bg-surface outline-none focus:border-[#E8630A] disabled:bg-header"
                     />
                   </td>
                   <td className="text-right px-[6px] py-[3px] border-b border-border-subtle">
@@ -172,7 +172,7 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
                         const val = e.target.value ? Number(e.target.value) : 0;
                         if (val !== (r.latePunchAmt || 0)) handleUpdate(r.employeeId.toString(), 'latePunchAmt', val);
                       }}
-                      className="w-[70px] text-right font-mono text-[12.5px] px-[6px] py-[4px] border border-border-strong rounded-[3px] bg-surface outline-none focus:border-text disabled:bg-panel"
+                      className="w-[70px] text-right font-mono text-[12.5px] px-[6px] py-[4px] border border-border-strong rounded-[3px] bg-surface outline-none focus:border-[#E8630A] disabled:bg-header"
                     />
                   </td>
                   <td className="text-right px-[6px] py-[3px] border-b border-border-subtle">
@@ -183,7 +183,7 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
                         const val = e.target.value ? Number(e.target.value) : 0;
                         if (val !== (r.advanceDeduction || 0)) handleUpdate(r.employeeId.toString(), 'advanceDeduction', val);
                       }}
-                      className="w-[78px] text-right font-mono text-[12.5px] px-[6px] py-[4px] border border-border-strong rounded-[3px] bg-surface outline-none focus:border-text disabled:bg-panel"
+                      className="w-[78px] text-right font-mono text-[12.5px] px-[6px] py-[4px] border border-border-strong rounded-[3px] bg-surface outline-none focus:border-[#E8630A] disabled:bg-header"
                     />
                   </td>
                   <td className="text-right px-[6px] py-[3px] border-b border-border-subtle">
@@ -194,7 +194,7 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
                         const val = e.target.value ? Number(e.target.value) : 0;
                         if (val !== (r.otherDebit || 0)) handleUpdate(r.employeeId.toString(), 'otherDebit', val);
                       }}
-                      className="w-[70px] text-right font-mono text-[12.5px] px-[6px] py-[4px] border border-border-strong rounded-[3px] bg-surface outline-none focus:border-text disabled:bg-panel"
+                      className="w-[70px] text-right font-mono text-[12.5px] px-[6px] py-[4px] border border-border-strong rounded-[3px] bg-surface outline-none focus:border-[#E8630A] disabled:bg-header"
                     />
                   </td>
                   <td className="text-right px-[10px] py-[6px] border-b border-border-subtle font-mono text-text-secondary">{r.outstandingAdvance?.toLocaleString() || 0}</td>
@@ -255,7 +255,7 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
                           </>
                         )}
                         <div className="ml-auto flex gap-[6px]">
-                          <button onClick={() => setOpenRow(null)} className="bg-transparent text-text-secondary border border-transparent rounded-[4px] px-[8px] py-[5px] text-[12px] cursor-pointer hover:bg-panel">
+                          <button onClick={() => setOpenRow(null)} className="bg-transparent text-text-secondary border border-transparent rounded-[4px] px-[8px] py-[5px] text-[12px] cursor-pointer hover:bg-header">
                             Close
                           </button>
                         </div>
@@ -285,7 +285,7 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
             <button
               onClick={handleUnlock}
               disabled={loading}
-              className="px-4 py-2 bg-text text-surface rounded-[4px] text-[13px] font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
+              className="px-4 py-2 bg-[#E8630A] text-white rounded-[6px] text-[13px] font-medium hover:opacity-90 transition-opacity disabled:opacity-50"
             >
               {loading ? 'Unlocking...' : 'Unlock Period'}
             </button>
@@ -298,7 +298,7 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
             </a>
           </div>
         ) : (
-          <button onClick={handleLock} disabled={loading || exceptionsCount > 0} className="bg-text text-surface border border-text rounded-[4px] px-[13px] py-[7px] text-[12.5px] font-medium cursor-pointer hover:bg-[#332F2A] disabled:opacity-50 disabled:bg-panel disabled:text-text-muted disabled:border-border">
+          <button onClick={handleLock} disabled={loading || exceptionsCount > 0} className="bg-[#E8630A] text-white rounded-[6px] px-[13px] py-[7px] text-[12.5px] font-medium cursor-pointer hover:bg-[#C9540A] disabled:opacity-50 disabled:bg-header disabled:text-text-muted disabled:border-border">
             {loading ? 'Locking...' : 'Lock Period'}
           </button>
         )}

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createEmployee, updateEmployee, getEmployeeDetails } from './actions';
 import React from 'react';
+import { createPortal } from 'react-dom';
 import HistoryClient from './[id]/history/HistoryClient';
 import LeaveClient from './[id]/leave/LeaveClient';
 import LedgerClient from './[id]/ledger/LedgerClient';
@@ -40,6 +41,11 @@ export function EmployeeDrawer({ employee, trigger }: { employee?: any, trigger:
   const [tab, setTab] = useState<'profile' | 'revisions' | 'history' | 'leave' | 'ledger'>('profile');
   const [fullData, setFullData] = useState<any>(null);
   const router = useRouter();
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const isEdit = !!employee;
   const revisions = fullData?.employee?.salaryRevisions || (employee?.salaryRevisions || []);
@@ -124,13 +130,11 @@ export function EmployeeDrawer({ employee, trigger }: { employee?: any, trigger:
   });
 
   const [leaveModalOpen, setLeaveModalOpen] = useState(false);
-  const [advanceModalOpen, setAdvanceModalOpen] = useState(false);
-
   return (
     <>
       {triggerElement}
       
-      {open && (
+      {open && mounted && createPortal(
         <div className="fixed inset-0 z-[100] flex justify-end bg-transparent">
           <div className="absolute inset-0 bg-[#1A1815]/20 backdrop-blur-[1px]" onClick={() => setOpen(false)} />
           
@@ -162,121 +166,108 @@ export function EmployeeDrawer({ employee, trigger }: { employee?: any, trigger:
               </div>
             )}
 
-            <div className="flex-1 overflow-auto bg-surface px-[32px] py-[28px]">
+            <div className="flex-1 overflow-y-auto p-[28px]">
               {tab === 'profile' && (
-                <form id="employeeForm" onSubmit={handleSubmit(onSubmit)} className="flex flex-col text-left">
-                  
-                  {/* Personal Information */}
-                  <div className="flex flex-col gap-5 pb-8 border-b border-border-subtle">
-                    <h3 className="text-[14px] font-semibold text-text tracking-tight m-0">Personal Profile</h3>
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-5">
-                      <div className="flex flex-col gap-2">
-                        <Label className="text-[12px] font-medium text-text-secondary text-left">Full Name</Label>
-                        <Input {...register("name")} placeholder="John Doe" />
-                        {errors.name && <span className="text-[11px] text-alert-text text-left">{errors.name.message}</span>}
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Label className="text-[12px] font-medium text-text-secondary text-left">Machine ID</Label>
-                        <Input {...register("machineId")} type="number" disabled={isEdit} placeholder="e.g. 1" />
-                        {errors.machineId && <span className="text-[11px] text-alert-text text-left">{errors.machineId.message}</span>}
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Label className="text-[12px] font-medium text-text-secondary text-left">Mobile Number</Label>
-                        <Input {...register("mobileNumber")} placeholder="9876543210" />
-                        {errors.mobileNumber && <span className="text-[11px] text-alert-text text-left">{errors.mobileNumber.message}</span>}
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Label className="text-[12px] font-medium text-text-secondary text-left">Aadhaar Number</Label>
-                        <Input {...register("aadharNumber")} placeholder="XXXX XXXX XXXX" />
-                        {errors.aadharNumber && <span className="text-[11px] text-alert-text text-left">{errors.aadharNumber.message}</span>}
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Label className="text-[12px] font-medium text-text-secondary text-left">PAN Number</Label>
-                        <Input {...register("panNumber")} placeholder="ABCDE1234F" className="uppercase" />
-                        {errors.panNumber && <span className="text-[11px] text-alert-text text-left">{errors.panNumber.message}</span>}
-                      </div>
+                <form id="employeeForm" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-2">
+                      <Label className="text-[12px] font-medium text-text-secondary text-left">Full Name</Label>
+                      <Input {...register("name")} placeholder="e.g. John Doe" />
+                      {errors.name && <span className="text-[11px] text-alert-text text-left">{errors.name.message}</span>}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <Label className="text-[12px] font-medium text-text-secondary text-left">Machine ID</Label>
+                      <Input {...register("machineId", { valueAsNumber: true })} type="number" disabled={isEdit} />
+                      {errors.machineId && <span className="text-[11px] text-alert-text text-left">{errors.machineId.message}</span>}
                     </div>
                   </div>
 
-                  {/* Employment Details */}
-                  <div className="flex flex-col gap-5 py-8 border-b border-border-subtle">
-                    <h3 className="text-[14px] font-semibold text-text tracking-tight m-0">Employment Details</h3>
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-5">
-                      <div className="flex flex-col gap-2">
-                        <Label className="text-[12px] font-medium text-text-secondary text-left">Designation</Label>
-                        <Input {...register("designation")} placeholder="Mechanic" />
-                        {errors.designation && <span className="text-[11px] text-alert-text text-left">{errors.designation.message}</span>}
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Label className="text-[12px] font-medium text-text-secondary text-left">Date of Joining</Label>
-                        <Input {...register("dateOfJoining")} type="date" />
-                        {errors.dateOfJoining && <span className="text-[11px] text-alert-text text-left">{errors.dateOfJoining.message}</span>}
-                      </div>
-                      <div className="flex flex-col gap-2 col-span-2">
-                        <Label className="text-[12px] font-medium text-text-secondary text-left">Designated Weekly Off</Label>
-                        <Select value={watch("weeklyOff").toString()} onValueChange={v => reset({...watch(), weeklyOff: parseInt(v || "0")})}>
-                          <SelectTrigger className="w-full h-[36px] bg-surface border border-border shadow-sm focus:ring-1 focus:ring-text text-[13px] px-3 font-medium">
-                            <SelectValue placeholder="Select day..." />
-                          </SelectTrigger>
-                          <SelectContent className="bg-surface border-border z-[200] min-w-[240px] text-[13px]">
-                            {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((d, i) => (
-                              <SelectItem key={i} value={i.toString()} className="text-[13px] py-2">{d}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {errors.weeklyOff && <span className="text-[11px] text-alert-text text-left">{errors.weeklyOff.message}</span>}
-                      </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-2">
+                      <Label className="text-[12px] font-medium text-text-secondary text-left">Designation</Label>
+                      <Input {...register("designation")} placeholder="e.g. Mechanic" />
+                      {errors.designation && <span className="text-[11px] text-alert-text text-left">{errors.designation.message}</span>}
                     </div>
-
-                    <div className="flex flex-col gap-[10px] mt-2">
-                      <Label className="text-[12px] font-medium text-text-secondary text-left">Employment Status</Label>
-                      <div className="flex items-center gap-3">
-                        <label className={`flex-1 flex items-center justify-center gap-2 py-[7px] px-3 rounded-[6px] border cursor-pointer transition-colors select-none ${!isIgnoredWatched ? 'border-text bg-text text-surface shadow-sm' : 'border-border bg-surface text-text-secondary hover:bg-hover'}`}>
-                          <input type="radio" value="false" {...register("isIgnored", { setValueAs: v => v === 'true' })} className="hidden" />
-                          <span className="text-[13px] font-medium">Active</span>
-                        </label>
-                        <label className={`flex-1 flex items-center justify-center gap-2 py-[7px] px-3 rounded-[6px] border cursor-pointer transition-colors select-none ${isIgnoredWatched ? 'border-alert-text bg-alert-bg text-alert-text shadow-sm' : 'border-border bg-surface text-text-secondary hover:bg-hover'}`}>
-                          <input type="radio" value="true" {...register("isIgnored", { setValueAs: v => v === 'true' })} className="hidden" />
-                          <span className="text-[13px] font-medium">Inactive / Resigned</span>
-                        </label>
-                      </div>
-                    </div>
-                    
-                    {isIgnoredWatched && (
-                      <div className="flex flex-col gap-2 mt-2 p-4 bg-panel border border-border-subtle rounded-[6px]">
-                        <Label className="text-[12px] font-medium text-text-secondary text-left">Date of Resignation</Label>
-                        <Input {...register("endDate")} type="date" className="w-full bg-surface" />
-                        <div className="text-[11px] text-text-muted mt-[2px] leading-tight text-left">Enter a date only if the employee has resigned. They will be ignored in payroll after this date.</div>
-                        {errors.endDate && <span className="text-[11px] text-alert-text text-left">{errors.endDate.message}</span>}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Compensation */}
-                  <div className="flex flex-col gap-5 pt-8 pb-4">
-                    <h3 className="text-[14px] font-semibold text-text tracking-tight m-0">Compensation</h3>
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-5">
-                      <div className="flex flex-col gap-2">
-                        <Label className="text-[12px] font-medium text-text-secondary text-left">Fixed Salary (₹)</Label>
-                        <Input {...register("fixedSalary")} type="number" placeholder="25000" className="font-mono text-[14px]" />
-                        {errors.fixedSalary && <span className="text-[11px] text-alert-text text-left">{errors.fixedSalary.message}</span>}
-                      </div>
-                      {isEdit && (
-                        <div className="flex flex-col gap-2">
-                          <Label className="text-[12px] font-medium text-text-secondary text-left">Effective From</Label>
-                          <Input {...register("effectiveFrom")} type="date" className="font-mono" />
-                          <div className="text-[11px] text-text-muted mt-[2px] leading-tight text-left">Change only if updating salary amount.</div>
-                          {errors.effectiveFrom && <span className="text-[11px] text-alert-text text-left">{errors.effectiveFrom.message}</span>}
-                        </div>
-                      )}
+                    <div className="flex flex-col gap-2">
+                      <Label className="text-[12px] font-medium text-text-secondary text-left">Mobile Number</Label>
+                      <Input {...register("mobileNumber")} placeholder="10 digit number" />
+                      {errors.mobileNumber && <span className="text-[11px] text-alert-text text-left">{errors.mobileNumber.message}</span>}
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-2">
+                      <Label className="text-[12px] font-medium text-text-secondary text-left">Aadhaar Number</Label>
+                      <Input {...register("aadharNumber")} placeholder="12 digit number" />
+                      {errors.aadharNumber && <span className="text-[11px] text-alert-text text-left">{errors.aadharNumber.message}</span>}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <Label className="text-[12px] font-medium text-text-secondary text-left">PAN Number</Label>
+                      <Input {...register("panNumber")} placeholder="e.g. ABCDE1234F" />
+                      {errors.panNumber && <span className="text-[11px] text-alert-text text-left">{errors.panNumber.message}</span>}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-2">
+                      <Label className="text-[12px] font-medium text-text-secondary text-left">Fixed Salary (Monthly)</Label>
+                      <Input {...register("fixedSalary", { valueAsNumber: true })} type="number" />
+                      {errors.fixedSalary && <span className="text-[11px] text-alert-text text-left">{errors.fixedSalary.message}</span>}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <Label className="text-[12px] font-medium text-text-secondary text-left">Effective Date of Salary</Label>
+                      <Input {...register("effectiveFrom")} type="date" />
+                      {errors.effectiveFrom && <span className="text-[11px] text-alert-text text-left">{errors.effectiveFrom.message}</span>}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="flex flex-col gap-2">
+                      <Label className="text-[12px] font-medium text-text-secondary text-left">Date of Joining</Label>
+                      <Input {...register("dateOfJoining")} type="date" />
+                      {errors.dateOfJoining && <span className="text-[11px] text-alert-text text-left">{errors.dateOfJoining.message}</span>}
+                    </div>
+                    <div className="flex flex-col gap-2 col-span-2">
+                      <Label className="text-[12px] font-medium text-text-secondary text-left">Designated Weekly Off</Label>
+                      <Select value={watch("weeklyOff").toString()} onValueChange={v => reset({...watch(), weeklyOff: parseInt(v || "0")})}>
+                        <SelectTrigger className="w-full h-[36px] data-[size=default]:h-[36px] bg-surface border border-border shadow-sm focus:ring-1 focus:ring-text text-[13px] px-3 font-medium">
+                          <SelectValue placeholder="Select day..." />
+                        </SelectTrigger>
+                        <SelectContent className="bg-surface border-border z-[200] min-w-[240px] text-[13px]">
+                          {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((d, i) => (
+                            <SelectItem key={i} value={i.toString()} className="text-[13px] py-2">{d}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {errors.weeklyOff && <span className="text-[11px] text-alert-text text-left">{errors.weeklyOff.message}</span>}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-[10px] mt-2">
+                    <Label className="text-[12px] font-medium text-text-secondary text-left">Employment Status</Label>
+                    <div className="flex items-center gap-3">
+                      <label className={`flex-1 flex items-center justify-center gap-2 py-[7px] px-3 rounded-[6px] border cursor-pointer transition-colors select-none ${!isIgnoredWatched ? 'border-text bg-text text-surface shadow-sm' : 'border-border bg-surface text-text-secondary hover:bg-hover'}`}>
+                        <input type="radio" value="false" {...register("isIgnored", { setValueAs: v => v === 'true' })} className="hidden" />
+                        <span className="text-[13px] font-medium">Active</span>
+                      </label>
+                      <label className={`flex-1 flex items-center justify-center gap-2 py-[7px] px-3 rounded-[6px] border cursor-pointer transition-colors select-none ${isIgnoredWatched ? 'border-alert-text bg-alert-bg text-alert-text shadow-sm' : 'border-border bg-surface text-text-secondary hover:bg-hover'}`}>
+                        <input type="radio" value="true" {...register("isIgnored", { setValueAs: v => v === 'true' })} className="hidden" />
+                        <span className="text-[13px] font-medium">Inactive / Resigned</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {isIgnoredWatched && (
+                    <div className="flex flex-col gap-2 mt-2">
+                      <Label className="text-[12px] font-medium text-text-secondary text-left">Resignation / Termination Date (Optional)</Label>
+                      <Input {...register("endDate")} type="date" />
+                    </div>
+                  )}
                 </form>
               )}
 
               {tab === 'revisions' && (
-                <div className="flex flex-col gap-[12px]">
+                <div className="space-y-[16px]">
                   <h2 className="text-[14px] font-semibold text-left">Salary Revisions</h2>
                   <div className="border border-border rounded-[4px] overflow-hidden">
                     <table className="w-full text-[13px] text-left border-collapse">
@@ -313,13 +304,14 @@ export function EmployeeDrawer({ employee, trigger }: { employee?: any, trigger:
             {tab === 'profile' && (
               <div className="p-[20px] border-t border-border bg-header flex justify-end gap-[10px]">
                 <button type="button" onClick={() => setOpen(false)} className="px-[14px] py-[8px] border border-border-strong bg-surface rounded-[4px] text-[13px] hover:bg-hover">Cancel</button>
-                <button form="employeeForm" type="submit" disabled={loading} className="px-[14px] py-[8px] border border-text bg-text text-surface rounded-[4px] text-[13px] font-medium hover:bg-[#332F2A] disabled:opacity-50">
+                <button form="employeeForm" type="submit" disabled={loading} className="px-[14px] py-[8px] border border-text bg-[#E8630A] text-white rounded-[6px] text-[13px] font-medium hover:bg-[#C9540A] disabled:opacity-50">
                   {loading ? 'Saving...' : 'Save employee'}
                 </button>
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

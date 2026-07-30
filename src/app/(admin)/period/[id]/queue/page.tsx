@@ -25,7 +25,7 @@ export default async function QueuePage(props: { params: Promise<{ id: string }>
                 All flagged days resolved. Attendance is complete and the payroll figures are final.
               </div>
               <div className="flex gap-[8px] mt-[16px] justify-center">
-                <a href={`/period/${id}/review`} className="bg-text text-surface border border-text rounded-[4px] px-[16px] py-[8px] text-[12.5px] font-medium cursor-pointer hover:bg-[#332F2A] transition-colors inline-block no-underline">
+                <a href={`/period/${id}/review`} className="bg-[#E8630A] text-white rounded-[6px] px-[16px] py-[8px] text-[12.5px] font-medium cursor-pointer hover:bg-[#C9540A] transition-colors inline-block no-underline">
                   Go to payroll review
                 </a>
               </div>

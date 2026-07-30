@@ -54,7 +54,7 @@ export default function RecordAdvanceModal({ employees, trigger, open: externalO
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1">
                 <label className="text-[12px] font-medium text-text-secondary">Employee</label>
-                <select name="employeeId" required className="px-3 py-2 bg-panel border border-border rounded text-[13px]">
+                <select name="employeeId" required className="px-3 py-2 bg-header border border-border rounded text-[13px]">
                   <option value="">Select Employee...</option>
                   {employees.map(e => (
                     <option key={e._id} value={e.machineId}>{e.machineId} - {e.name}</option>
@@ -63,21 +63,21 @@ export default function RecordAdvanceModal({ employees, trigger, open: externalO
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-[12px] font-medium text-text-secondary">Date</label>
-                <input type="date" name="date" required className="px-3 py-2 bg-panel border border-border rounded text-[13px]" />
+                <input type="date" name="date" required className="px-3 py-2 bg-header border border-border rounded text-[13px]" />
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-[12px] font-medium text-text-secondary">Amount (₹)</label>
-                <input type="number" name="amount" min="1" required className="px-3 py-2 bg-panel border border-border rounded text-[13px]" />
+                <input type="number" name="amount" min="1" required className="px-3 py-2 bg-header border border-border rounded text-[13px]" />
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-[12px] font-medium text-text-secondary">Note / Reason</label>
-                <input type="text" name="note" required placeholder="e.g. Mid-month emergency" className="px-3 py-2 bg-panel border border-border rounded text-[13px]" />
+                <input type="text" name="note" required placeholder="e.g. Mid-month emergency" className="px-3 py-2 bg-header border border-border rounded text-[13px]" />
               </div>
               <div className="flex justify-end gap-3 mt-4">
-                <button type="button" onClick={() => setOpen(false)} className="px-4 py-2 text-[13px] font-medium hover:bg-panel rounded">
+                <button type="button" onClick={() => setOpen(false)} className="px-4 py-2 text-[13px] font-medium hover:bg-header rounded">
                   Cancel
                 </button>
-                <button type="submit" disabled={loading} className="px-4 py-2 text-[13px] font-medium bg-text text-surface rounded disabled:opacity-50">
+                <button type="submit" disabled={loading} className="px-4 py-2 text-[13px] font-medium bg-[#E8630A] text-white rounded-[6px] disabled:opacity-50">
                   {loading ? 'Saving...' : 'Save Advance'}
                 </button>
               </div>

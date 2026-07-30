@@ -83,7 +83,7 @@ export default function LeaveClient({ employeeId, leaves }: { employeeId: string
             {error && <p className="col-span-3 text-xs text-red-600 font-medium">{error}</p>}
 
             <div className="col-span-3 flex justify-end pt-1">
-              <Button type="submit" disabled={loading || !date} className="h-[36px] bg-text text-surface hover:bg-[#332F2A] px-6">
+              <Button type="submit" disabled={loading || !date} className="h-[36px] bg-[#E8630A] text-white hover:bg-[#C9540A] px-6">
                 {loading ? 'Logging...' : 'Log Leave Entry'}
               </Button>
             </div>
