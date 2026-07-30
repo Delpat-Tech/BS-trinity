@@ -18,6 +18,10 @@ export default async function PeriodLayout(props: {
 
   const isLocked = period.status === 'locked';
 
+  const { Import } = await import('@/models/Import');
+  const existingImport = await Import.findOne({ periodId: id }).lean();
+  const hasBiometrics = !!existingImport;
+
   // Get unmapped exceptions
   let exceptionsCount = 0;
   if (!isLocked) {
@@ -40,7 +44,12 @@ export default async function PeriodLayout(props: {
       {/* Topbar context */}
       <div className="px-[28px] pt-[18px] pb-[0] border-b border-border">
         
-        <div className="flex items-center justify-between">
+        <div className="flex items-center gap-[16px]">
+          <Link href="/">
+            <button className="bg-transparent border-none text-[12.5px] text-text-secondary cursor-pointer p-0 hover:text-text flex items-center">
+              ← Back
+            </button>
+          </Link>
           <div className="flex items-baseline gap-[10px]">
             <h1 className="m-0 text-[18px] font-semibold tracking-[-0.015em]">{monthName} {period.year}</h1>
             <span className="text-[12px] text-text-muted font-mono">01–30 {shortMonth} · {employeesCount} employees</span>
@@ -55,20 +64,17 @@ export default async function PeriodLayout(props: {
               </span>
             )}
           </div>
-          
-          <Link href="/">
-            <button className="bg-transparent border-none text-[12.5px] text-text-secondary cursor-pointer p-0 hover:text-text">
-              ← All periods
-            </button>
-          </Link>
         </div>
-
-        {/* Tabs */}
-        <PeriodTabsClient periodId={id} exceptionsCount={exceptionsCount} />
       </div>
 
       {/* Main Tab Content */}
       <div className="flex-1 overflow-auto bg-surface flex flex-col">
+        <PeriodTabsClient 
+          periodId={id} 
+          exceptionsCount={exceptionsCount} 
+          hasBiometrics={hasBiometrics}
+          isLocked={isLocked}
+        />
         {props.children}
       </div>
     </div>

@@ -14,7 +14,8 @@ const RulesetSchema = new mongoose.Schema({
 }, { _id: false });
 
 const SettingsSchema = new mongoose.Schema({
-  globalRuleset: { type: RulesetSchema, required: true }
+  _id: { type: String, default: 'global' },
+  ruleset: { type: RulesetSchema, required: true }
 }, { timestamps: true });
 
 export const Settings = mongoose.models.Settings || mongoose.model('Settings', SettingsSchema);

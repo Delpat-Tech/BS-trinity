@@ -35,6 +35,30 @@
   --color-success-bg: #F1F5E8;
   --color-success-text: #3F5E12;
   --color-success-border: #DCE5C9;
+
+  /* Shadcn UI Variable Mappings */
+  --color-background: var(--color-page);
+  --color-foreground: var(--color-text);
+  --color-card: var(--color-surface);
+  --color-card-foreground: var(--color-text);
+  --color-popover: var(--color-surface);
+  --color-popover-foreground: var(--color-text);
+  --color-primary: var(--color-text);
+  --color-primary-foreground: var(--color-surface);
+  --color-secondary: var(--color-panel);
+  --color-secondary-foreground: var(--color-text);
+  --color-muted: var(--color-panel);
+  --color-muted-foreground: var(--color-text-muted);
+  --color-accent: var(--color-hover);
+  --color-accent-foreground: var(--color-text);
+  --color-destructive: var(--color-alert-text);
+  --color-destructive-foreground: var(--color-alert-bg);
+  --color-input: var(--color-border-strong);
+  --color-ring: var(--color-border-strong);
+  
+  /* Use explicit border-border variable from Trinity for shadcn's generic border */
+  --color-border: #E5E1DA; 
+  /* We preserve Trinity's original --color-border mapping */
 }
 
 @layer base {

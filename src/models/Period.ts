@@ -18,7 +18,11 @@ const PeriodSchema = new mongoose.Schema({
   year: { type: Number, required: true },
   divisorDays: { type: Number, required: true },
   ruleset: { type: RulesetSchema, required: true },
-  status: { type: String, enum: ['open', 'locked'], default: 'open' }
+  status: { type: String, enum: ['open', 'resolving', 'review', 'locked'], default: 'open' },
+  uploadedFileName: { type: String, default: null },
+  lockedAt: { type: Date },
+  lockedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  unlockReason: { type: String }
 }, { timestamps: true });
 
 PeriodSchema.index({ month: 1, year: 1 }, { unique: true });

@@ -26,6 +26,7 @@ export type Employee = {
   dateOfJoining: string;
   endDate: string | null;
   isIgnored: boolean;
+  weeklyOff?: number;
   salaryRevisions: { fixedSalary: number; effectiveFrom: string }[];
 };
 
@@ -196,17 +197,11 @@ export function computePayroll(input: {
       const machineStatus = att?.machineStatus ?? 'A';
       const finalStatus = att?.finalStatus ?? null;
 
-      // 2. OVERRIDE
+      // 3. WEEKLY OFF
+      const isWeeklyOff = new Date(date).getDay() === (emp.weeklyOff ?? 0);
+
       if (finalStatus !== null) {
         status = finalStatus as DayStatus;
-      } 
-      // 3. WEEKLY OFF
-      else if (machineStatus === 'WO') {
-        status = 'WEEKLY_OFF';
-      } else if (machineStatus === 'WOP') {
-        status = 'WEEKLY_OFF_WORKED';
-        // continue to 6? Spec says: "WEEKLY_OFF_WORKED, continue to 6".
-        // Wait! "continue to 6" means it falls through rules 4 and 5. Let's do that cleanly.
       } 
       // 4. ORPHAN
       else if (inTime !== null && outTime === null) {
@@ -214,30 +209,34 @@ export function computePayroll(input: {
         exceptions.push({ employeeId: emp._id, date, reason: 'orphan_punch' });
       }
       // 5. LEAVE
-      else if (machineStatus === 'A') {
+      else if (machineStatus === 'A' && !isWeeklyOff) {
         if (leave?.kind === 'paid') status = 'PAID_LEAVE';
         else if (leave?.kind === 'half') status = 'HALF_DAY';
         else if (leave?.kind === 'unpaid') status = 'ABSENT_UNPAID';
         else status = 'ABSENT_UNPAID';
       }
+      // 6. THRESHOLD & WEEKLY OFF
       else {
-        // Here we handle machineStatus 'P' and 'WOP' falling through to step 6.
-        status = 'PRESENT';
-      }
-
-      // 6. THRESHOLD
-      if ((machineStatus === 'P' || machineStatus === 'WOP') && status !== 'EXCEPTION') {
-        if (inTime && inTime > rules.half_day_if_in_after) {
-          status = 'HALF_DAY';
-        } else if (outTime && outTime < rules.half_day_if_out_before) {
-          status = 'HALF_DAY';
+        // Here, it's either P or it's a Weekly Off
+        if (machineStatus === 'A' && isWeeklyOff) {
+          status = 'WEEKLY_OFF';
         } else {
-          status = 'PRESENT';
+          // Employee punched in (machineStatus === 'P')
+          const missedFirstHalf = inTime && inTime > rules.half_day_if_in_after;
+          const missedSecondHalf = outTime && outTime < rules.half_day_if_out_before;
+
+          if (missedFirstHalf && missedSecondHalf) {
+            status = 'ABSENT_UNPAID';
+          } else if (missedFirstHalf || missedSecondHalf) {
+            status = 'HALF_DAY';
+          } else {
+            status = isWeeklyOff ? 'WEEKLY_OFF_WORKED' : 'PRESENT';
+          }
         }
       }
 
       // 7. CONFLICT
-      if (status === 'PRESENT' && leave?.kind === 'half') {
+      if ((status === 'PRESENT' || status === 'WEEKLY_OFF_WORKED' || status === 'HALF_DAY') && leave?.kind === 'half') {
         status = 'EXCEPTION';
         exceptions.push({ employeeId: emp._id, date, reason: 'conflict' });
       }
@@ -262,13 +261,13 @@ export function computePayroll(input: {
         let prevDate = getNextDateStr(date, -1);
         let nextDate = getNextDateStr(date, 1);
 
-        if (rules.sandwich_skips_weekly_off) {
-          while (periodDates.includes(prevDate) && computedStatuses.get(prevDate) === 'WEEKLY_OFF') {
-            prevDate = getNextDateStr(prevDate, -1);
-          }
-          while (periodDates.includes(nextDate) && computedStatuses.get(nextDate) === 'WEEKLY_OFF') {
-            nextDate = getNextDateStr(nextDate, 1);
-          }
+        while (periodDates.includes(prevDate) && 
+               ((rules.sandwich_skips_weekly_off && computedStatuses.get(prevDate) === 'WEEKLY_OFF') || holidaysByDate.has(prevDate))) {
+          prevDate = getNextDateStr(prevDate, -1);
+        }
+        while (periodDates.includes(nextDate) && 
+               ((rules.sandwich_skips_weekly_off && computedStatuses.get(nextDate) === 'WEEKLY_OFF') || holidaysByDate.has(nextDate))) {
+          nextDate = getNextDateStr(nextDate, 1);
         }
 
         const prevAbsent = !periodDates.includes(prevDate) || computedStatuses.get(prevDate) === 'ABSENT_UNPAID';
@@ -321,7 +320,8 @@ export function computePayroll(input: {
     // Find latest salaryRevision with effectiveFrom <= period end
     const periodEnd = periodDates[periodDates.length - 1];
     let fixedSalary = 0;
-    const sortedRevisions = [...emp.salaryRevisions].sort((a, b) => a.effectiveFrom.localeCompare(b.effectiveFrom));
+    const salaryRevs = emp.salaryRevisions || [];
+    const sortedRevisions = [...salaryRevs].sort((a, b) => a.effectiveFrom.localeCompare(b.effectiveFrom));
     for (const rev of sortedRevisions) {
       if (rev.effectiveFrom <= periodEnd) {
         fixedSalary = rev.fixedSalary;

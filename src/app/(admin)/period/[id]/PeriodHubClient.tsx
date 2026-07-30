@@ -1,117 +1,275 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { uploadBiometrics } from './actions';
+import { uploadBiometrics, previewBiometrics } from './actions';
+import { UploadCloud, CheckCircle2, FileSpreadsheet, Loader2, AlertCircle, X, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-export default function PeriodHubClient({ periodId, isLocked, hasBiometrics }: { periodId: string, isLocked: boolean, hasBiometrics: boolean }) {
+export default function PeriodHubClient({ 
+  periodId, 
+  isLocked, 
+  hasBiometrics,
+  existingPreviewData
+}: { 
+  periodId: string, 
+  isLocked: boolean, 
+  hasBiometrics: boolean,
+  existingPreviewData?: any
+}) {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingStep, setLoadingStep] = useState('');
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState<any>(null);
   const [forceShowUpload, setForceShowUpload] = useState(false);
+  
+  const [previewData, setPreviewData] = useState<any>(existingPreviewData || null);
+  
   const router = useRouter();
 
   const showUploadForm = !hasBiometrics || forceShowUpload;
 
-  const handleUpload = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!file) return;
-
+  const handlePreview = async (selectedFile: File) => {
     setLoading(true);
+    setLoadingStep(`Parsing ${selectedFile.name}...`);
     setError('');
-    setSuccess(null);
-
+    setFile(selectedFile);
+    
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', selectedFile);
 
     try {
-      const res = await uploadBiometrics(periodId, formData);
-      setSuccess(res);
-      // Wait a moment then refresh to show next steps if needed, or user can navigate to Resolve
-      window.location.reload();
+      const res = await previewBiometrics(periodId, formData);
+      setPreviewData(res);
     } catch (err: any) {
-      setError(err.message || 'An error occurred during upload.');
+      setError(err.message || 'An error occurred during preview.');
+      setFile(null);
     } finally {
       setLoading(false);
     }
   };
 
-  if (!showUploadForm) {
-    return (
-      <div className="px-[28px] py-[16px] border-b border-border-subtle bg-header flex items-center gap-[38px]">
-        <div>
-          <div className="text-[11.5px] text-text-secondary">File status</div>
-          <div className="font-mono text-[13px] mt-[2px]">Data successfully processed</div>
-        </div>
-        <button 
-          onClick={() => setForceShowUpload(true)} 
-          disabled={isLocked}
-          className="ml-auto bg-surface text-text border border-border-strong rounded-[4px] px-[11px] py-[6px] text-[12.5px] cursor-pointer hover:bg-hover disabled:opacity-50"
-        >
-          Replace file
-        </button>
-      </div>
-    );
-  }
+  const handleConfirm = async () => {
+    if (!file) return;
 
-  return (
-    <>
-      <div className="p-[28px] max-w-4xl">
-        <h2 className="m-0 text-[14px] font-semibold">Upload Biometrics</h2>
-        <div className="text-[13px] text-text-secondary mt-[4px] mb-[16px]">
-          Upload the .xls export from the biometric machine for this period. 
-          Uploading a new file will replace existing attendance data.
+    setLoading(true);
+    setLoadingStep(`Processing and saving ${file.name} to database...`);
+    setError('');
+
+    try {
+      await uploadBiometrics(periodId, previewData.importId);
+      // Let's redirect to step 2 after successful upload
+      router.push(`/period/${periodId}/queue`);
+    } catch (err: any) {
+      setError(err.message || 'An error occurred during final upload.');
+      setLoading(false);
+    }
+  };
+
+  const FileDropzone = () => (
+    <div className="relative group cursor-pointer">
+      <input 
+        id="file"
+        type="file" 
+        accept=".xls,.xlsx" 
+        onChange={(e) => {
+          if (e.target.files?.[0]) handlePreview(e.target.files[0]);
+        }}
+        disabled={loading || isLocked}
+        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+      />
+      <div className={cn(
+        "flex flex-col items-center justify-center p-12 border-2 border-dashed rounded-xl transition-all duration-200",
+        "bg-surface hover:bg-hover hover:border-border-strong border-border-subtle group-hover:shadow-sm"
+      )}>
+        <div className="w-16 h-16 rounded-full bg-panel flex items-center justify-center mb-6 shadow-sm border border-border-subtle group-hover:scale-105 transition-transform duration-300">
+          <UploadCloud className="w-8 h-8 text-text-muted group-hover:text-text transition-colors" />
         </div>
-        
-        <form onSubmit={handleUpload} className="flex flex-col gap-[16px] max-w-md">
-          <div className="border border-dashed border-border-strong rounded-[4px] p-[24px] flex flex-col items-center justify-center relative bg-header hover:bg-hover transition-colors">
-            <input 
-              id="file"
-              type="file" 
-              accept=".xls,.xlsx" 
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-              disabled={loading || isLocked}
-              required 
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-            />
-            <div className="text-[13px] font-medium text-text-secondary">
-              {file ? file.name : "Click or drag biometric .xls file here"}
+        <h3 className="text-lg font-semibold text-text mb-2">Upload Biometric Data</h3>
+        <p className="text-sm text-text-muted text-center max-w-sm mb-6">
+          Drag and drop your machine's <span className="font-mono text-[13px] bg-panel px-1 py-0.5 rounded border border-border">.xls</span> export file here, or click to browse.
+        </p>
+        <div className="flex items-center gap-2 text-xs font-medium text-text-muted bg-panel px-3 py-1.5 rounded-full border border-border-subtle">
+          <FileSpreadsheet className="w-3.5 h-3.5" /> Supported format: strict machine .xls
+        </div>
+      </div>
+    </div>
+  );
+
+  const LoadingState = () => (
+    <div className="flex flex-col items-center justify-center p-16 rounded-xl border border-border bg-surface shadow-sm">
+      <Loader2 className="w-10 h-10 text-text animate-spin mb-6" />
+      <h3 className="text-base font-semibold text-text mb-2">Processing Data</h3>
+      <p className="text-sm text-text-muted">{loadingStep}</p>
+    </div>
+  );
+
+  const PreviewTable = ({ data, isAlreadySaved }: { data: any, isAlreadySaved: boolean }) => (
+    <div className="flex flex-col w-full bg-surface border border-border rounded-xl shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+      
+      {/* Header */}
+      <div className="p-6 border-b border-border bg-panel flex items-start justify-between">
+        <div className="flex gap-4">
+          <div className={cn(
+            "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border",
+            isAlreadySaved ? "bg-success-bg border-success-border text-success-text" : "bg-surface border-border shadow-sm text-text"
+          )}>
+            {isAlreadySaved ? <CheckCircle2 className="w-6 h-6" /> : <FileSpreadsheet className="w-6 h-6" />}
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-text mb-1">
+              {isAlreadySaved ? "Data Successfully Processed" : "Review Data"}
+            </h2>
+            <div className="flex items-center gap-3 text-sm text-text-muted">
+              <span className="flex items-center gap-1.5"><FileSpreadsheet className="w-4 h-4" /> {data.fileName}</span>
+              <span className="w-1 h-1 rounded-full bg-border-strong" />
+              <span>{data.totalRecords} records found</span>
             </div>
           </div>
+        </div>
 
-          {error && (
-            <div className="bg-alert-bg text-alert-text border border-alert-border p-[12px] rounded-[4px] text-[13px]">
-              {error}
-            </div>
-          )}
+        {isAlreadySaved && !isLocked && (
+          <button 
+            onClick={() => { setForceShowUpload(true); setPreviewData(null); }}
+            className="text-sm font-medium text-text-muted hover:text-text px-4 py-2 bg-surface border border-border rounded-lg shadow-sm hover:bg-hover transition-colors"
+          >
+            Replace File
+          </button>
+        )}
+      </div>
 
-          {success && (
-            <div className="bg-success-bg text-success-text border border-success-border p-[12px] rounded-[4px] text-[13px] whitespace-pre-line">
-              {success.message}
-            </div>
-          )}
-
-          <div className="flex gap-[12px]">
-            <button 
-              type="submit" 
-              disabled={!file || loading || isLocked}
-              className="bg-text text-surface border border-text rounded-[4px] px-[13px] py-[7px] text-[12.5px] font-medium cursor-pointer hover:bg-[#332F2A] disabled:opacity-50"
-            >
-              {loading ? 'Uploading...' : 'Upload Data'}
-            </button>
-            {hasBiometrics && (
-              <button 
-                type="button" 
-                onClick={() => setForceShowUpload(false)}
-                className="bg-transparent text-text border border-border-strong rounded-[4px] px-[13px] py-[7px] text-[12.5px] font-medium cursor-pointer hover:bg-hover"
-              >
-                Cancel
-              </button>
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm text-left">
+          <thead className="text-xs uppercase text-text-muted bg-surface border-b border-border">
+            <tr>
+              <th className="px-6 py-4 font-semibold tracking-wider">Employee</th>
+              <th className="px-6 py-4 font-semibold tracking-wider">Date</th>
+              <th className="px-6 py-4 font-semibold tracking-wider">In Time</th>
+              <th className="px-6 py-4 font-semibold tracking-wider">Out Time</th>
+              <th className="px-6 py-4 font-semibold tracking-wider text-right">Status</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border bg-surface">
+            {data.preview.map((row: any, i: number) => (
+              <tr key={i} className="hover:bg-hover transition-colors">
+                <td className="px-6 py-3.5">
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-text">{row.name || 'Unknown Employee'}</span>
+                    <span className="font-mono text-[11px] text-text-muted mt-0.5">ID: {row.machineId}</span>
+                  </div>
+                </td>
+                <td className="px-6 py-3.5 text-text">{row.date}</td>
+                <td className="px-6 py-3.5 text-text-secondary">{row.inTime || '-'}</td>
+                <td className="px-6 py-3.5 text-text-secondary">{row.outTime || '-'}</td>
+                <td className="px-6 py-3.5 text-right">
+                  <span className={cn(
+                    "inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase border",
+                    row.status === 'P' ? "bg-success-bg/50 border-success-border text-[#127a4b]" : 
+                    row.status === 'A' ? "bg-alert-bg border-alert-border text-alert-text" : 
+                    "bg-panel border-border-strong text-text-muted"
+                  )}>
+                    {row.status === 'P' ? 'Present' : row.status === 'A' ? 'Absent' : row.status}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      
+      {/* Footer message indicating it's just a sample */}
+      <div className="bg-panel px-6 py-3 border-t border-border text-xs text-text-muted text-center italic">
+        Showing first 5 rows of {data.totalRecords} imported rows.
+      </div>
+      
+      {/* Notice Lists */}
+      {(!isAlreadySaved && ((data.unmappedCodes?.length > 0) || (data.missingActive?.length > 0))) && (
+        <div className="p-6 bg-amber-500/10 border-t border-amber-500/20 text-amber-700">
+          <h3 className="font-semibold mb-4 flex items-center gap-2">
+            <AlertCircle className="w-5 h-5" />
+            Please note the following before proceeding:
+          </h3>
+          
+          <div className="grid grid-cols-2 gap-8">
+            {data.unmappedCodes?.length > 0 && (
+              <div>
+                <h4 className="font-semibold text-sm mb-2 text-amber-800">New Machine Codes</h4>
+                <p className="text-xs text-amber-700/80 mb-3">These codes don't exist in the database. They will be auto-created as "Employee #ID". You can update their details later.</p>
+                <div className="flex flex-wrap gap-2 max-h-40 overflow-auto">
+                  {data.unmappedCodes.map((code: number) => (
+                    <span key={code} className="px-2 py-1 bg-amber-500/20 rounded font-mono text-xs">{code}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {data.missingActive?.length > 0 && (
+              <div>
+                <h4 className="font-semibold text-sm mb-2 text-amber-800">Active Employees Missing from File</h4>
+                <p className="text-xs text-amber-700/80 mb-3">These employees are active this month but have no data in the file. They will be marked as absent.</p>
+                <div className="flex flex-col gap-1 max-h-40 overflow-auto">
+                  {data.missingActive.map((emp: any) => (
+                    <div key={emp.machineId} className="flex justify-between items-center text-xs bg-amber-500/20 px-2 py-1 rounded">
+                      <span>{emp.name}</span>
+                      <span className="font-mono opacity-70">#{emp.machineId}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
-        </form>
+        </div>
+      )}
+
+
+      {/* Action Footer for Preview Mode */}
+      {!isAlreadySaved && (
+        <div className="p-6 border-t border-border bg-surface flex items-center justify-between">
+          <button 
+            onClick={() => { setPreviewData(null); setFile(null); }}
+            disabled={loading}
+            className="text-sm font-medium text-text-muted hover:text-text px-4 py-2 hover:bg-panel rounded-lg transition-colors disabled:opacity-50"
+          >
+            Cancel
+          </button>
+            <button 
+              onClick={handleConfirm}
+              disabled={loading}
+              className="flex items-center gap-2 px-5 py-2.5 bg-text text-surface rounded-lg text-sm font-semibold hover:bg-[#332F2A] transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Confirm & Save Data
+              <ChevronRight className="w-4 h-4" />
+            </button>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="w-full flex flex-col items-center justify-start pt-12 pb-24 px-8 min-h-[600px] bg-surface">
+      <div className="w-full max-w-4xl">
+        
+        {error && (
+          <div className="mb-6 p-4 bg-alert-bg border-l-4 border-alert-border rounded-r-lg flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
+            <AlertCircle className="w-5 h-5 text-alert-text shrink-0 mt-0.5" />
+            <div className="text-sm text-alert-text flex-1 whitespace-pre-wrap">{error}</div>
+            <button onClick={() => setError('')} className="text-alert-text hover:opacity-70">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        {loading ? (
+          <LoadingState />
+        ) : previewData ? (
+          <PreviewTable data={previewData} isAlreadySaved={!showUploadForm} />
+        ) : (
+          <div className="animate-in fade-in zoom-in-95 duration-300">
+            <FileDropzone />
+          </div>
+        )}
       </div>
-    </>
+    </div>
   );
 }

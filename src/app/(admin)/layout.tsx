@@ -12,10 +12,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const uniqueCodes = (await Employee.distinct('machineId', { isIgnored: false, endDate: null })).length;
 
   return (
-    <div className="w-full min-h-screen flex bg-surface text-text font-sans text-[13px] leading-[1.45] relative">
+    <div className="w-full h-screen flex bg-surface text-text font-sans text-[13px] leading-[1.45] overflow-hidden">
       
       {/* Sidebar matching #F5F3F0 and exactly 240px wide */}
-      <div className="w-[240px] flex-none bg-panel border-r border-border flex flex-col">
+      <div className="w-[240px] flex-none bg-panel border-r border-border flex flex-col h-full">
         {/* Header */}
         <div className="px-[18px] py-[16px] border-b border-border">
           <div className="text-[13.5px] font-semibold tracking-[-0.01em]">Trinity Motors</div>
@@ -26,15 +26,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <div className="p-[10px] flex flex-col gap-[1px]">
           <SidebarClient />
         </div>
-
-        {/* Footer */}
-        <div className="mt-auto px-[18px] py-[14px] border-t border-border text-[11.5px] text-text-muted font-mono">
-          {employeesCount} active · {uniqueCodes} codes
-        </div>
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 min-w-0 flex flex-col bg-surface">
+      <div className="flex-1 min-w-0 flex flex-col bg-surface h-full overflow-y-auto">
         {children}
       </div>
     </div>

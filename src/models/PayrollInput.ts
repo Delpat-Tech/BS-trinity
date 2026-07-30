@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const PayrollInputSchema = new mongoose.Schema({
   periodId: { type: mongoose.Schema.Types.ObjectId, ref: 'Period', required: true },
-  employeeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee', required: true },
+  employeeId: { type: Number, ref: 'Employee', required: true },
   ewDays: { type: Number, default: null },
   incentive: { type: Number, default: 0 },
   bonus: { type: Number, default: 0 },
