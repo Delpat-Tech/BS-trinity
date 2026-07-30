@@ -53,63 +53,66 @@ export default function LedgerClient({ employeeId, entries }: { employeeId: stri
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div className="md:col-span-1 space-y-6">
-        <Card className="bg-slate-900 text-white">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-300">Total Outstanding</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-bold">
-              ₹{currentOutstanding.toLocaleString()}
+    <div className="flex flex-col gap-6 w-full">
+      <Card className="bg-slate-900 text-white">
+        <CardHeader className="pb-2 py-3 px-5">
+          <CardTitle className="text-xs font-medium text-slate-300">Total Outstanding Balance</CardTitle>
+        </CardHeader>
+        <CardContent className="py-2 px-5">
+          <div className="text-3xl font-bold">
+            ₹{currentOutstanding.toLocaleString()}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-[15px] font-semibold text-text">Log Ledger Entry</CardTitle>
+          <CardDescription className="text-[12.5px] text-text-secondary">Add a mid-month advance or an opening balance for this employee.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4 items-start">
+            <div className="space-y-1.5">
+              <Label className="text-[12px] font-medium text-text-secondary">Type</Label>
+              <Select value={type} onValueChange={(val: any) => setType(val)}>
+                <SelectTrigger className="w-full h-[36px] data-[size=default]:h-[36px] bg-surface border-border-strong text-[13px] px-3 font-medium">
+                  <span>
+                    {type === 'advance' && 'Advance'}
+                    {type === 'opening' && 'Opening Balance'}
+                  </span>
+                </SelectTrigger>
+                <SelectContent className="bg-surface border-border z-[200] min-w-[240px] text-[13px]">
+                  <SelectItem value="advance" className="text-[13px] py-2">Advance</SelectItem>
+                  <SelectItem value="opening" className="text-[13px] py-2">Opening Balance</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          </CardContent>
-        </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Log Entry</CardTitle>
-            <CardDescription>Add a mid-month advance or an opening balance.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label>Type</Label>
-                <Select value={type} onValueChange={(val: any) => setType(val)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="advance">Advance</SelectItem>
-                    <SelectItem value="opening">Opening Balance</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-1.5">
+              <Label className="text-[12px] font-medium text-text-secondary">Date</Label>
+              <Input type="date" value={date} onChange={e => setDate(e.target.value)} required className="h-[36px] bg-surface border-border-strong font-mono" />
+            </div>
 
-              <div className="space-y-2">
-                <Label>Date</Label>
-                <Input type="date" value={date} onChange={e => setDate(e.target.value)} required />
-              </div>
+            <div className="space-y-1.5">
+              <Label className="text-[12px] font-medium text-text-secondary">Amount (₹)</Label>
+              <Input type="number" step="1" min="1" value={amount} onChange={e => setAmount(e.target.value)} required className="h-[36px] bg-surface border-border-strong font-mono" />
+            </div>
 
-              <div className="space-y-2">
-                <Label>Amount (₹)</Label>
-                <Input type="number" step="1" min="1" value={amount} onChange={e => setAmount(e.target.value)} required />
-              </div>
+            <div className="space-y-1.5">
+              <Label className="text-[12px] font-medium text-text-secondary">Note / Remarks</Label>
+              <Input placeholder="e.g. Medical emergency" value={note} onChange={e => setNote(e.target.value)} required className="h-[36px] bg-surface border-border-strong" />
+            </div>
 
-              <div className="space-y-2">
-                <Label>Note</Label>
-                <Input placeholder="e.g., Medical emergency" value={note} onChange={e => setNote(e.target.value)} required />
-              </div>
+            {error && <p className="col-span-2 text-xs text-red-600 font-medium">{error}</p>}
 
-              {error && <p className="text-sm text-red-600 font-medium">{error}</p>}
-
-              <Button type="submit" disabled={loading || !date || !amount || !note} className="w-full">
-                {loading ? 'Logging...' : 'Log Entry'}
+            <div className="col-span-2 flex justify-end pt-1">
+              <Button type="submit" disabled={loading || !date || !amount || !note} className="h-[36px] bg-text text-surface hover:bg-[#332F2A] px-6">
+                {loading ? 'Logging...' : 'Log Ledger Entry'}
               </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
 
       <div className="md:col-span-2">
         <div className="border rounded-lg bg-white overflow-hidden shadow-sm">

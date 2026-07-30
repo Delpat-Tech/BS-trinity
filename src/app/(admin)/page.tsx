@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { Employee } from '@/models/Employee';
 import PeriodsClient from './PeriodsClient';
 
+import { Calendar } from 'lucide-react';
+
 export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
@@ -21,10 +23,13 @@ export default async function DashboardPage() {
 
   return (
     <>
-      <div className="px-[28px] pt-[20px] pb-[16px] border-b border-border flex items-center justify-between">
+      <div className="px-[32px] pt-[28px] pb-[20px] border-b border-border flex items-center justify-between">
         <div>
-          <h1 className="m-0 text-[18px] font-semibold tracking-[-0.015em]">Periods</h1>
-          <div className="text-[12.5px] text-text-secondary mt-[2px]">One period per month. A locked period cannot be edited.</div>
+          <h1 className="m-0 text-[24px] font-semibold tracking-tight text-text flex items-center gap-2">
+            <Calendar className="w-6 h-6 text-text-secondary" />
+            Periods
+          </h1>
+          <div className="text-[14px] text-text-secondary mt-[4px]">One period per month. A locked period cannot be edited.</div>
         </div>
         <PeriodsClient nextMonth={nextMonth} nextYear={nextYear} />
       </div>
@@ -32,7 +37,7 @@ export default async function DashboardPage() {
       <table className="w-full border-collapse text-[13px]">
         <thead>
           <tr>
-            <th className="text-left font-medium text-[11.5px] text-text-secondary px-[28px] py-[8px] border-b border-border bg-header">Month</th>
+            <th className="text-left font-medium text-[11.5px] text-text-secondary px-[32px] py-[8px] border-b border-border bg-header">Month</th>
             <th className="text-left font-medium text-[11.5px] text-text-secondary px-[12px] py-[8px] border-b border-border bg-header w-[130px]">Status</th>
             <th className="text-right font-medium text-[11.5px] text-text-secondary px-[12px] py-[8px] border-b border-border bg-header w-[130px]">Divisor Days</th>
             <th className="text-right font-medium text-[11.5px] text-text-secondary px-[12px] py-[8px] border-b border-border bg-header w-[110px]">Employees</th>
@@ -59,7 +64,7 @@ export default async function DashboardPage() {
             
             return (
               <tr key={period._id.toString()} className="hover:bg-header transition-colors">
-                <td className="px-[28px] py-[11px] border-b border-border-subtle">
+                <td className="px-[32px] py-[11px] border-b border-border-subtle">
                   <span className={isLocked ? "font-medium" : "font-semibold text-[14px]"}>{monthName} {period.year}</span>
                   <span className="block text-[11.5px] text-text-muted font-mono mt-[1px]">01–30 {shortMonth}</span>
                 </td>
@@ -88,7 +93,7 @@ export default async function DashboardPage() {
                   -
                 </td>
                 
-                <td className="px-[12px] py-[11px] pr-[28px] border-b border-border-subtle text-right">
+                <td className="px-[12px] py-[11px] pr-[32px] border-b border-border-subtle text-right">
                   {isLocked ? (
                     <Link href={`/period/${period._id.toString()}/review`}>
                       <button className="bg-surface text-text border border-border-strong rounded-[4px] px-[12px] py-[6px] text-[12.5px] cursor-pointer hover:bg-header">

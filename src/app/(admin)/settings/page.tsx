@@ -7,10 +7,12 @@ import { HolidayClient } from './HolidayClient';
 // We force dynamic to ensure settings aren't cached stale
 export const dynamic = 'force-dynamic';
 
+import { Settings as SettingsIcon } from 'lucide-react';
+
 export default async function SettingsPage() {
   await dbConnect();
   const settingsDoc = await Settings.findOne({});
-  const ruleset = settingsDoc?.globalRuleset || {
+  const ruleset = settingsDoc?.ruleset || {
     shift_start: "09:30",
     shift_end: "19:30",
     grace_until: "09:40",
@@ -30,15 +32,18 @@ export default async function SettingsPage() {
 
   return (
     <>
-      <div className="px-[28px] pt-[20px] pb-[16px] border-b border-border flex flex-col justify-center">
-        <h1 className="m-0 text-[18px] font-semibold tracking-[-0.015em]">Global Settings</h1>
-        <div className="text-[12.5px] text-text-secondary mt-[2px]">
+      <div className="px-[32px] pt-[28px] pb-[20px] border-b border-border flex flex-col justify-center">
+        <h1 className="m-0 text-[24px] font-semibold tracking-tight text-text flex items-center gap-2">
+          <SettingsIcon className="w-6 h-6 text-text-secondary" />
+          Global Settings
+        </h1>
+        <div className="text-[14px] text-text-secondary mt-[4px]">
           Manage the global payroll ruleset. These settings take effect immediately for all unlocked periods.
         </div>
       </div>
       
       <div className="flex-1 overflow-auto bg-header">
-        <div className="p-[28px] flex flex-col gap-[32px]">
+        <div className="p-[32px] flex flex-col gap-[32px]">
           <div>
             <blockquote className="bg-alert-bg border-l-4 border-alert-text px-[16px] py-[12px] text-alert-text text-[13px] italic mb-[20px] shadow-sm">
               Late arrivals are penalised by day deduction. The rupee Late Punch Amount on the payroll sheet is entered manually and is not applied automatically. Do not use both as a policy.

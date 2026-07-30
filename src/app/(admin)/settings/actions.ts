@@ -21,10 +21,10 @@ export async function updateSettings(data: {
   // Settings collection only has one document. We update it or create if it doesn't exist.
   const existing = await Settings.findOne({});
   if (existing) {
-    existing.globalRuleset = data;
+    existing.ruleset = data;
     await existing.save();
   } else {
-    await Settings.create({ globalRuleset: data });
+    await Settings.create({ ruleset: data });
   }
 
   revalidatePath('/settings');

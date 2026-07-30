@@ -6,7 +6,7 @@ import RecordLeaveModal from "./RecordLeaveModal";
 import RecordAdvanceModal from "./RecordAdvanceModal";
 import UploadEmployeesModal from "./UploadEmployeesModal";
 import { updateMachineId } from "./actions";
-import { Pencil, Check, X, MoreHorizontal, Filter, Search, ChevronLeft, ChevronRight, UserPlus } from "lucide-react";
+import { Pencil, Check, X, MoreHorizontal, Filter, Search, ChevronLeft, ChevronRight, UserPlus, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel, DropdownMenuGroup } from "@/components/ui/dropdown-menu";
@@ -153,7 +153,10 @@ export default function EmployeesListClient({ employees }: { employees: any[] })
     <div className="flex-1 flex flex-col min-h-0 bg-surface">
       <div className="px-[32px] pt-[28px] pb-[20px] flex items-center justify-between flex-none">
         <div>
-          <h1 className="m-0 text-[24px] font-semibold tracking-tight text-text">Employees</h1>
+          <h1 className="m-0 text-[24px] font-semibold tracking-tight text-text flex items-center gap-2">
+            <Users className="w-6 h-6 text-text-secondary" />
+            Employees
+          </h1>
           <div className="text-[14px] text-text-secondary mt-[4px]">
             Manage workforce, view history, and record global actions.
           </div>
@@ -166,24 +169,15 @@ export default function EmployeesListClient({ employees }: { employees: any[] })
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuGroup>
-                <DropdownMenuLabel className="uppercase tracking-wider">Bulk Operations</DropdownMenuLabel>
+                <DropdownMenuLabel className="uppercase tracking-wider text-[11px] text-text-muted px-2 py-1.5">Employee Data</DropdownMenuLabel>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setLeaveModalOpen(true)}>
-                Record Global Leave
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setAdvanceModalOpen(true)}>
-                Record Global Advance
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => setUploadModalOpen(true)}>
-                Upload CSV
+                Upload / Download CSV Schema
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <RecordLeaveModal open={leaveModalOpen} onOpenChange={setLeaveModalOpen} employees={employees} />
-          <RecordAdvanceModal open={advanceModalOpen} onOpenChange={setAdvanceModalOpen} employees={employees} />
           <UploadEmployeesModal open={uploadModalOpen} onOpenChange={setUploadModalOpen} />
 
           <EmployeeDrawer trigger={
@@ -197,7 +191,7 @@ export default function EmployeesListClient({ employees }: { employees: any[] })
 
       <div className="px-[32px] pb-[16px] flex items-center justify-between flex-none gap-4">
         <div className="flex items-center gap-3">
-          <div className="relative w-[280px]">
+          <div className="relative w-[280px] h-[36px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
             <Input 
               type="text" 
@@ -209,17 +203,17 @@ export default function EmployeesListClient({ employees }: { employees: any[] })
           </div>
           
           <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v || "all"); setPage(1); }}>
-            <SelectTrigger className="w-[160px] h-[36px] bg-panel border-border-strong">
+            <SelectTrigger className="w-[160px] h-[36px] data-[size=default]:h-[36px] bg-panel border-border-strong flex items-center text-[13px] px-3 font-medium">
               <div className="flex items-center gap-2">
                 <Filter className="w-3.5 h-3.5 text-text-muted" />
                 <SelectValue placeholder="Status" />
               </div>
             </SelectTrigger>
-            <SelectContent className="bg-panel border-border">
-              <SelectItem value="all">All Employees</SelectItem>
-              <SelectItem value="active">Active Only</SelectItem>
-              <SelectItem value="resigned">Resigned</SelectItem>
-              <SelectItem value="ignored">Ignored (Hidden)</SelectItem>
+            <SelectContent className="bg-panel border-border z-[200] min-w-[180px] text-[13px]">
+              <SelectItem value="all" className="text-[13px] py-2">All Employees</SelectItem>
+              <SelectItem value="active" className="text-[13px] py-2">Active Only</SelectItem>
+              <SelectItem value="resigned" className="text-[13px] py-2">Resigned</SelectItem>
+              <SelectItem value="ignored" className="text-[13px] py-2">Ignored (Hidden)</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -264,7 +258,6 @@ export default function EmployeesListClient({ employees }: { employees: any[] })
                 >
                   <div className="flex items-center justify-center">Status {getSortIndicator('isIgnored')}</div>
                 </TableHead>
-                <TableHead className="px-[28px] py-[12px] w-[80px] font-semibold text-text-secondary"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -273,36 +266,31 @@ export default function EmployeesListClient({ employees }: { employees: any[] })
                 const latestSalary = [...revisions].sort((a: any, b: any) => b.effectiveFrom.localeCompare(a.effectiveFrom))[0]?.fixedSalary || 0;
                 
                 return (
-                  <TableRow key={emp._id} className="border-b border-border-subtle last:border-0 hover:bg-hover transition-colors">
-                    <MachineIdCell emp={emp} />
-                    <TableCell className="px-[28px] py-[11px] font-medium text-text">
-                      {emp.name}
-                    </TableCell>
-                    <TableCell className="px-[28px] py-[11px] text-text-secondary truncate max-w-[200px]">
-                      {emp.designation || '-'}
-                    </TableCell>
-                    <TableCell className="px-[28px] py-[11px] text-right font-mono text-text">
-                      ₹{latestSalary.toLocaleString()}
-                    </TableCell>
-                    <TableCell className="px-[28px] py-[11px] text-center">
-                      {emp.isIgnored ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-red-100 text-red-700 border border-red-200">
-                          {emp.endDate ? 'Resigned' : 'Ignored'}
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-green-100 text-green-700 border border-green-200">
-                          Active
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className="px-[28px] py-[11px] text-right">
-                      <EmployeeDrawer employee={emp} trigger={
-                        <button className="text-[12px] font-medium text-blue-600 hover:text-blue-800 transition-colors">
-                          View
-                        </button>
-                      } />
-                    </TableCell>
-                  </TableRow>
+                  <EmployeeDrawer key={emp._id} employee={emp} trigger={
+                    <TableRow className="border-b border-border-subtle last:border-0 hover:bg-hover transition-colors cursor-pointer">
+                      <MachineIdCell emp={emp} />
+                      <TableCell className="px-[28px] py-[11px] font-medium text-text">
+                        {emp.name}
+                      </TableCell>
+                      <TableCell className="px-[28px] py-[11px] text-text-secondary truncate max-w-[200px]">
+                        {emp.designation || '-'}
+                      </TableCell>
+                      <TableCell className="px-[28px] py-[11px] text-right font-mono text-text">
+                        ₹{latestSalary.toLocaleString()}
+                      </TableCell>
+                      <TableCell className="px-[28px] py-[11px] text-center">
+                        {emp.isIgnored ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-red-100 text-red-700 border border-red-200">
+                            {emp.endDate ? 'Resigned' : 'Ignored'}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-green-100 text-green-700 border border-green-200">
+                            Active
+                          </span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  } />
                 );
               })}
               

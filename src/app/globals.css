@@ -90,4 +90,34 @@
     font-family: inherit;
     color: inherit;
   }
+
+  /* Safari Compatibility for Time Inputs */
+  input[type="time"] {
+    position: relative;
+    min-height: 36px;
+    align-items: center;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  input[type="time"]::-webkit-datetime-edit {
+    display: inline-flex !important;
+    padding: 0;
+  }
+  
+  /* Ensure the native picker indicator is visible and clickable in Webkit/Safari */
+  input[type="time"]::-webkit-calendar-picker-indicator {
+    display: block !important;
+    width: 16px;
+    height: 16px;
+    opacity: 0.7;
+    cursor: pointer;
+    background-size: contain;
+    position: absolute;
+    right: 8px;
+  }
+
+  input[type="time"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+  }
 }

@@ -7,6 +7,7 @@ import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
 
 export const authOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     CredentialsProvider({
       name: 'Credentials',

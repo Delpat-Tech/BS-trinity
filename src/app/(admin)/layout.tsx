@@ -18,8 +18,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <div className="w-[240px] flex-none bg-panel border-r border-border flex flex-col h-full">
         {/* Header */}
         <div className="px-[18px] py-[16px] border-b border-border">
-          <div className="text-[13.5px] font-semibold tracking-[-0.01em]">Trinity Motors</div>
-          <div className="text-[11.5px] text-text-muted mt-[1px]">Attendance &amp; payroll</div>
+          <div className="text-[17px] font-bold tracking-tight text-text">Trinity Motors</div>
+          <div className="text-[12px] text-text-muted mt-[2px] font-medium">Attendance &amp; payroll</div>
         </div>
         
         {/* Nav Links Wrapper */}

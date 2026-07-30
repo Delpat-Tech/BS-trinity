@@ -5,6 +5,26 @@ import { Employee } from '../src/models/Employee';
 import { LedgerEntry } from '../src/models/LedgerEntry';
 
 async function seedJune() {
+  // Load .env file manually
+  const fs = require('fs');
+  const dotenvPath = path.join(__dirname, '..', '.env');
+  if (fs.existsSync(dotenvPath)) {
+    const envContent = fs.readFileSync(dotenvPath, 'utf-8');
+    for (const line of envContent.split('\n')) {
+      const match = line.match(/^\s*([^#=]+)\s*=\s*(.*)\s*$/);
+      if (match) {
+        const key = match[1].trim();
+        let value = match[2].trim();
+        if (value.startsWith('"') && value.endsWith('"')) {
+          value = value.substring(1, value.length - 1);
+        } else if (value.startsWith("'") && value.endsWith("'")) {
+          value = value.substring(1, value.length - 1);
+        }
+        process.env[key] = value;
+      }
+    }
+  }
+
   const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/trinity';
   await mongoose.connect(uri, { bufferCommands: false });
 
@@ -27,6 +47,8 @@ async function seedJune() {
   await LedgerEntry.deleteMany({});
   console.log('Cleared existing employees and ledger entries.');
 
+  const seen = new Set<number>();
+
   // The actual data seems to start around row 4. Let's iterate.
   ws.eachRow((row, rowNumber) => {
     if (rowNumber === 4) {
@@ -45,6 +67,12 @@ async function seedJune() {
     }
     
     if (isNaN(machineId)) return;
+
+    if (seen.has(machineId)) {
+      console.log(`Skipping duplicate machineId ${machineId} at row ${rowNumber}`);
+      return;
+    }
+    seen.add(machineId);
 
     const name = (row.getCell(3).value as string) || `Employee ${machineId}`;
     const designation = (row.getCell(4).value as string) || 'Staff';
@@ -66,6 +94,7 @@ async function seedJune() {
     const paymentMode = paymentModeStr.toLowerCase().includes('cash') ? 'Cash' : 'Bank';
 
     const emp = new Employee({
+      _id: machineId,
       machineId,
       name,
       designation,

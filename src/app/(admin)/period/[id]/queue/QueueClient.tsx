@@ -93,6 +93,7 @@ export default function QueueClient({ periodId, initialExceptions, uploadedFileN
           <span className="text-[12px] text-text-secondary ml-[8px]">
             Source: <span className="font-mono text-text bg-border-subtle px-[6px] py-[2px] rounded">{uploadedFileName}</span>
           </span>
+        </div>
         <div className="flex gap-[8px] items-center">
           <Select value={filter} onValueChange={(v) => { setFilter(v || "all"); setSelected(new Set()); }}>
             <SelectTrigger className="w-[180px] h-[34px] bg-panel border-border-strong text-[12.5px]">

@@ -142,24 +142,11 @@ export function EmployeeDrawer({ employee, trigger }: { employee?: any, trigger:
               </div>
               
               <div className="flex items-center gap-4">
-                {isEdit && (
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => setLeaveModalOpen(true)} className="px-3 py-1.5 text-[12px] font-medium border border-border rounded shadow-sm hover:bg-hover bg-surface">
-                      Record Leave
-                    </button>
-                    <button onClick={() => setAdvanceModalOpen(true)} className="px-3 py-1.5 text-[12px] font-medium border border-border rounded shadow-sm hover:bg-hover bg-surface">
-                      Record Advance
-                    </button>
-                  </div>
-                )}
                 <button onClick={() => setOpen(false)} className="text-[12px] text-text-secondary hover:text-text cursor-pointer ml-2">
                   Close ✕
                 </button>
               </div>
             </div>
-
-            <RecordLeaveModal open={leaveModalOpen} onOpenChange={setLeaveModalOpen} employees={[fullData?.employee || employee]} />
-            <RecordAdvanceModal open={advanceModalOpen} onOpenChange={setAdvanceModalOpen} employees={[fullData?.employee || employee]} />
             
             {isEdit && (
               <div className="flex border-b border-border bg-header px-[28px] gap-[20px] text-[13px] font-medium">
@@ -228,12 +215,12 @@ export function EmployeeDrawer({ employee, trigger }: { employee?: any, trigger:
                       <div className="flex flex-col gap-2 col-span-2">
                         <Label className="text-[12px] font-medium text-text-secondary text-left">Designated Weekly Off</Label>
                         <Select value={watch("weeklyOff").toString()} onValueChange={v => reset({...watch(), weeklyOff: parseInt(v || "0")})}>
-                          <SelectTrigger className="w-full h-[36px] bg-surface border border-border shadow-sm focus:ring-1 focus:ring-text text-[13px]">
+                          <SelectTrigger className="w-full h-[36px] bg-surface border border-border shadow-sm focus:ring-1 focus:ring-text text-[13px] px-3 font-medium">
                             <SelectValue placeholder="Select day..." />
                           </SelectTrigger>
-                          <SelectContent className="bg-surface border-border">
+                          <SelectContent className="bg-surface border-border z-[200] min-w-[240px] text-[13px]">
                             {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((d, i) => (
-                              <SelectItem key={i} value={i.toString()}>{d}</SelectItem>
+                              <SelectItem key={i} value={i.toString()} className="text-[13px] py-2">{d}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>

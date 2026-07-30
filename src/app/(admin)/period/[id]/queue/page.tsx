@@ -18,8 +18,18 @@ export default async function QueuePage(props: { params: Promise<{ id: string }>
     <div className="p-[20px] flex-1 flex flex-col min-h-0">
       <div className="bg-surface border border-border rounded-[4px] overflow-hidden flex-1 flex flex-col">
         {safeExceptions.length === 0 ? (
-          <div className="p-12 text-center text-text-muted">
-            No exceptions found. The period is ready for review.
+          <div className="flex-1 flex items-center justify-center py-[70px] px-[28px] bg-surface h-full">
+            <div className="max-w-[430px] text-center">
+              <div className="text-[18px] font-semibold tracking-[-0.015em]">Nothing left to resolve</div>
+              <div className="text-[13px] text-text-secondary mt-[6px]">
+                All flagged days resolved. Attendance is complete and the payroll figures are final.
+              </div>
+              <div className="flex gap-[8px] mt-[16px] justify-center">
+                <a href={`/period/${id}/review`} className="bg-text text-surface border border-text rounded-[4px] px-[16px] py-[8px] text-[12.5px] font-medium cursor-pointer hover:bg-[#332F2A] transition-colors inline-block no-underline">
+                  Go to payroll review
+                </a>
+              </div>
+            </div>
           </div>
         ) : (
           <QueueClient periodId={id} initialExceptions={safeExceptions} uploadedFileName={period?.uploadedFileName || 'biometric_export.xls'} />

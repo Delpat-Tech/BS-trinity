@@ -88,6 +88,53 @@ export default function UploadEmployeesModal({ trigger, open: externalOpen, onOp
               </div>
             </div>
 
+            <div className="flex justify-between items-center bg-panel p-3 rounded border border-border">
+              <div>
+                <div className="text-[12.5px] font-medium text-text">Employee Panel Schema Template</div>
+                <div className="text-[11px] text-text-muted">Download standard column layout (.xlsx)</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  import('xlsx').then(XLSX => {
+                    const headers = [
+                      "Emp ID / Machine ID",
+                      "Full Name",
+                      "Designation",
+                      "Mobile Number",
+                      "Date of Joining (YYYY-MM-DD)",
+                      "Designated Weekly Off (0=Sun, 1=Mon, ...)",
+                      "Fixed Salary (₹)",
+                      "Aadhaar Number",
+                      "PAN Number",
+                      "Is Ignored / Resigned (TRUE/FALSE)",
+                      "Resignation End Date (YYYY-MM-DD)"
+                    ];
+                    const sampleRow = [
+                      101,
+                      "Rajesh Kumar",
+                      "Technician",
+                      "9876543210",
+                      "2024-01-15",
+                      0,
+                      25000,
+                      "123456789012",
+                      "ABCDE1234F",
+                      "FALSE",
+                      ""
+                    ];
+                    const ws = XLSX.utils.aoa_to_sheet([headers, sampleRow]);
+                    const wb = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(wb, ws, "Employee Schema");
+                    XLSX.writeFile(wb, "Trinity_Employee_Master_Template.xlsx");
+                  });
+                }}
+                className="px-3 py-1.5 bg-surface border border-border-strong rounded text-[12px] font-medium hover:bg-hover text-text shadow-sm"
+              >
+                Download Schema
+              </button>
+            </div>
+
             <div className="flex justify-end gap-2 mt-6">
               <button
                 onClick={() => setOpen(false)}

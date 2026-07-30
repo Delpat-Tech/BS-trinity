@@ -44,48 +44,52 @@ export default function LeaveClient({ employeeId, leaves }: { employeeId: string
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div className="md:col-span-1 space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Log Leave</CardTitle>
-            <CardDescription>Add a retroactive leave card off-cycle.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label>Type</Label>
-                <Select value={kind} onValueChange={(val: any) => setKind(val)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="paid">Paid Leave</SelectItem>
-                    <SelectItem value="half">Half Day</SelectItem>
-                    <SelectItem value="unpaid">Unpaid Leave</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+    <div className="flex flex-col gap-6 w-full">
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-[15px] font-semibold text-text">Log Leave</CardTitle>
+          <CardDescription className="text-[12.5px] text-text-secondary">Add a retroactive leave card off-cycle for this employee.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="grid grid-cols-3 gap-4 items-start">
+            <div className="space-y-1.5">
+              <Label className="text-[12px] font-medium text-text-secondary">Type</Label>
+              <Select value={kind} onValueChange={(val: any) => setKind(val)}>
+                <SelectTrigger className="w-full h-[36px] data-[size=default]:h-[36px] bg-surface border-border-strong text-[13px] px-3 font-medium">
+                  <span>
+                    {kind === 'paid' && 'Paid Leave'}
+                    {kind === 'half' && 'Half Day'}
+                    {kind === 'unpaid' && 'Unpaid Leave'}
+                  </span>
+                </SelectTrigger>
+                <SelectContent className="bg-surface border-border z-[200] min-w-[240px] text-[13px]">
+                  <SelectItem value="paid" className="text-[13px] py-2">Paid Leave</SelectItem>
+                  <SelectItem value="half" className="text-[13px] py-2">Half Day</SelectItem>
+                  <SelectItem value="unpaid" className="text-[13px] py-2">Unpaid Leave</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-              <div className="space-y-2">
-                <Label>Date</Label>
-                <Input type="date" value={date} onChange={e => setDate(e.target.value)} required />
-              </div>
+            <div className="space-y-1.5">
+              <Label className="text-[12px] font-medium text-text-secondary">Date</Label>
+              <Input type="date" value={date} onChange={e => setDate(e.target.value)} required className="h-[36px] bg-surface border-border-strong font-mono" />
+            </div>
 
-              <div className="space-y-2">
-                <Label>Note (Optional)</Label>
-                <Input placeholder="e.g. Sick leave" value={note} onChange={e => setNote(e.target.value)} />
-              </div>
+            <div className="space-y-1.5">
+              <Label className="text-[12px] font-medium text-text-secondary">Note (Optional)</Label>
+              <Input placeholder="e.g. Sick leave" value={note} onChange={e => setNote(e.target.value)} className="h-[36px] bg-surface border-border-strong" />
+            </div>
 
-              {error && <p className="text-sm text-red-600 font-medium">{error}</p>}
+            {error && <p className="col-span-3 text-xs text-red-600 font-medium">{error}</p>}
 
-              <Button type="submit" disabled={loading || !date} className="w-full">
-                {loading ? 'Logging...' : 'Log Leave'}
+            <div className="col-span-3 flex justify-end pt-1">
+              <Button type="submit" disabled={loading || !date} className="h-[36px] bg-text text-surface hover:bg-[#332F2A] px-6">
+                {loading ? 'Logging...' : 'Log Leave Entry'}
               </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
 
       <div className="md:col-span-2">
         <div className="border rounded-lg bg-white overflow-hidden shadow-sm">

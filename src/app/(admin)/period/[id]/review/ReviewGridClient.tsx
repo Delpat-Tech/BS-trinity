@@ -75,26 +75,26 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
         <table className="border-collapse min-w-[1560px] text-[12.5px] w-full">
           <thead>
             <tr>
-              <th className="sticky left-0 z-30 bg-header text-left font-medium text-[11.5px] text-text-secondary px-[12px] pl-[28px] py-[7px] border-b border-border border-r min-w-[216px]">Employee</th>
-              <th className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Code</th>
-              <th className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Salary</th>
-              <th className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Daily</th>
-              <th className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Pres.</th>
-              <th className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Half</th>
-              <th className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Abs.</th>
-              <th className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">P.L.</th>
-              <th className="text-right font-medium text-[11.5px] text-text px-[10px] py-[7px] border-b border-border bg-panel">E.W.</th>
-              <th className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Pen.</th>
-              <th className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Paid days</th>
-              <th className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Gross</th>
-              <th className="text-right font-medium text-[11.5px] text-text px-[10px] py-[7px] border-b border-border bg-panel">Incentive</th>
-              <th className="text-right font-medium text-[11.5px] text-text px-[10px] py-[7px] border-b border-border bg-panel">Bonus</th>
-              <th className="text-right font-medium text-[11.5px] text-text px-[10px] py-[7px] border-b border-border bg-panel">Late ₹</th>
-              <th className="text-right font-medium text-[11.5px] text-text px-[10px] py-[7px] border-b border-border bg-panel">Adv. taken</th>
-              <th className="text-right font-medium text-[11.5px] text-text px-[10px] py-[7px] border-b border-border bg-panel">Other debit</th>
-              <th className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Out. Adv</th>
-              <th className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Carr. Adv</th>
-              <th className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] pr-[28px] py-[7px] border-b border-border bg-header">Net</th>
+              <th title="Full Name of Employee" className="sticky left-0 z-30 bg-header text-left font-medium text-[11.5px] text-text-secondary px-[12px] pl-[28px] py-[7px] border-b border-border border-r min-w-[216px]">Employee</th>
+              <th title="Biometric Machine Code / ID" className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Code</th>
+              <th title="Base Fixed Monthly Salary (₹)" className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Salary</th>
+              <th title="Calculated Daily Rate = Salary / Divisor Days" className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Daily</th>
+              <th title="Number of Full Present Days" className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Pres.</th>
+              <th title="Count of Half Days Worked" className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Half</th>
+              <th title="Number of Unpaid Absent Days" className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Abs.</th>
+              <th title="Paid Leave Days Approved" className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">P.L.</th>
+              <th title="Extra Working (E.W.) Days - Pre-filled from Worked Weekly Offs" className="text-right font-medium text-[11.5px] text-text px-[10px] py-[7px] border-b border-border bg-panel cursor-help">E.W.</th>
+              <th title="Penalty Day Deductions from Late/Early Strike Rules" className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Pen.</th>
+              <th title="Total Paid Days = Pres. - Pen. + E.W." className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Paid days</th>
+              <th title="Gross Earnings = floor(Daily Rate × Total Paid Days)" className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Gross</th>
+              <th title="Performance Incentive (₹)" className="text-right font-medium text-[11.5px] text-text px-[10px] py-[7px] border-b border-border bg-panel cursor-help">Incentive</th>
+              <th title="Additional Bonus (₹)" className="text-right font-medium text-[11.5px] text-text px-[10px] py-[7px] border-b border-border bg-panel cursor-help">Bonus</th>
+              <th title="Manual Rupee Deduction for Late Punches (₹)" className="text-right font-medium text-[11.5px] text-text px-[10px] py-[7px] border-b border-border bg-panel cursor-help">Late ₹</th>
+              <th title="Salary Advance Deduction Applied This Month (₹)" className="text-right font-medium text-[11.5px] text-text px-[10px] py-[7px] border-b border-border bg-panel cursor-help">Adv. taken</th>
+              <th title="Miscellaneous Debit Deductions (₹)" className="text-right font-medium text-[11.5px] text-text px-[10px] py-[7px] border-b border-border bg-panel cursor-help">Other debit</th>
+              <th title="Total Outstanding Advance Balance (₹)" className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Out. Adv</th>
+              <th title="Remaining Advance Carried Forward (₹)" className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] py-[7px] border-b border-border bg-header">Carr. Adv</th>
+              <th title="Final Net Salary Payable = Gross + Inc + Bonus - Adv - Late - Debit" className="text-right font-medium text-[11.5px] text-text-secondary px-[10px] pr-[28px] py-[7px] border-b border-border bg-header">Net</th>
             </tr>
           </thead>
           <tbody>

@@ -13,8 +13,28 @@ import { LedgerEntry } from '../src/models/LedgerEntry';
 import { PayrollInput } from '../src/models/PayrollInput';
 import { PayrollLine } from '../src/models/PayrollLine';
 import { Import } from '../src/models/Import';
+import path from 'path';
 
 async function seed() {
+   // Load .env file manually
+    const fs = require('fs');
+    const dotenvPath = path.join(__dirname, '..', '.env');
+    if (fs.existsSync(dotenvPath)) {
+      const envContent = fs.readFileSync(dotenvPath, 'utf-8');
+      for (const line of envContent.split('\n')) {
+        const match = line.match(/^\s*([^#=]+)\s*=\s*(.*)\s*$/);
+        if (match) {
+          const key = match[1].trim();
+          let value = match[2].trim();
+          if (value.startsWith('"') && value.endsWith('"')) {
+            value = value.substring(1, value.length - 1);
+          } else if (value.startsWith("'") && value.endsWith("'")) {
+            value = value.substring(1, value.length - 1);
+          }
+          process.env[key] = value;
+        }
+      }
+    }
   let mongoServer: MongoMemoryServer | null = null;
   let uri = process.env.MONGODB_URI;
 
@@ -39,7 +59,7 @@ async function seed() {
   console.log('Seeding Settings...');
   await Settings.deleteMany({});
   await Settings.create({
-    globalRuleset: {
+    ruleset: {
       shift_start: "09:30",
       shift_end: "19:30",
       grace_until: "09:40",

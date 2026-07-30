@@ -50,14 +50,12 @@ export async function lockPeriod(periodId: string) {
   const session = await getServerSession(authOptions);
   const user = await User.findOne({ username: session?.user?.name }).lean();
 
-  const mongoose = (await import('mongoose')).default;
-  const dbSession = await mongoose.startSession();
-  
-  try {
-    dbSession.startTransaction();
-
     // 1. Write PayrollLines
-    await PayrollLine.insertMany(lines, { session: dbSession });
+    const linesWithPeriodId = lines.map(l => ({
+      ...l,
+      periodId
+    }));
+    await PayrollLine.insertMany(linesWithPeriodId);
 
     // 2. Write Ledger deductions for advances
     const deductions = lines
@@ -71,7 +69,7 @@ export async function lockPeriod(periodId: string) {
         note: `Payroll deduction for period`
       }));
     if (deductions.length > 0) {
-      await LedgerEntry.insertMany(deductions, { session: dbSession });
+      await LedgerEntry.insertMany(deductions);
     }
 
     // 3. Update Period status
@@ -83,17 +81,8 @@ export async function lockPeriod(periodId: string) {
           lockedAt: new Date(),
           lockedBy: user?._id
         }
-      },
-      { session: dbSession }
+      }
     );
-
-    await dbSession.commitTransaction();
-  } catch (error) {
-    await dbSession.abortTransaction();
-    throw error;
-  } finally {
-    dbSession.endSession();
-  }
 
   revalidatePath(`/period/${periodId}/review`);
   revalidatePath(`/period/${periodId}`);
@@ -110,17 +99,11 @@ export async function unlockPeriod(periodId: string, reason: string) {
   const { PayrollLine } = await import('@/models/PayrollLine');
   const { LedgerEntry } = await import('@/models/LedgerEntry');
 
-  const mongoose = (await import('mongoose')).default;
-  const dbSession = await mongoose.startSession();
-
-  try {
-    dbSession.startTransaction();
-
     // 1. Delete all PayrollLines for this period
-    await PayrollLine.deleteMany({ periodId }, { session: dbSession });
+    await PayrollLine.deleteMany({ periodId });
 
     // 2. Delete all deduction LedgerEntries for this period
-    await LedgerEntry.deleteMany({ periodId, type: 'deduction' }, { session: dbSession });
+    await LedgerEntry.deleteMany({ periodId, type: 'deduction' });
 
     // 3. Revert Period status
     await Period.findByIdAndUpdate(
@@ -130,17 +113,8 @@ export async function unlockPeriod(periodId: string, reason: string) {
           status: 'review',
           unlockReason: reason
         }
-      },
-      { session: dbSession }
+      }
     );
-
-    await dbSession.commitTransaction();
-  } catch (error) {
-    await dbSession.abortTransaction();
-    throw error;
-  } finally {
-    dbSession.endSession();
-  }
 
   revalidatePath(`/period/${periodId}/review`);
   revalidatePath(`/period/${periodId}`);
