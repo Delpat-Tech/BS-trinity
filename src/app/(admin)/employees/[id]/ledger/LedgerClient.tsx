@@ -9,7 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Trash2Icon } from 'lucide-react';
 
-export default function LedgerClient({ employeeId, entries }: { employeeId: string, entries: any[] }) {
+import { useRouter } from 'next/navigation';
+
+export default function LedgerClient({ employeeId, entries, onRefresh }: { employeeId: string, entries: any[], onRefresh?: () => void }) {
+  const router = useRouter();
   const [date, setDate] = useState('');
   const [type, setType] = useState<'opening' | 'advance'>('advance');
   const [amount, setAmount] = useState('');
@@ -17,7 +20,7 @@ export default function LedgerClient({ employeeId, entries }: { employeeId: stri
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const currentOutstanding = entries.length > 0 ? (entries[0].balance ?? 0) : 0;
+  const currentOutstanding = entries.length > 0 ? (entries[0].runningBalance ?? 0) : 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,6 +29,7 @@ export default function LedgerClient({ employeeId, entries }: { employeeId: stri
     const numAmount = parseInt(amount, 10);
     if (isNaN(numAmount) || numAmount <= 0) {
       setError('Amount must be a positive integer in rupees');
+      toast.error('Amount must be a positive integer in rupees');
       return;
     }
 
@@ -33,11 +37,16 @@ export default function LedgerClient({ employeeId, entries }: { employeeId: stri
     setError('');
     try {
       await logLedgerEntry(employeeId, date, type, numAmount, note);
+      toast.success('Successfully logged ledger entry');
       setDate('');
       setAmount('');
       setNote('');
+      if (onRefresh) onRefresh();
+      router.refresh();
     } catch (err: any) {
-      setError(err.message || 'Failed to log entry');
+      const errMsg = err.message || 'Failed to log entry';
+      setError(errMsg);
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }
@@ -47,6 +56,9 @@ export default function LedgerClient({ employeeId, entries }: { employeeId: stri
     if (!confirm('Are you sure you want to delete this entry? This will change the running balance for all subsequent months.')) return;
     try {
       await deleteLedgerEntry(employeeId, entryId);
+      toast.success('Successfully deleted ledger entry');
+      if (onRefresh) onRefresh();
+      router.refresh();
     } catch (err) {
       toast.error('Failed to delete');
     }
@@ -150,7 +162,7 @@ export default function LedgerClient({ employeeId, entries }: { employeeId: stri
                       {entry.type === 'deduction' ? '-' : '+'}₹{entry.amount.toLocaleString()}
                     </td>
                     <td className="py-3 px-4 text-right font-bold text-slate-900">
-                      ₹{entry.balance.toLocaleString()}
+                      ₹{(entry.runningBalance ?? 0).toLocaleString()}
                     </td>
                     <td className="py-3 px-4 text-right">
                       {entry.type !== 'deduction' && (

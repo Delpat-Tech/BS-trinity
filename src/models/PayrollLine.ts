@@ -24,7 +24,12 @@ const PayrollLineSchema = new mongoose.Schema({
   advanceCarried: { type: Number, required: true },
   latePunchAmt: { type: Number, required: true },
   otherDebit: { type: Number, required: true },
-  net: { type: Number, required: true }
+  net: { type: Number, required: true },
+  absentDates: { type: [String], default: [] },
+  presentDatesList: { type: [String], default: [] },
+  halfDatesList: { type: [String], default: [] },
+  paidLeaveDatesList: { type: [String], default: [] },
+  ewDatesList: { type: [String], default: [] }
 }, { timestamps: true });
 
 PayrollLineSchema.index({ periodId: 1, employeeId: 1 }, { unique: true });

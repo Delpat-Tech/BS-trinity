@@ -9,7 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Trash2Icon } from 'lucide-react';
 
-export default function LeaveClient({ employeeId, leaves }: { employeeId: string, leaves: any[] }) {
+import { useRouter } from 'next/navigation';
+
+export default function LeaveClient({ employeeId, leaves, onRefresh }: { employeeId: string, leaves: any[], onRefresh?: () => void }) {
+  const router = useRouter();
   const [date, setDate] = useState('');
   const [kind, setKind] = useState<'paid' | 'unpaid' | 'half'>('paid');
   const [note, setNote] = useState('');
@@ -24,11 +27,16 @@ export default function LeaveClient({ employeeId, leaves }: { employeeId: string
     setError('');
     try {
       await addLeave(employeeId, date, kind, note);
+      toast.success('Successfully logged leave entry');
       setDate('');
       setNote('');
       setKind('paid');
+      if (onRefresh) onRefresh();
+      router.refresh();
     } catch (err: any) {
-      setError(err.message || 'Failed to log leave');
+      const errMsg = err.message || 'Failed to log leave';
+      setError(errMsg);
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }
@@ -38,6 +46,9 @@ export default function LeaveClient({ employeeId, leaves }: { employeeId: string
     if (!confirm('Are you sure you want to delete this leave entry?')) return;
     try {
       await deleteLeave(employeeId, leaveId);
+      toast.success('Successfully deleted leave entry');
+      if (onRefresh) onRefresh();
+      router.refresh();
     } catch (err) {
       toast.error('Failed to delete leave');
     }

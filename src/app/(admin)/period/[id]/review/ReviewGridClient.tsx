@@ -10,12 +10,14 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
   const router = useRouter();
   
   const [openRow, setOpenRow] = useState<string | null>(null);
-  const [openCell, setOpenCell] = useState<'gross' | 'net' | 'paidDays' | 'penalties' | null>(null);
+  const [openCell, setOpenCell] = useState<'gross' | 'net' | 'paidDays' | 'penalties' | 'absent' | 'present' | 'half' | 'leave' | 'ew' | null>(null);
 
   const handleUpdate = async (employeeId: string, field: string, value: number | null) => {
     if (isLocked) return;
     try {
       await updatePayrollInput(periodId, employeeId, field, value);
+      toast.success(`Successfully saved ${field}`);
+      router.refresh();
     } catch (err) {
       toast.error('Failed to save input');
     }
@@ -26,6 +28,7 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
     setLoading(true);
     try {
       await lockPeriod(periodId);
+      toast.success('Period locked successfully');
       router.refresh();
     } catch (err: any) {
       toast.error(err.message || 'Failed to lock');
@@ -40,6 +43,7 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
     setLoading(true);
     try {
       await unlockPeriod(periodId, reason);
+      toast.success('Period unlocked successfully');
       router.refresh();
     } catch (err: any) {
       toast.error(err.message || 'Failed to unlock');
@@ -108,20 +112,49 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
                   <td className="text-right px-[10px] py-[6px] border-b border-border-subtle font-mono text-text-muted">{r.machineId}</td>
                   <td className="text-right px-[10px] py-[6px] border-b border-border-subtle font-mono text-text">{r.fixedSalary.toLocaleString()}</td>
                   <td className="text-right px-[10px] py-[6px] border-b border-border-subtle font-mono text-text-secondary">{r.dailyRate.toLocaleString()}</td>
-                  <td className="text-right px-[10px] py-[6px] border-b border-border-subtle font-mono text-text">{r.presentDays}</td>
-                  <td className="text-right px-[10px] py-[6px] border-b border-border-subtle font-mono text-text">{r.halfDays}</td>
-                  <td className="text-right px-[10px] py-[6px] border-b border-border-subtle font-mono text-text">{r.absDays}</td>
-                  <td className="text-right px-[10px] py-[6px] border-b border-border-subtle font-mono text-text">{r.paidLeaveDays}</td>
+                  <td 
+                    onClick={() => { setOpenRow(openRow === r.employeeId && openCell === 'present' ? null : r.employeeId); setOpenCell('present'); }}
+                    className="text-right px-[10px] py-[6px] border-b border-border-subtle font-mono cursor-pointer underline decoration-border decoration-dotted underline-offset-4 hover:bg-hover transition-colors text-text"
+                  >
+                    {r.presentDays}
+                  </td>
+                  <td 
+                    onClick={() => { setOpenRow(openRow === r.employeeId && openCell === 'half' ? null : r.employeeId); setOpenCell('half'); }}
+                    className="text-right px-[10px] py-[6px] border-b border-border-subtle font-mono cursor-pointer underline decoration-border decoration-dotted underline-offset-4 hover:bg-hover transition-colors text-text"
+                  >
+                    {r.halfDays}
+                  </td>
+                  <td 
+                    onClick={() => { setOpenRow(openRow === r.employeeId && openCell === 'absent' ? null : r.employeeId); setOpenCell('absent'); }}
+                    className="text-right px-[10px] py-[6px] border-b border-border-subtle font-mono cursor-pointer underline decoration-border decoration-dotted underline-offset-4 hover:bg-hover transition-colors text-text"
+                  >
+                    {r.absDays}
+                  </td>
+                  <td 
+                    onClick={() => { setOpenRow(openRow === r.employeeId && openCell === 'leave' ? null : r.employeeId); setOpenCell('leave'); }}
+                    className="text-right px-[10px] py-[6px] border-b border-border-subtle font-mono cursor-pointer underline decoration-border decoration-dotted underline-offset-4 hover:bg-hover transition-colors text-text"
+                  >
+                    {r.paidLeaveDays}
+                  </td>
                   <td className="text-right px-[6px] py-[3px] border-b border-border-subtle">
-                    <input 
-                      disabled={isLocked}
-                      defaultValue={r.ewDays !== null ? r.ewDays : ''}
-                      onBlur={(e) => {
-                        const val = e.target.value === '' ? null : Number(e.target.value);
-                        if (val !== r.ewDays) handleUpdate(r.employeeId.toString(), 'ewDays', val);
-                      }}
-                      className="w-[50px] text-right font-mono text-[12.5px] px-[6px] py-[4px] border border-border-strong rounded-[3px] bg-surface outline-none focus:border-[#E8630A] disabled:bg-header"
-                    />
+                    <div className="flex items-center justify-end gap-1">
+                      <input 
+                        disabled={isLocked}
+                        defaultValue={r.ewDays !== null ? r.ewDays : ''}
+                        onBlur={(e) => {
+                          const val = e.target.value === '' ? null : Number(e.target.value);
+                          if (val !== r.ewDays) handleUpdate(r.employeeId.toString(), 'ewDays', val);
+                        }}
+                        className="w-[45px] text-right font-mono text-[12.5px] px-[6px] py-[4px] border border-border-strong rounded-[3px] bg-surface outline-none focus:border-[#E8630A] disabled:bg-header"
+                      />
+                      <button 
+                        onClick={() => { setOpenRow(openRow === r.employeeId && openCell === 'ew' ? null : r.employeeId); setOpenCell('ew'); }}
+                        className="text-[10px] px-1 py-0.5 rounded border border-border text-text-secondary hover:bg-hover font-mono"
+                        title="View EW Dates"
+                      >
+                        ℹ
+                      </button>
+                    </div>
                   </td>
                   <td 
                     onClick={() => { setOpenRow(openRow === r.employeeId && openCell === 'penalties' ? null : r.employeeId); setOpenCell('penalties'); }}
@@ -210,8 +243,8 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
 
                 {openRow === r.employeeId && (
                   <tr>
-                    <td colSpan={20} className="p-0 border-b border-border bg-header">
-                      <div className="py-[12px] px-[28px] flex gap-[34px] items-start">
+                    <td colSpan={20} className="p-0 border-b border-border bg-header sticky left-0">
+                      <div className="py-[12px] px-[28px] flex gap-[34px] items-start max-w-[calc(100vw-220px)] overflow-x-auto">
                         {openCell === 'gross' && (
                           <>
                             <div>
@@ -251,6 +284,96 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
                               <div className="text-[11.5px] text-text-secondary font-medium">How Penalty was built</div>
                               <div className="font-mono text-[14px] mt-[6px]">{r.lateStrikes} Late Strikes + {r.earlyStrikes} Early Strikes</div>
                               <div className="font-mono text-[14px] mt-[3px] text-text-secondary">= {r.penaltyDays} penalty days deducted</div>
+                            </div>
+                          </>
+                        )}
+                        {openCell === 'absent' && (
+                          <>
+                            <div>
+                              <div className="text-[11.5px] text-text-secondary font-medium">Absent Dates ({r.absDays} Days)</div>
+                              {r.absentDates && r.absentDates.length > 0 ? (
+                                <div className="flex flex-wrap gap-2 mt-[6px]">
+                                  {r.absentDates.map((dateStr: string) => (
+                                    <span key={dateStr} className="px-2 py-1 rounded bg-[#FEF6EC] text-[#8A4B0B] font-mono text-[12px] border border-[#F2DFC0]">
+                                      {dateStr}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="text-[13px] text-text-secondary mt-[6px]">No absent dates recorded.</div>
+                              )}
+                            </div>
+                          </>
+                        )}
+                        {openCell === 'present' && (
+                          <>
+                            <div>
+                              <div className="text-[11.5px] text-text-secondary font-medium">Present / Paid Days ({r.presentDays} Days)</div>
+                              {r.presentDatesList && r.presentDatesList.length > 0 ? (
+                                <div className="flex flex-wrap gap-2 mt-[6px] max-w-[800px]">
+                                  {r.presentDatesList.map((dateStr: string) => (
+                                    <span key={dateStr} className="px-2 py-1 rounded bg-success-bg text-success-text font-mono text-[12px] border border-success-border">
+                                      {dateStr}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="text-[13px] text-text-secondary mt-[6px]">No present dates.</div>
+                              )}
+                            </div>
+                          </>
+                        )}
+                        {openCell === 'half' && (
+                          <>
+                            <div>
+                              <div className="text-[11.5px] text-text-secondary font-medium">Half Days ({r.halfDays} Days)</div>
+                              {r.halfDatesList && r.halfDatesList.length > 0 ? (
+                                <div className="flex flex-wrap gap-2 mt-[6px]">
+                                  {r.halfDatesList.map((dateStr: string) => (
+                                    <span key={dateStr} className="px-2 py-1 rounded bg-amber-50 text-amber-800 font-mono text-[12px] border border-amber-200">
+                                      {dateStr}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="text-[13px] text-text-secondary mt-[6px]">No half days.</div>
+                              )}
+                            </div>
+                          </>
+                        )}
+                        {openCell === 'leave' && (
+                          <>
+                            <div>
+                              <div className="text-[11.5px] text-text-secondary font-medium">Approved Leaves ({r.paidLeaveDays} Days)</div>
+                              {r.paidLeaveDatesList && r.paidLeaveDatesList.length > 0 ? (
+                                <div className="flex flex-wrap gap-2 mt-[6px]">
+                                  {r.paidLeaveDatesList.map((dateStr: string) => (
+                                    <span key={dateStr} className="px-2 py-1 rounded bg-[#F0F5E6] text-[#3D5A10] font-mono text-[12px] border border-[#D8E4C3]">
+                                      {dateStr}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="text-[13px] text-text-secondary mt-[6px]">No approved leave dates.</div>
+                              )}
+                            </div>
+                          </>
+                        )}
+                        {openCell === 'ew' && (
+                          <>
+                            <div>
+                              <div className="text-[11.5px] text-text-secondary font-medium">Extra Working Days (EW: {r.ewDays} Days)</div>
+                              {r.ewDatesList && r.ewDatesList.length > 0 ? (
+                                <div className="flex flex-wrap gap-2 mt-[6px]">
+                                  {r.ewDatesList.map((dateStr: string) => (
+                                    <span key={dateStr} className="px-2 py-1 rounded bg-blue-50 text-blue-700 font-mono text-[12px] border border-blue-200">
+                                      {dateStr}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="text-[13px] text-text-secondary mt-[6px]">No extra working days worked on weekly offs.</div>
+                              )}
                             </div>
                           </>
                         )}

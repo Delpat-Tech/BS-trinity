@@ -16,7 +16,7 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Trinity Admin",
+  title: "Brahmasuite Trinity",
   description: "Internal portal for Trinity Motors",
 };
 

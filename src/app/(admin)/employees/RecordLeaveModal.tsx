@@ -23,10 +23,11 @@ export default function RecordLeaveModal({ employees, trigger, open: externalOpe
         kind: formData.get("kind") as any,
         note: formData.get("note") as string
       });
+      toast.success("Leave entry recorded successfully");
       setOpen(false);
       router.refresh();
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error(err.message || 'Failed to record leave');
     } finally {
       setLoading(false);
     }

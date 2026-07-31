@@ -6,6 +6,8 @@ import { uploadBiometrics, previewBiometrics } from './actions';
 import { UploadCloud, CheckCircle2, FileSpreadsheet, Loader2, AlertCircle, X, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+import { toast } from 'sonner';
+
 export default function PeriodHubClient({ 
   periodId, 
   isLocked, 
@@ -41,8 +43,11 @@ export default function PeriodHubClient({
     try {
       const res = await previewBiometrics(periodId, formData);
       setPreviewData(res);
+      toast.success('Excel file parsed successfully. Review preview below.');
     } catch (err: any) {
-      setError(err.message || 'An error occurred during preview.');
+      const errMsg = err.message || 'An error occurred during preview.';
+      setError(errMsg);
+      toast.error(errMsg);
       setFile(null);
     } finally {
       setLoading(false);
@@ -58,10 +63,13 @@ export default function PeriodHubClient({
 
     try {
       await uploadBiometrics(periodId, previewData.importId);
+      toast.success('Biometrics uploaded and processed successfully.');
       // Let's redirect to step 2 after successful upload
       router.push(`/period/${periodId}/queue`);
     } catch (err: any) {
-      setError(err.message || 'An error occurred during final upload.');
+      const errMsg = err.message || 'An error occurred during final upload.';
+      setError(errMsg);
+      toast.error(errMsg);
       setLoading(false);
     }
   };

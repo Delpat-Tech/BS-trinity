@@ -73,8 +73,10 @@ export default function QueueClient({ periodId, initialExceptions, uploadedFileN
       // Perform bulk resolve
       await bulkResolve(periodId, targets.map(t => ({ employeeId: t.employeeId, date: t.date, action, note: '' })));
       
+      toast.success(`Successfully applied ${action} to ${selected.size} selected records.`);
       setExceptions(prev => prev.filter(e => !selected.has(`${e.employeeId}_${e.date}`)));
       setSelected(new Set());
+      router.refresh();
     } catch (err: any) {
       toast.error(`Failed to resolve exceptions in bulk: ${err.message}`);
     } finally {

@@ -190,14 +190,14 @@ export default function EmployeesListClient({ employees }: { employees: any[] })
 
       <div className="px-[32px] pb-[16px] flex items-center justify-between flex-none gap-4">
         <div className="flex items-center gap-3">
-          <div className="relative w-[280px] h-[38px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-            <Input 
-              type="text" 
+          <div className="flex items-center w-[280px] h-[38px] rounded-[6px] bg-header border border-border-strong focus-within:ring-1 focus-within:ring-[#E8630A] px-3 gap-2">
+            <Search className="w-[14px] h-[14px] text-text-muted shrink-0" />
+            <input 
+              type="text"
+              className="search-input flex-1 text-foreground placeholder:text-text-muted"
               placeholder="Search by ID or Name..." 
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-              className="pl-9 h-[38px] rounded-[6px] bg-header border-border-strong focus-visible:ring-1 focus-visible:ring-[#E8630A]"
             />
           </div>
           

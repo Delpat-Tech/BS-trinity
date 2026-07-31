@@ -23,10 +23,11 @@ export default function RecordAdvanceModal({ employees, trigger, open: externalO
         amount: Number(formData.get("amount")),
         note: formData.get("note") as string
       });
+      toast.success("Advance recorded successfully");
       setOpen(false);
       router.refresh();
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error(err.message || 'Failed to record advance');
     } finally {
       setLoading(false);
     }

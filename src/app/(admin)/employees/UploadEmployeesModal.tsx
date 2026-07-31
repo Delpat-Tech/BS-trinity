@@ -6,6 +6,8 @@ import { uploadEmployeeMaster } from "./actions";
 
 import React from "react";
 
+import { toast } from 'sonner';
+
 export default function UploadEmployeesModal({ trigger, open: externalOpen, onOpenChange }: { trigger?: React.ReactElement<any>, open?: boolean, onOpenChange?: (open: boolean) => void }) {
   const [internalOpen, setInternalOpen] = useState(false);
   const open = externalOpen !== undefined ? externalOpen : internalOpen;
@@ -25,14 +27,19 @@ export default function UploadEmployeesModal({ trigger, open: externalOpen, onOp
     try {
       const res = await uploadEmployeeMaster(formData);
       if (res.success) {
+        toast.success("Employee master uploaded successfully");
         setOpen(false);
         setFile(null);
         window.location.reload();
       } else {
-        setError(res.error || "Upload failed");
+        const errText = res.error || "Upload failed";
+        setError(errText);
+        toast.error(errText);
       }
     } catch (err: any) {
-      setError(err.message || "An unexpected error occurred");
+      const errMsg = err.message || "An unexpected error occurred";
+      setError(errMsg);
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }

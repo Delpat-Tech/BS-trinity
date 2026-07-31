@@ -71,6 +71,21 @@ export function EmployeeDrawer({ employee, trigger }: { employee?: any, trigger:
 
   const isIgnoredWatched = watch("isIgnored");
 
+  const refreshData = async () => {
+    if (!employee?._id) return;
+    try {
+      const data = await getEmployeeDetails(employee._id);
+      setFullData(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setFullData(null);
+  };
+
   useEffect(() => {
     if (open && isEdit && !fullData) {
       getEmployeeDetails(employee._id).then(data => setFullData(data)).catch(console.error);
@@ -116,7 +131,7 @@ export function EmployeeDrawer({ employee, trigger }: { employee?: any, trigger:
         await createEmployee(payload as any);
         toast.success("Employee created successfully");
       }
-      setOpen(false);
+      handleClose();
       router.refresh();
     } catch (err: any) {
       toast.error(err.message || 'An error occurred');
@@ -136,7 +151,7 @@ export function EmployeeDrawer({ employee, trigger }: { employee?: any, trigger:
       
       {open && mounted && createPortal(
         <div className="fixed inset-0 z-[100] flex justify-end bg-transparent">
-          <div className="absolute inset-0 bg-[#1A1815]/20 backdrop-blur-[1px]" onClick={() => setOpen(false)} />
+          <div className="absolute inset-0 bg-[#1A1815]/20 backdrop-blur-[1px]" onClick={handleClose} />
           
           <div className="relative w-[700px] h-full bg-surface border-l border-border flex flex-col shadow-[-4px_0_12px_rgba(0,0,0,0.05)]">
             <div className="px-[28px] py-[20px] border-b border-border bg-header flex items-center justify-between">
@@ -146,7 +161,7 @@ export function EmployeeDrawer({ employee, trigger }: { employee?: any, trigger:
               </div>
               
               <div className="flex items-center gap-4">
-                <button onClick={() => setOpen(false)} className="text-[12px] text-text-secondary hover:text-text cursor-pointer ml-2">
+                <button onClick={handleClose} className="text-[12px] text-text-secondary hover:text-text cursor-pointer ml-2">
                   Close ✕
                 </button>
               </div>
@@ -294,16 +309,16 @@ export function EmployeeDrawer({ employee, trigger }: { employee?: any, trigger:
                 <HistoryClient employeeId={employee._id} history={fullData.history} />
               )}
               {tab === 'leave' && fullData && (
-                <LeaveClient employeeId={employee._id} leaves={fullData.leaves} />
+                <LeaveClient employeeId={employee._id} leaves={fullData.leaves} onRefresh={refreshData} />
               )}
               {tab === 'ledger' && fullData && (
-                <LedgerClient employeeId={employee._id} entries={fullData.ledger} />
+                <LedgerClient employeeId={employee._id} entries={fullData.ledger} onRefresh={refreshData} />
               )}
             </div>
             
             {tab === 'profile' && (
               <div className="p-[20px] border-t border-border bg-header flex justify-end gap-[10px]">
-                <button type="button" onClick={() => setOpen(false)} className="px-[14px] py-[8px] border border-border-strong bg-surface rounded-[4px] text-[13px] hover:bg-hover">Cancel</button>
+                <button type="button" onClick={handleClose} className="px-[14px] py-[8px] border border-border-strong bg-surface rounded-[4px] text-[13px] hover:bg-hover">Cancel</button>
                 <button form="employeeForm" type="submit" disabled={loading} className="px-[14px] py-[8px] border border-text bg-[#E8630A] text-white rounded-[6px] text-[13px] font-medium hover:bg-[#C9540A] disabled:opacity-50">
                   {loading ? 'Saving...' : 'Save employee'}
                 </button>

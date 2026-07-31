@@ -20,8 +20,8 @@ export default async function EmployeeLeavePage(props: { params: Promise<{ id: s
   
   const employee = JSON.parse(JSON.stringify(empDoc));
   
-  // Fetch all leaves, sort descending by date
-  const leaveDocs = await LeaveEntry.find({ employeeId: id }).sort({ date: -1 }).lean();
+  // Fetch all leaves, sort descending by date using employee's machineId
+  const leaveDocs = await LeaveEntry.find({ employeeId: employee.machineId }).sort({ date: -1 }).lean();
   
   // Resolve user who logged the entry
   const userIds = [...new Set(leaveDocs.map(d => d.loggedBy?.toString()).filter(Boolean))];
@@ -49,7 +49,7 @@ export default async function EmployeeLeavePage(props: { params: Promise<{ id: s
         </Link>
       </div>
 
-      <LeaveClient employeeId={id} leaves={safeLeaves} />
+      <LeaveClient employeeId={employee.machineId.toString()} leaves={safeLeaves} />
     </div>
   );
 }

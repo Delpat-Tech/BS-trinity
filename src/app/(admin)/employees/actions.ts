@@ -8,6 +8,9 @@ import { LedgerEntry } from '@/models/LedgerEntry';
 import { AttendanceDay } from '@/models/AttendanceDay';
 import { revalidatePath } from 'next/cache';
 import * as XLSX from 'xlsx';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { User } from '@/models/User';
 
 export async function createEmployee(data: {
   machineId: number;
@@ -122,11 +125,20 @@ export async function addLeave(machineId: number, data: { date: string; kind: 'p
   const emp = await Employee.findOne({ machineId });
   if (!emp) throw new Error('Employee not found');
 
+  const session = await getServerSession(authOptions);
+  let user = null;
+  if (session?.user?.name) {
+    user = await User.findOne({ username: session.user.name }).lean();
+  }
+  const userId = user?._id || null;
+
   await LeaveEntry.create({
     employeeId: emp._id,
     date: data.date,
     kind: data.kind,
-    note: data.note || ''
+    note: data.note || '',
+    loggedBy: userId,
+    loggedAt: new Date()
   });
   
   revalidatePath('/employees');
@@ -139,12 +151,21 @@ export async function addAdvance(machineId: number, data: { date: string; amount
   const emp = await Employee.findOne({ machineId });
   if (!emp) throw new Error('Employee not found');
 
+  const session = await getServerSession(authOptions);
+  let user = null;
+  if (session?.user?.name) {
+    user = await User.findOne({ username: session.user.name }).lean();
+  }
+  const userId = user?._id || null;
+
   await LedgerEntry.create({
     employeeId: emp._id,
     date: data.date,
     type: 'advance',
     amount: data.amount,
-    note: data.note
+    note: data.note,
+    loggedBy: userId,
+    loggedAt: new Date()
   });
   
   revalidatePath('/employees');
@@ -158,13 +179,36 @@ export async function getEmployeeDetails(employeeId: any) {
   if (!employee) throw new Error('Employee not found');
 
   const leaves = await LeaveEntry.find({ employeeId }).sort({ date: -1 }).lean();
-  const ledger = await LedgerEntry.find({ employeeId }).sort({ date: -1, createdAt: -1 }).lean();
+  
+  // Sort oldest first to calculate running balance correctly
+  const ledgerDocs = await LedgerEntry.find({ employeeId }).sort({ date: 1, createdAt: 1 }).lean();
+  
+  const periodIds = [...new Set(ledgerDocs.map(e => e.periodId?.toString()).filter(Boolean))];
+  const PeriodModel = (await import('@/models/Period')).Period;
+  const periods = await PeriodModel.find({ _id: { $in: periodIds } }).lean();
+  const periodMap = new Map(periods.map(p => [p._id.toString(), p]));
+
+  let balance = 0;
+  const ledger = ledgerDocs.map(entry => {
+    if (entry.type === 'opening' || entry.type === 'advance') {
+      balance += entry.amount;
+    } else if (entry.type === 'deduction') {
+      balance -= entry.amount;
+    }
+    const isLocked = entry.periodId ? periodMap.get(entry.periodId.toString())?.status === 'locked' : false;
+    return {
+      ...entry,
+      runningBalance: balance,
+      isLocked
+    };
+  });
+
   const history = await AttendanceDay.find({ employeeId }).sort({ date: -1 }).limit(100).lean();
 
   return { 
     employee: JSON.parse(JSON.stringify(employee)), 
     leaves: JSON.parse(JSON.stringify(leaves)), 
-    ledger: JSON.parse(JSON.stringify(ledger)), 
+    ledger: JSON.parse(JSON.stringify(ledger.reverse())), 
     history: JSON.parse(JSON.stringify(history)) 
   };
 }

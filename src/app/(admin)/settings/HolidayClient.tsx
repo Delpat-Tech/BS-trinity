@@ -5,7 +5,10 @@ import { addHoliday, deleteHoliday } from './holidayActions';
 import { Trash2Icon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, isSameMonth, isSameDay, addDays, parseISO, startOfDay } from 'date-fns';
 
+import { useRouter } from 'next/navigation';
+
 export function HolidayClient({ holidays }: { holidays: any[] }) {
+  const router = useRouter();
   const [currentMonth, setCurrentMonth] = useState(startOfMonth(new Date()));
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   
@@ -32,11 +35,15 @@ export function HolidayClient({ holidays }: { holidays: any[] }) {
     try {
       const dateStr = format(selectedDate, 'yyyy-MM-dd');
       await addHoliday(dateStr, name, sandwichEligible);
+      toast.success('Holiday added successfully');
       setSelectedDate(null);
       setName('');
       setSandwichEligible(true);
+      router.refresh();
     } catch (err: any) {
-      setError(err.message || 'Failed to add holiday');
+      const errMsg = err.message || 'Failed to add holiday';
+      setError(errMsg);
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }
@@ -46,6 +53,8 @@ export function HolidayClient({ holidays }: { holidays: any[] }) {
     if (!confirm('Delete this holiday?')) return;
     try {
       await deleteHoliday(id);
+      toast.success('Holiday deleted successfully');
+      router.refresh();
     } catch (err) {
       toast.error('Failed to delete holiday');
     }

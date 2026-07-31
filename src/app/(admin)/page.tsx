@@ -6,6 +6,8 @@ import PeriodsClient from './PeriodsClient';
 
 import { PayrollLine } from '@/models/PayrollLine';
 
+import DeletePeriodButton from './DeletePeriodButton';
+
 export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
@@ -53,7 +55,7 @@ export default async function DashboardPage() {
               <th className="text-right text-[11px] font-medium tracking-[0.04em] uppercase text-text-muted px-[12px] py-[8px] border-b border-border bg-header w-[130px]">Divisor Days</th>
               <th className="text-right text-[11px] font-medium tracking-[0.04em] uppercase text-text-muted px-[12px] py-[8px] border-b border-border bg-header w-[110px]">Employees</th>
               <th className="text-right text-[11px] font-medium tracking-[0.04em] uppercase text-text-muted px-[12px] py-[8px] border-b border-border bg-header w-[150px]">Net payable</th>
-              <th className="border-b border-border bg-header w-[190px]"></th>
+              <th className="border-b border-border bg-header w-[120px]"></th>
             </tr>
           </thead>
           <tbody>
@@ -71,56 +73,74 @@ export default async function DashboardPage() {
               const isLocked = period.status === 'locked';
               
               const totalNetPayable = netPayableMap.get(period._id.toString());
+              const targetUrl = isLocked 
+                ? `/period/${period._id.toString()}/review` 
+                : `/period/${period._id.toString()}`;
               
               return (
-                <tr key={period._id.toString()} className="hover:bg-[#FAFAF8] transition-colors duration-100">
+                <tr 
+                  key={period._id.toString()} 
+                  className="hover:bg-[#FAFAF8] transition-colors duration-100 cursor-pointer"
+                  // Use click handler to navigate on client-side or wrap inner row content with link
+                >
                   <td className="px-[32px] py-[14px] border-b border-border-subtle last:border-0">
-                    <span className="text-[14px] font-medium tracking-[-0.01em] text-text">{monthName} {period.year}</span>
-                    <span className="block text-[11px] text-text-muted font-mono mt-[2px]">01–30 {shortMonth}</span>
+                    <Link href={targetUrl} className="block hover:underline">
+                      <span className="text-[14px] font-medium tracking-[-0.01em] text-text">{monthName} {period.year}</span>
+                      <span className="block text-[11px] text-text-muted font-mono mt-[2px]">01–30 {shortMonth}</span>
+                    </Link>
                   </td>
                   
                   <td className="px-[12px] py-[14px] border-b border-border-subtle last:border-0">
-                    {isLocked ? (
-                      <span className="inline-block text-[11px] font-medium px-[10px] py-[3px] rounded-full bg-[#F0F5E6] text-[#3D5A10]">
-                        Locked
-                      </span>
-                    ) : (
-                      <span className="inline-block text-[11px] font-medium px-[10px] py-[3px] rounded-full bg-[#FEF6EC] text-[#8A4B0B]">
-                        Open
-                      </span>
-                    )}
+                    <Link href={targetUrl} className="block">
+                      {isLocked ? (
+                        <span className="inline-block text-[11px] font-medium px-[10px] py-[3px] rounded-full bg-[#F0F5E6] text-[#3D5A10]">
+                          Locked
+                        </span>
+                      ) : (
+                        <span className="inline-block text-[11px] font-medium px-[10px] py-[3px] rounded-full bg-[#FEF6EC] text-[#8A4B0B]">
+                          Open
+                        </span>
+                      )}
+                    </Link>
                   </td>
                   
                   <td className="px-[12px] py-[14px] border-b border-border-subtle last:border-0 text-right font-mono text-[14px] text-text-muted">
-                    {period.divisorDays}
+                    <Link href={targetUrl} className="block">
+                      {period.divisorDays}
+                    </Link>
                   </td>
                   
                   <td className="px-[12px] py-[14px] border-b border-border-subtle last:border-0 text-right font-mono text-text-secondary">
-                    {employeesCount}
+                    <Link href={targetUrl} className="block">
+                      {employeesCount}
+                    </Link>
                   </td>
                   
                   <td className="px-[12px] py-[14px] border-b border-border-subtle last:border-0 text-right font-mono">
-                    {totalNetPayable !== undefined ? (
-                      <span className="text-[14px] text-text font-medium">₹{totalNetPayable.toLocaleString()}</span>
-                    ) : (
-                      <span className="text-[14px] text-text-muted">-</span>
-                    )}
+                    <Link href={targetUrl} className="block">
+                      {totalNetPayable !== undefined ? (
+                        <span className="text-[14px] text-text font-medium">₹{totalNetPayable.toLocaleString()}</span>
+                      ) : (
+                        <span className="text-[14px] text-text-muted">-</span>
+                      )}
+                    </Link>
                   </td>
                   
                   <td className="px-[12px] py-[14px] pr-[32px] border-b border-border-subtle last:border-0 text-right">
-                    {isLocked ? (
-                      <Link href={`/period/${period._id.toString()}/review`}>
-                        <button className="bg-transparent text-text-secondary border border-border rounded-[6px] px-[14px] py-[7px] text-[12px] font-medium hover:bg-hover hover:text-text hover:border-border-strong transition-colors">
-                          View salary sheet
-                        </button>
-                      </Link>
-                    ) : (
-                      <Link href={`/period/${period._id.toString()}`}>
-                        <button className="bg-[#E8630A] text-white rounded-[6px] px-[14px] py-[7px] text-[12px] font-medium hover:bg-[#C9540A] shadow-sm transition-colors">
-                          Upload
-                        </button>
-                      </Link>
-                    )}
+                    <div className="flex justify-end items-center gap-[12px]">
+                      {!isLocked ? (
+                        <Link href={targetUrl}>
+                          <button className="bg-[#E8630A] text-white rounded-[6px] px-[14px] py-[7px] text-[12px] font-medium hover:bg-[#C9540A] shadow-sm transition-colors">
+                            Upload
+                          </button>
+                        </Link>
+                      ) : null}
+                      <DeletePeriodButton 
+                        periodId={period._id.toString()} 
+                        monthName={monthName} 
+                        year={period.year} 
+                      />
+                    </div>
                   </td>
                 </tr>
               );

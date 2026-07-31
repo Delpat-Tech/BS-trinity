@@ -107,6 +107,11 @@ export type PayrollLine = {
   latePunchAmt: number;
   otherDebit: number;
   net: number;
+  absentDates?: string[];
+  presentDatesList?: string[];
+  halfDatesList?: string[];
+  paidLeaveDatesList?: string[];
+  ewDatesList?: string[];
 };
 
 function formatTime(t: string | null): string | null {
@@ -347,6 +352,36 @@ export function computePayroll(input: {
 
     const net = gross + empInput.incentive + empInput.bonus - advanceDeduction - empInput.latePunchAmt - empInput.otherDebit;
 
+    const absentDates: string[] = [];
+    const presentDatesList: string[] = [];
+    const halfDatesList: string[] = [];
+    const paidLeaveDatesList: string[] = [];
+    const ewDatesList: string[] = [];
+
+    const monthShort = new Date(periodYear, periodMonth - 1).toLocaleString('default', { month: 'short' });
+
+    for (const date of periodDates) {
+      const status = computedStatuses.get(date);
+      const [, , d] = date.split('-');
+      const dayFormatted = `${parseInt(d, 10)} ${monthShort}`;
+
+      if (status === 'ABSENT_UNPAID' || !status) {
+        absentDates.push(dayFormatted);
+      }
+      if (status === 'PRESENT' || status === 'WEEKLY_OFF') {
+        presentDatesList.push(dayFormatted);
+      }
+      if (status === 'HALF_DAY') {
+        halfDatesList.push(dayFormatted);
+      }
+      if (status === 'PAID_LEAVE') {
+        paidLeaveDatesList.push(dayFormatted);
+      }
+      if (status === 'WEEKLY_OFF_WORKED') {
+        ewDatesList.push(dayFormatted);
+      }
+    }
+
     lines.push({
       employeeId: emp._id,
       fixedSalary,
@@ -370,7 +405,12 @@ export function computePayroll(input: {
       advanceCarried,
       latePunchAmt: empInput.latePunchAmt,
       otherDebit: empInput.otherDebit,
-      net
+      net,
+      absentDates,
+      presentDatesList,
+      halfDatesList,
+      paidLeaveDatesList,
+      ewDatesList
     });
   }
 

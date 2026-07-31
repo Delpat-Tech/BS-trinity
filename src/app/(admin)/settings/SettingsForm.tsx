@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { updateSettings } from './actions';
 
+import { toast } from 'sonner';
+
 export function SettingsForm({ initialData }: { initialData: any }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -33,9 +35,12 @@ export function SettingsForm({ initialData }: { initialData: any }) {
     try {
       await updateSettings(data);
       setSuccess(true);
+      toast.success('Settings saved successfully');
       router.refresh();
     } catch (err: any) {
-      setError(err.message || 'Failed to save settings');
+      const errMsg = err.message || 'Failed to save settings';
+      setError(errMsg);
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }

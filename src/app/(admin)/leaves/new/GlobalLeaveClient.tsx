@@ -38,6 +38,11 @@ export default function GlobalLeaveClient({ employees }: { employees: any[] }) {
       return;
     }
 
+    if (!note.trim()) {
+      toast.error("Please enter a note or reason");
+      return;
+    }
+
     setLoading(true);
     try {
       await addLeave(selectedEmpId, date, kind, note);
@@ -72,14 +77,14 @@ export default function GlobalLeaveClient({ employees }: { employees: any[] }) {
           <div className="space-y-2">
             <Label className="text-[13px] font-medium text-text">Select Employee *</Label>
             
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-              <Input
+            <div className="flex items-center h-[38px] rounded-[6px] bg-surface border border-border-strong focus-within:ring-1 focus-within:ring-[#E8630A] px-3 gap-2">
+              <Search className="w-[14px] h-[14px] text-text-muted shrink-0" />
+              <input
                 type="text"
+                className="search-input flex-1 text-text placeholder:text-text-muted"
                 placeholder="Search employee by name or machine ID..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 h-[38px] bg-surface border-border-strong"
               />
             </div>
 
@@ -148,12 +153,13 @@ export default function GlobalLeaveClient({ employees }: { employees: any[] }) {
           </div>
 
           <div className="space-y-2">
-            <Label className="text-[13px] font-medium text-text">Note / Reason (Optional)</Label>
+            <Label className="text-[13px] font-medium text-text">Note / Reason *</Label>
             <Input
               type="text"
               placeholder="e.g. Approved medical leave card"
               value={note}
               onChange={(e) => setNote(e.target.value)}
+              required
               className="h-[36px] bg-surface border-border-strong"
             />
           </div>
@@ -169,7 +175,7 @@ export default function GlobalLeaveClient({ employees }: { employees: any[] }) {
             </Button>
             <Button
               type="submit"
-              disabled={loading || !selectedEmpId}
+              disabled={loading || !selectedEmpId || !note.trim()}
               className="h-[38px] bg-[#E8630A] text-white hover:bg-[#C9540A] font-medium"
             >
               {loading ? "Recording..." : "Save Leave Entry"}

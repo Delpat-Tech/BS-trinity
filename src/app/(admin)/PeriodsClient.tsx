@@ -3,8 +3,23 @@
 import { useState } from 'react';
 import { openPeriod } from './actions';
 
+import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
+
 export default function PeriodsClient({ nextMonth, nextYear }: { nextMonth: string, nextYear: number }) {
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
+
+  const handleSubmit = async (formData: FormData) => {
+    try {
+      await openPeriod(formData);
+      toast.success('Period opened successfully');
+      setIsOpen(false);
+      router.refresh();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to open period');
+    }
+  };
 
   return (
     <>
@@ -23,10 +38,7 @@ export default function PeriodsClient({ nextMonth, nextYear }: { nextMonth: stri
               <div className="text-[12px] text-text-secondary mt-[2px]">Creates a new payroll period based on global rules.</div>
             </div>
             
-            <form action={(formData) => {
-              openPeriod(formData);
-              setIsOpen(false);
-            }} className="p-[20px] flex flex-col gap-[16px]">
+            <form action={handleSubmit} className="p-[20px] flex flex-col gap-[16px]">
               
               <div className="flex flex-col gap-[4px]">
                 <label htmlFor="month" className="text-[11.5px] font-medium tracking-[0.02em] uppercase text-text-muted">Month</label>

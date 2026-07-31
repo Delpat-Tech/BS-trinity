@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { CalendarDays, Wallet, Calendar, Users, Settings } from "lucide-react";
+import { CalendarDays, Wallet, Calendar, Users, Settings, LogOut } from "lucide-react";
+import { signOut } from "next-auth/react";
 
 export default function SidebarClient() {
   const pathname = usePathname();
@@ -50,6 +51,14 @@ export default function SidebarClient() {
         <Settings className={cn("w-4 h-4 shrink-0", isSettings ? iconActive : iconInactive)} />
         Settings
       </Link>
+
+      <button
+        onClick={() => signOut({ callbackUrl: "/login" })}
+        className={cn(linkBase, linkInactive, "w-full text-left cursor-pointer")}
+      >
+        <LogOut className={cn("w-4 h-4 shrink-0", iconInactive)} />
+        Logout
+      </button>
     </div>
   );
 }

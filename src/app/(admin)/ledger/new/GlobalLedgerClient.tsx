@@ -44,6 +44,11 @@ export default function GlobalLedgerClient({ employees }: { employees: any[] }) 
       return;
     }
 
+    if (!note.trim()) {
+      toast.error("Please enter a note or remarks");
+      return;
+    }
+
     setLoading(true);
     try {
       await logLedgerEntry(selectedEmpId, date, type, numAmount, note);
@@ -79,14 +84,14 @@ export default function GlobalLedgerClient({ employees }: { employees: any[] }) 
           <div className="space-y-2">
             <Label className="text-[13px] font-medium text-text">Select Employee *</Label>
             
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-              <Input
+            <div className="flex items-center h-[38px] rounded-[6px] bg-surface border border-border-strong focus-within:ring-1 focus-within:ring-[#E8630A] px-3 gap-2">
+              <Search className="w-[14px] h-[14px] text-text-muted shrink-0" />
+              <input
                 type="text"
+                className="search-input flex-1 text-text placeholder:text-text-muted"
                 placeholder="Search employee by name or machine ID..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 h-[38px] bg-surface border-border-strong"
               />
             </div>
 
@@ -166,12 +171,13 @@ export default function GlobalLedgerClient({ employees }: { employees: any[] }) 
             </div>
 
             <div className="space-y-2">
-              <Label className="text-[13px] font-medium text-text">Note / Remarks (Optional)</Label>
+              <Label className="text-[13px] font-medium text-text">Note / Remarks *</Label>
               <Input
                 type="text"
                 placeholder="e.g. Cash advance for emergency"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
+                required
                 className="h-[36px] bg-surface border-border-strong"
               />
             </div>
@@ -188,7 +194,7 @@ export default function GlobalLedgerClient({ employees }: { employees: any[] }) 
             </Button>
             <Button
               type="submit"
-              disabled={loading || !selectedEmpId || !amount}
+              disabled={loading || !selectedEmpId || !amount || !note.trim()}
               className="h-[38px] bg-[#E8630A] text-white hover:bg-[#C9540A] font-medium"
             >
               {loading ? "Recording..." : "Save Ledger Entry"}

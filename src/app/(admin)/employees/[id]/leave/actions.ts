@@ -3,14 +3,18 @@
 import { requireSession } from '@/lib/auth';
 import dbConnect from '@/lib/db';
 import { LeaveEntry } from '@/models/LeaveEntry';
+import { Employee } from '@/models/Employee';
 import { User } from '@/models/User';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
 
-export async function addLeave(employeeId: string, date: string, kind: 'paid' | 'unpaid' | 'half', note: string) {
+export async function addLeave(employeeIdStr: string, date: string, kind: 'paid' | 'unpaid' | 'half', note: string) {
   await requireSession();
   await dbConnect();
+
+  const emp = await Employee.findById(employeeIdStr).lean();
+  if (!emp) throw new Error('Employee not found');
 
   const session = await getServerSession(authOptions);
   const user = await User.findOne({ username: session?.user?.name }).lean();
@@ -19,7 +23,7 @@ export async function addLeave(employeeId: string, date: string, kind: 'paid' | 
 
   try {
     await LeaveEntry.create({
-      employeeId,
+      employeeId: emp.machineId,
       date,
       kind,
       note,
@@ -33,13 +37,16 @@ export async function addLeave(employeeId: string, date: string, kind: 'paid' | 
     throw error;
   }
 
-  revalidatePath(`/employees/${employeeId}/leave`);
+  revalidatePath(`/employees/${employeeIdStr}/leave`);
 }
 
-export async function deleteLeave(employeeId: string, leaveId: string) {
+export async function deleteLeave(employeeIdStr: string, leaveId: string) {
   await requireSession();
   await dbConnect();
 
-  await LeaveEntry.findOneAndDelete({ _id: leaveId, employeeId });
-  revalidatePath(`/employees/${employeeId}/leave`);
+  const emp = await Employee.findById(employeeIdStr).lean();
+  if (!emp) throw new Error('Employee not found');
+
+  await LeaveEntry.findOneAndDelete({ _id: leaveId, employeeId: emp.machineId });
+  revalidatePath(`/employees/${employeeIdStr}/leave`);
 }

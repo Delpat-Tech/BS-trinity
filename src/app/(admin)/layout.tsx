@@ -45,6 +45,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <div className="flex-1 min-w-0 flex flex-col bg-surface h-full overflow-y-auto">
         {children}
       </div>
+
+      {/* BrahmaSuite System Branding Badge (Bottom Left) */}
+      <div className="fixed bottom-3 left-4 z-40 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/85 text-white border border-slate-700/60 shadow-xl text-[11px] font-medium backdrop-blur-md print:hidden opacity-85 hover:opacity-100 transition-opacity pointer-events-auto">
+        <span className="text-slate-400 text-[10px]">Powered by</span>
+        <span className="font-bold text-white tracking-wide">BrahmaSuite</span>
+      </div>
     </div>
   );
 }
