@@ -9,6 +9,7 @@ export type Ruleset = {
   strikes_per_penalty: number;
   penalty_days_per_trigger: number;
   sandwich_skips_weekly_off: boolean;
+  monthly_paid_leave_quota?: number;
 };
 
 export type Period = {
@@ -26,7 +27,7 @@ export type Employee = {
   dateOfJoining: string;
   endDate: string | null;
   isIgnored: boolean;
-  weeklyOff?: number;
+  weeklyOff?: string | number;
   salaryRevisions: { fixedSalary: number; effectiveFrom: string }[];
 };
 
@@ -46,8 +47,11 @@ export type LeaveEntry = {
 };
 
 export type Holiday = {
+  _id?: any;
   date: string;
+  name: string;
   sandwichEligible: boolean;
+  recurrence?: string;
 };
 
 export type LedgerEntry = {
@@ -143,8 +147,25 @@ export function computePayroll(input: {
   const leavesByEmpDate = new Map<string, LeaveEntry>();
   input.leaves.forEach(l => leavesByEmpDate.set(`${l.employeeId}_${l.date}`, l));
 
+  const periodYear = input.period.year;
+  const periodMonth = input.period.month;
+  // Build calendar for the month
+  const numDays = new Date(periodYear, periodMonth, 0).getDate();
+  const periodDates: string[] = [];
+  for (let i = 1; i <= numDays; i++) {
+    periodDates.push(`${periodYear}-${periodMonth.toString().padStart(2, '0')}-${i.toString().padStart(2, '0')}`);
+  }
+
   const holidaysByDate = new Map<string, Holiday>();
-  input.holidays.forEach(h => holidaysByDate.set(h.date, h));
+  periodDates.forEach(dateStr => {
+    const [, monthStr, dayStr] = dateStr.split('-');
+    const matchingHoliday = input.holidays.find(h => {
+      if (h.recurrence === 'monthly') return h.date.endsWith(`-${dayStr}`);
+      if (h.recurrence === 'yearly') return h.date.endsWith(`-${monthStr}-${dayStr}`);
+      return h.date === dateStr;
+    });
+    if (matchingHoliday) holidaysByDate.set(dateStr, matchingHoliday);
+  });
 
   const attendanceByEmpDate = new Map<string, AttendanceDay>();
   input.attendance.forEach(a => attendanceByEmpDate.set(`${a.employeeId}_${a.date}`, a));
@@ -158,15 +179,6 @@ export function computePayroll(input: {
     ledgerByEmp.get(l.employeeId)!.push(l);
   });
 
-  const periodYear = input.period.year;
-  const periodMonth = input.period.month;
-  // Build calendar for the month
-  const numDays = new Date(periodYear, periodMonth, 0).getDate();
-  const periodDates: string[] = [];
-  for (let i = 1; i <= numDays; i++) {
-    const dStr = `${periodYear}-${String(periodMonth).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-    periodDates.push(dStr);
-  }
 
   for (const emp of input.employees) {
     if (emp.isIgnored) continue;
@@ -203,7 +215,9 @@ export function computePayroll(input: {
       const finalStatus = att?.finalStatus ?? null;
 
       // 3. WEEKLY OFF
-      const isWeeklyOff = new Date(date).getDay() === (emp.weeklyOff ?? 0);
+      const dayMap: Record<string, number> = { 'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3, 'Thursday': 4, 'Friday': 5, 'Saturday': 6 };
+      const empWeeklyOffNum = typeof emp.weeklyOff === 'number' ? emp.weeklyOff : (dayMap[emp.weeklyOff || 'Sunday'] ?? 0);
+      const isWeeklyOff = new Date(date).getDay() === empWeeklyOffNum;
 
       if (finalStatus !== null) {
         status = finalStatus as DayStatus;
@@ -259,43 +273,62 @@ export function computePayroll(input: {
       computedStatuses.set(date, status);
     }
 
-    // SANDWICH RULE
+    // PRE-PROCESS HOLIDAYS
     for (const date of periodDates) {
       const holiday = holidaysByDate.get(date);
-      if (holiday?.sandwichEligible && computedStatuses.get(date) !== 'EXCEPTION') {
-        let prevDate = getNextDateStr(date, -1);
-        let nextDate = getNextDateStr(date, 1);
+      const att = attendanceByEmpDate.get(`${emp._id}_${date}`);
+      const isOverridden = att?.finalStatus !== null && att?.finalStatus !== undefined;
+      const worked = att?.machineStatus === 'P' || att?.machineStatus === 'WOP';
 
-        while (periodDates.includes(prevDate) && 
-               ((rules.sandwich_skips_weekly_off && computedStatuses.get(prevDate) === 'WEEKLY_OFF') || holidaysByDate.has(prevDate))) {
-          prevDate = getNextDateStr(prevDate, -1);
+      if (holiday?.sandwichEligible && !worked && !isOverridden && computedStatuses.get(date) !== 'EXCEPTION') {
+        computedStatuses.set(date, 'PRESENT'); // Default unworked holiday to PRESENT before sandwich
+      }
+    }
+
+    // ADVANCED SANDWICH RULE (Block-based)
+    const isBlockable = (date: string) => {
+      const status = computedStatuses.get(date);
+      const holiday = holidaysByDate.get(date);
+      const att = attendanceByEmpDate.get(`${emp._id}_${date}`);
+      const worked = att?.machineStatus === 'P' || att?.machineStatus === 'WOP';
+      const isOverridden = att?.finalStatus !== null && att?.finalStatus !== undefined;
+
+      if (isOverridden) return false;
+
+      if (holiday?.sandwichEligible && !worked) return true;
+      if (status === 'WEEKLY_OFF' && rules.sandwich_skips_weekly_off) return true;
+      if (status === 'PAID_LEAVE') return true;
+
+      return false;
+    };
+
+    let currentBlock: string[] = [];
+    const blocks: string[][] = [];
+
+    for (const date of periodDates) {
+      if (isBlockable(date)) {
+        currentBlock.push(date);
+      } else {
+        if (currentBlock.length > 0) {
+          blocks.push(currentBlock);
+          currentBlock = [];
         }
-        while (periodDates.includes(nextDate) && 
-               ((rules.sandwich_skips_weekly_off && computedStatuses.get(nextDate) === 'WEEKLY_OFF') || holidaysByDate.has(nextDate))) {
-          nextDate = getNextDateStr(nextDate, 1);
-        }
+      }
+    }
+    if (currentBlock.length > 0) blocks.push(currentBlock);
 
-        const prevAbsent = !periodDates.includes(prevDate) || computedStatuses.get(prevDate) === 'ABSENT_UNPAID';
-        const nextAbsent = !periodDates.includes(nextDate) || computedStatuses.get(nextDate) === 'ABSENT_UNPAID';
-        
-        // Wait, if it goes out of period bounds, is it absent? Spec: "For each holiday H where sandwichEligible: Find the previous and next day that are neither WEEKLY_OFF nor a holiday... If both are ABSENT_UNPAID, set H to ABSENT_UNPAID. A holiday date that is not sandwiched is PRESENT regardless of the machine status, unless overridden."
-        // We shouldn't default out-of-period to absent. The spec says "find the previous and next day...". If they aren't in this period, we technically don't have them. I'll strictly check if they are explicitly ABSENT_UNPAID within our computedStatuses. If out of bounds, it doesn't sandwich.
+    for (const block of blocks) {
+      const startDate = block[0];
+      const endDate = block[block.length - 1];
 
-        let isSandwiched = false;
-        if (periodDates.includes(prevDate) && periodDates.includes(nextDate)) {
-          if (computedStatuses.get(prevDate) === 'ABSENT_UNPAID' && computedStatuses.get(nextDate) === 'ABSENT_UNPAID') {
-             isSandwiched = true;
+      const prevDate = getNextDateStr(startDate, -1);
+      const nextDate = getNextDateStr(endDate, 1);
+
+      if (periodDates.includes(prevDate) && periodDates.includes(nextDate)) {
+        if (computedStatuses.get(prevDate) === 'ABSENT_UNPAID' && computedStatuses.get(nextDate) === 'ABSENT_UNPAID') {
+          for (const date of block) {
+            computedStatuses.set(date, 'ABSENT_UNPAID');
           }
-        }
-
-        const existingStatus = computedStatuses.get(date);
-        const att = attendanceByEmpDate.get(`${emp._id}_${date}`);
-        const isOverridden = att?.finalStatus !== null && att?.finalStatus !== undefined;
-
-        if (isSandwiched) {
-           computedStatuses.set(date, 'ABSENT_UNPAID');
-        } else if (!isOverridden) {
-           computedStatuses.set(date, 'PRESENT'); // Holiday not sandwiched is PRESENT unless overridden
         }
       }
     }

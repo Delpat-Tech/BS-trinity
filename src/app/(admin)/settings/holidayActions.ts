@@ -5,12 +5,12 @@ import dbConnect from '@/lib/db';
 import { Holiday } from '@/models/Holiday';
 import { revalidatePath } from 'next/cache';
 
-export async function addHoliday(date: string, name: string, sandwichEligible: boolean) {
+export async function addHoliday(date: string, name: string, sandwichEligible: boolean, recurrence: string = 'none', isHalfDay: boolean = false) {
   await requireSession();
   await dbConnect();
 
   try {
-    await Holiday.create({ date, name, sandwichEligible });
+    await Holiday.create({ date, name, sandwichEligible, recurrence, isHalfDay });
   } catch (error: any) {
     if (error.code === 11000) {
       throw new Error('A holiday already exists for this date.');

@@ -13,7 +13,8 @@ import { Button } from "@/components/ui/button";
 export default function GlobalLeaveClient({ employees }: { employees: any[] }) {
   const [selectedEmpId, setSelectedEmpId] = useState<string>("");
   const [search, setSearch] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [fromDate, setFromDate] = useState(new Date().toISOString().split("T")[0]);
+  const [toDate, setToDate] = useState(new Date().toISOString().split("T")[0]);
   const [kind, setKind] = useState<"paid" | "unpaid" | "half">("paid");
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
@@ -33,8 +34,14 @@ export default function GlobalLeaveClient({ employees }: { employees: any[] }) {
       toast.error("Please select an employee");
       return;
     }
-    if (!date) {
-      toast.error("Please select a date");
+    if (!fromDate || !toDate) {
+      toast.error("Please select a date range");
+      return;
+    }
+    const start = new Date(fromDate);
+    const end = new Date(toDate);
+    if (start > end) {
+      toast.error("From Date cannot be after To Date");
       return;
     }
 
@@ -45,7 +52,16 @@ export default function GlobalLeaveClient({ employees }: { employees: any[] }) {
 
     setLoading(true);
     try {
-      await addLeave(selectedEmpId, date, kind, note);
+      const dates = [];
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        dates.push(d.toISOString().split("T")[0]);
+      }
+      
+      // We can await Promise.all, but simple loop works if the range is short
+      for (const d of dates) {
+        await addLeave(selectedEmpId, d, kind, note);
+      }
+
       toast.success(`Leave recorded for ${selectedEmployee?.name || 'employee'}`);
       setNote("");
       setSelectedEmpId("");
@@ -140,12 +156,23 @@ export default function GlobalLeaveClient({ employees }: { employees: any[] }) {
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-[13px] font-medium text-text">Date *</Label>
+            <div className="space-y-2 col-span-1">
+              <Label className="text-[13px] font-medium text-text">From Date *</Label>
               <Input
                 type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                required
+                className="h-[36px] bg-surface border-border-strong font-mono"
+              />
+            </div>
+            
+            <div className="space-y-2 col-span-1">
+              <Label className="text-[13px] font-medium text-text">To Date *</Label>
+              <Input
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
                 required
                 className="h-[36px] bg-surface border-border-strong font-mono"
               />

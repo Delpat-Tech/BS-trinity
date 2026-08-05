@@ -8,11 +8,30 @@ import { PayrollLine } from '@/models/PayrollLine';
 
 import DeletePeriodButton from './DeletePeriodButton';
 
+import MonthlyNetChart from './MonthlyNetChart';
+import DashboardSidebar from './DashboardSidebar';
+import FinancialYearFilter from './FinancialYearFilter';
+
 export const dynamic = 'force-dynamic';
 
-export default async function DashboardPage() {
+export default async function DashboardPage(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   await dbConnect();
-  const periods = await Period.find().sort({ year: -1, month: -1 }).lean();
+
+  const searchParams = await props.searchParams;
+  const fy = searchParams.fy as string;
+  let query = {};
+  if (fy && fy !== 'all') {
+    const startYear = parseInt(fy);
+    const endYear = startYear + 1;
+    query = {
+      $or: [
+        { year: startYear, month: { $gte: 4 } }, // April to Dec of startYear
+        { year: endYear, month: { $lte: 3 } }    // Jan to March of endYear
+      ]
+    };
+  }
+
+  const periods = await Period.find(query).sort({ year: -1, month: -1 }).lean();
   const employeesCount = await Employee.countDocuments({ isIgnored: false, endDate: null });
 
   const payrollSums = await PayrollLine.aggregate([
@@ -43,27 +62,6 @@ export default async function DashboardPage() {
           </h1>
           <div className="text-[13.5px] text-text-secondary mt-[6px] leading-relaxed">One period per month. A locked period cannot be edited.</div>
         </div>
-        <PeriodsClient nextMonth={nextMonth} nextYear={nextYear} />
-      </div>
-
-      <div className="mx-[32px] mt-[24px] mb-[32px] border border-border rounded-[8px] overflow-hidden bg-surface shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-        <table className="w-full border-collapse text-[13px]">
-          <thead>
-            <tr>
-              <th className="text-left text-[11px] font-medium tracking-[0.04em] uppercase text-text-muted px-[32px] py-[8px] border-b border-border bg-header">Month</th>
-              <th className="text-left text-[11px] font-medium tracking-[0.04em] uppercase text-text-muted px-[12px] py-[8px] border-b border-border bg-header w-[130px]">Status</th>
-              <th className="text-right text-[11px] font-medium tracking-[0.04em] uppercase text-text-muted px-[12px] py-[8px] border-b border-border bg-header w-[130px]">Divisor Days</th>
-              <th className="text-right text-[11px] font-medium tracking-[0.04em] uppercase text-text-muted px-[12px] py-[8px] border-b border-border bg-header w-[110px]">Employees</th>
-              <th className="text-right text-[11px] font-medium tracking-[0.04em] uppercase text-text-muted px-[12px] py-[8px] border-b border-border bg-header w-[150px]">Net payable</th>
-              <th className="border-b border-border bg-header w-[120px]"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {periods.length === 0 && (
-              <tr>
-                <td colSpan={6} className="text-center text-text-muted py-8 border-b border-border-subtle last:border-0">
-                  No periods found.
-                </td>
               </tr>
             )}
             {periods.map((period: any) => {
@@ -81,7 +79,6 @@ export default async function DashboardPage() {
                 <tr 
                   key={period._id.toString()} 
                   className="hover:bg-[#FAFAF8] transition-colors duration-100 cursor-pointer"
-                  // Use click handler to navigate on client-side or wrap inner row content with link
                 >
                   <td className="px-[32px] py-[14px] border-b border-border-subtle last:border-0">
                     <Link href={targetUrl} className="block hover:underline">

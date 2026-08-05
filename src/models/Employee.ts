@@ -20,7 +20,7 @@ const EmployeeSchema = new mongoose.Schema({
   panNumber: { type: String },
   bankAccount: { type: String },
   ifsc: { type: String },
-  weeklyOff: { type: Number, default: 0 }, // 0 = Sunday, 1 = Monday, etc.
+  weeklyOff: { type: mongoose.Schema.Types.Mixed, default: 'Sunday' }, // Number (legacy) or String ('Sunday' etc)
   salaryRevisions: [SalaryRevisionSchema]
 }, { timestamps: true });
 

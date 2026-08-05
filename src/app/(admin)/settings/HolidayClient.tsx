@@ -14,6 +14,8 @@ export function HolidayClient({ holidays }: { holidays: any[] }) {
   
   const [name, setName] = useState('');
   const [sandwichEligible, setSandwichEligible] = useState(true);
+  const [isHalfDay, setIsHalfDay] = useState(false);
+  const [recurrence, setRecurrence] = useState('none');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -23,6 +25,7 @@ export function HolidayClient({ holidays }: { holidays: any[] }) {
   const onDateClick = (day: Date) => {
     setSelectedDate(day);
     setName('');
+    setRecurrence('none');
     setError('');
   };
 
@@ -34,11 +37,13 @@ export function HolidayClient({ holidays }: { holidays: any[] }) {
     setError('');
     try {
       const dateStr = format(selectedDate, 'yyyy-MM-dd');
-      await addHoliday(dateStr, name, sandwichEligible);
+      await addHoliday(dateStr, name, sandwichEligible, recurrence, isHalfDay);
       toast.success('Holiday added successfully');
       setSelectedDate(null);
       setName('');
       setSandwichEligible(true);
+      setIsHalfDay(false);
+      setRecurrence('none');
       router.refresh();
     } catch (err: any) {
       const errMsg = err.message || 'Failed to add holiday';
@@ -75,7 +80,14 @@ export function HolidayClient({ holidays }: { holidays: any[] }) {
       formattedDate = format(day, dateFormat);
       const cloneDay = day;
       
-      const isHoliday = holidays.find(h => h.date === format(cloneDay, 'yyyy-MM-dd'));
+      const dateStr = format(cloneDay, 'yyyy-MM-dd');
+      const dayStr = format(cloneDay, 'dd');
+      const monthDayStr = format(cloneDay, 'MM-dd');
+      const isHoliday = holidays.find(h => {
+        if (h.recurrence === 'monthly') return h.date.endsWith(`-${dayStr}`);
+        if (h.recurrence === 'yearly') return h.date.endsWith(`-${monthDayStr}`);
+        return h.date === dateStr;
+      });
       const isSelected = selectedDate && isSameDay(day, selectedDate);
       const isCurrentMonth = isSameMonth(day, currentMonth);
 
@@ -164,15 +176,39 @@ export function HolidayClient({ holidays }: { holidays: any[] }) {
                       autoFocus
                     />
                   </div>
-                  <label className="flex items-start gap-[8px] cursor-pointer mt-[4px]">
-                    <input 
-                      type="checkbox" 
-                      checked={sandwichEligible}
-                      onChange={e => setSandwichEligible(e.target.checked)}
-                      className="mt-[2px] w-[13px] h-[13px] accent-[#E8630A]" 
-                    />
-                    <span className="text-[12px] font-medium text-text">Sandwich Eligible</span>
-                  </label>
+                  <div className="flex flex-col gap-[6px]">
+                    <label className="text-[12px] font-medium text-text-secondary">Recurrence</label>
+                    <select 
+                      value={recurrence} 
+                      onChange={e => setRecurrence(e.target.value)} 
+                      className="w-full rounded-[4px] border border-border-strong px-[10px] py-[8px] font-sans text-[13px] outline-none focus:border-[#E8630A]"
+                    >
+                      <option value="none">None (One-time)</option>
+                      <option value="monthly">Monthly</option>
+                      <option value="yearly">Yearly</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-4 mt-[4px]">
+                    <label className="flex items-start gap-[8px] cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={sandwichEligible}
+                        onChange={e => setSandwichEligible(e.target.checked)}
+                        className="mt-[2px] w-[13px] h-[13px] accent-[#E8630A]" 
+                      />
+                      <span className="text-[12px] font-medium text-text">Sandwich Eligible</span>
+                    </label>
+                    
+                    <label className="flex items-start gap-[8px] cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={isHalfDay}
+                        onChange={e => setIsHalfDay(e.target.checked)}
+                        className="mt-[2px] w-[13px] h-[13px] accent-[#E8630A]" 
+                      />
+                      <span className="text-[12px] font-medium text-text">Half Day</span>
+                    </label>
+                  </div>
                   
                   {error && <div className="text-[12px] text-alert-text mt-[4px]">{error}</div>}
                   
@@ -197,6 +233,8 @@ export function HolidayClient({ holidays }: { holidays: any[] }) {
                   <tr>
                     <th className="text-left font-medium text-[11.5px] text-text-secondary px-[16px] py-[8px]">Date</th>
                     <th className="text-left font-medium text-[11.5px] text-text-secondary px-[16px] py-[8px]">Name</th>
+                    <th className="text-left font-medium text-[11.5px] text-text-secondary px-[16px] py-[8px]">Recurrence</th>
+                    <th className="text-center font-medium text-[11.5px] text-text-secondary px-[16px] py-[8px]">Type</th>
                     <th className="text-center font-medium text-[11.5px] text-text-secondary px-[16px] py-[8px]">Sandwich Eligible</th>
                     <th className="w-10"></th>
                   </tr>
@@ -204,14 +242,22 @@ export function HolidayClient({ holidays }: { holidays: any[] }) {
                 <tbody className="divide-y divide-border">
                   {holidays.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="text-center py-[24px] text-text-muted">No holidays configured.</td>
+                      <td colSpan={5} className="text-center py-[24px] text-text-muted">No holidays configured.</td>
                     </tr>
                   ) : (
                     holidays.sort((a,b) => a.date.localeCompare(b.date)).map((h: any) => (
                       <tr key={h._id} className="hover:bg-hover">
                         <td className="px-[16px] py-[10px] font-mono text-text">{h.date}</td>
                         <td className="px-[16px] py-[10px] font-medium text-text">{h.name}</td>
-                        <td className="px-[16px] py-[10px] text-center">
+                        <td className="px-[16px] py-[12px] font-medium text-text capitalize">{h.recurrence || 'none'}</td>
+                        <td className="px-[16px] py-[12px] text-center">
+                          {h.isHalfDay ? (
+                            <span className="inline-block px-2 py-0.5 rounded text-[11px] font-medium bg-amber-100 text-amber-700">Half Day</span>
+                          ) : (
+                            <span className="inline-block px-2 py-0.5 rounded text-[11px] font-medium bg-blue-100 text-blue-700">Full Day</span>
+                          )}
+                        </td>
+                        <td className="px-[16px] py-[12px] text-center">
                           {h.sandwichEligible ? (
                             <span className="inline-block px-[6px] py-[2px] bg-success-bg text-success-text border border-success-border rounded-[4px] text-[11px] font-medium">Yes</span>
                           ) : (

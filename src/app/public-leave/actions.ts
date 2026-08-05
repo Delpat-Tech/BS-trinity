@@ -6,57 +6,61 @@ import { LeaveEntry } from '@/models/LeaveEntry';
 import { revalidatePath } from 'next/cache';
 
 export async function submitPublicLeave(formData: {
-  name: string;
-  mobile: string;
-  aadhar: string;
+  employeeId: number;
   pan: string;
-  date: string;
+  fromDate: string;
+  toDate: string;
+  kind: 'paid' | 'unpaid';
   note?: string;
 }) {
   await dbConnect();
 
-  const { name, mobile, aadhar, pan, date, note } = formData;
+  const { employeeId, pan, fromDate, toDate, kind, note } = formData;
 
-  if (!name || !mobile || !aadhar || !pan || !date) {
+  if (!employeeId || !pan || !fromDate || !toDate || !kind) {
     throw new Error('All asterisk (*) fields are required');
   }
 
-  // Fetch active employees
-  const employees = await Employee.find({ endDate: null, isIgnored: false }).lean();
+  const employee = await Employee.findOne({ _id: employeeId, endDate: null, isIgnored: false }).lean();
+  if (!employee) {
+    throw new Error('Employee not found or is inactive.');
+  }
 
-  // Find matches by cleaning and normalizing fields
   const clean = (val: string) => (val || '').trim().replace(/[\s-]/g, '').toUpperCase();
-  const cleanName = (val: string) => (val || '').trim().toLowerCase();
+  
+  if (clean(employee.panNumber) !== clean(pan)) {
+    throw new Error('Verification failed. The PAN number provided is incorrect.');
+  }
 
-  const matched = employees.find((emp: any) => {
-    return (
-      cleanName(emp.name) === cleanName(name) &&
-      clean(emp.mobileNumber) === clean(mobile) &&
-      clean(emp.aadharNumber) === clean(aadhar) &&
-      clean(emp.panNumber) === clean(pan)
-    );
-  });
+  const start = new Date(fromDate);
+  const end = new Date(toDate);
+  
+  if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) {
+    throw new Error('Invalid date range');
+  }
 
-  if (!matched) {
-    throw new Error(
-      'Verification failed. Please ensure your Name, Mobile, Aadhaar, and PAN numbers are correct and match your employee record.'
-    );
+  const dates = [];
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    dates.push(d.toISOString().split('T')[0]);
   }
 
   try {
-    await LeaveEntry.create({
-      employeeId: matched._id,
+    const entries = dates.map(date => ({
+      employeeId: employee._id,
       date,
-      kind: 'unpaid', // unpaid leave for now as requested
+      kind,
+      status: 'pending',
       note: note ? `[Self Submitted] ${note}` : '[Self Submitted]',
       loggedAt: new Date(),
-    });
+    }));
+
+    await LeaveEntry.insertMany(entries, { ordered: false });
   } catch (error: any) {
-    if (error.code === 11000) {
-      throw new Error('A leave entry already exists for you on this date.');
+    // ordered: false allows inserting non-duplicates even if some exist
+    if (error.code !== 11000) {
+      throw error;
     }
-    throw error;
   }
 
-  revalidatePath(`/employees/${matched._id}/leave`);
+  revalidatePath(`/employees/${employee._id}/leave`);
 }

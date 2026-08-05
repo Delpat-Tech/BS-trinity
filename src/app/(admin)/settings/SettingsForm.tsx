@@ -30,6 +30,7 @@ export function SettingsForm({ initialData }: { initialData: any }) {
       strikes_per_penalty: Number(formData.get('strikes_per_penalty')),
       penalty_days_per_trigger: Number(formData.get('penalty_days_per_trigger')),
       sandwich_skips_weekly_off: formData.get('sandwich_skips_weekly_off') === 'on',
+      monthly_paid_leave_quota: Number(formData.get('monthly_paid_leave_quota') || 1),
     };
 
     try {
@@ -138,7 +139,23 @@ export function SettingsForm({ initialData }: { initialData: any }) {
         <div className="px-[20px] py-[12px] bg-header border-b border-border">
           <div className="text-[13px] font-semibold">Leave Policy</div>
         </div>
-        <div className="p-[20px]">
+        <div className="p-[20px] flex flex-col gap-[16px]">
+          <div className="flex flex-col gap-[6px] max-w-xs">
+            <label htmlFor="monthly_paid_leave_quota" className="text-[12px] font-medium text-text-secondary">Monthly Paid Leave Quota (Days)</label>
+            <input 
+              id="monthly_paid_leave_quota" 
+              name="monthly_paid_leave_quota" 
+              type="number" 
+              step="1" 
+              min="0"
+              defaultValue={initialData.monthly_paid_leave_quota ?? 1} 
+              className="w-full rounded-[4px] border border-border-strong px-[10px] py-[8px] font-mono text-[13px] outline-none focus:border-[#E8630A]" 
+            />
+            <div className="text-[11.5px] text-text-muted">Standard monthly paid leaves granted to all active employees.</div>
+          </div>
+
+          <div className="h-[1px] bg-border-subtle my-[4px]"></div>
+
           <label className="flex items-start gap-[10px] cursor-pointer">
             <input 
               type="checkbox" 

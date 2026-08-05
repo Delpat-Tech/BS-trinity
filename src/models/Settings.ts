@@ -10,7 +10,8 @@ const RulesetSchema = new mongoose.Schema({
   early_strike_window: [{ type: String }],
   strikes_per_penalty: { type: Number, required: true },
   penalty_days_per_trigger: { type: Number, required: true },
-  sandwich_skips_weekly_off: { type: Boolean, required: true }
+  sandwich_skips_weekly_off: { type: Boolean, required: true },
+  monthly_paid_leave_quota: { type: Number, default: 1 }
 }, { _id: false });
 
 const SettingsSchema = new mongoose.Schema({

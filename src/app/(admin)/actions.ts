@@ -5,7 +5,6 @@ import dbConnect from '@/lib/db';
 import { Period } from '@/models/Period';
 import { Settings } from '@/models/Settings';
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 
 export async function openPeriod(formData: FormData) {
   await requireSession();
@@ -51,5 +50,5 @@ export async function openPeriod(formData: FormData) {
   });
 
   revalidatePath('/');
-  redirect(`/period/${period._id.toString()}`);
+  return period._id.toString();
 }

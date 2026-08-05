@@ -102,6 +102,9 @@ export default function EmployeesListClient({ employees }: { employees: any[] })
   const [advanceModalOpen, setAdvanceModalOpen] = useState(false);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
+  const [salaryFilter, setSalaryFilter] = useState("all");
+  const [designationFilter, setDesignationFilter] = useState("all");
+
   // Search & Filter
   const filtered = employees.filter((emp) => {
     const q = search.toLowerCase();
@@ -112,8 +115,21 @@ export default function EmployeesListClient({ employees }: { employees: any[] })
     if (statusFilter === 'resigned') matchesStatus = !!emp.isIgnored && !!emp.endDate;
     if (statusFilter === 'ignored') matchesStatus = !!emp.isIgnored && !emp.endDate;
 
-    return matchesSearch && matchesStatus;
+    const revisions = emp.salaryRevisions || [];
+    const latestSalary = [...revisions].sort((a: any, b: any) => b.effectiveFrom.localeCompare(a.effectiveFrom))[0]?.fixedSalary || 0;
+    
+    let matchesSalary = true;
+    if (salaryFilter === '0-10k') matchesSalary = latestSalary > 0 && latestSalary <= 10000;
+    if (salaryFilter === '10k-20k') matchesSalary = latestSalary > 10000 && latestSalary <= 20000;
+    if (salaryFilter === '20k+') matchesSalary = latestSalary > 20000;
+
+    let matchesDesignation = true;
+    if (designationFilter !== 'all') matchesDesignation = emp.designation === designationFilter;
+
+    return matchesSearch && matchesStatus && matchesSalary && matchesDesignation;
   });
+
+  const uniqueDesignations = Array.from(new Set(employees.map(e => e.designation).filter(Boolean))).sort();
 
   // Sort
   const sorted = [...filtered].sort((a, b) => {
@@ -189,7 +205,7 @@ export default function EmployeesListClient({ employees }: { employees: any[] })
       </div>
 
       <div className="px-[32px] pb-[16px] flex items-center justify-between flex-none gap-4">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 flex-1">
           <div className="flex items-center w-[280px] h-[38px] rounded-[6px] bg-header border border-border-strong focus-within:ring-1 focus-within:ring-[#E8630A] px-3 gap-2">
             <Search className="w-[14px] h-[14px] text-text-muted shrink-0" />
             <input 
@@ -202,19 +218,51 @@ export default function EmployeesListClient({ employees }: { employees: any[] })
           </div>
           
           <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v || "all"); setPage(1); }}>
-            <SelectTrigger className="w-[160px] h-[38px] data-[size=default]:h-[38px] rounded-[6px] bg-header border-border-strong flex items-center text-[13px] px-3 font-medium">
+            <SelectTrigger className="w-[140px] h-[38px] data-[size=default]:h-[38px] rounded-[6px] bg-header border-border-strong flex items-center text-[13px] px-3 font-medium">
               <div className="flex items-center gap-2">
                 <Filter className="w-3.5 h-3.5 text-text-muted" />
                 <SelectValue placeholder="Status" />
               </div>
             </SelectTrigger>
-            <SelectContent className="bg-header border-border z-[200] min-w-[180px] text-[13px]">
-              <SelectItem value="all" className="text-[13px] py-2">All Employees</SelectItem>
+            <SelectContent className="bg-header border-border z-[200] min-w-[140px] text-[13px]">
+              <SelectItem value="all" className="text-[13px] py-2">All Status</SelectItem>
               <SelectItem value="active" className="text-[13px] py-2">Active Only</SelectItem>
               <SelectItem value="resigned" className="text-[13px] py-2">Resigned</SelectItem>
               <SelectItem value="ignored" className="text-[13px] py-2">Ignored (Hidden)</SelectItem>
             </SelectContent>
           </Select>
+
+          <Select value={salaryFilter} onValueChange={(v) => { setSalaryFilter(v || "all"); setPage(1); }}>
+            <SelectTrigger className="w-[140px] h-[38px] data-[size=default]:h-[38px] rounded-[6px] bg-header border-border-strong flex items-center text-[13px] px-3 font-medium">
+              <div className="flex items-center gap-2">
+                <Filter className="w-3.5 h-3.5 text-text-muted" />
+                <SelectValue placeholder="Salary" />
+              </div>
+            </SelectTrigger>
+            <SelectContent className="bg-header border-border z-[200] min-w-[140px] text-[13px]">
+              <SelectItem value="all" className="text-[13px] py-2">All Salaries</SelectItem>
+              <SelectItem value="0-10k" className="text-[13px] py-2">0 - 10k</SelectItem>
+              <SelectItem value="10k-20k" className="text-[13px] py-2">10k - 20k</SelectItem>
+              <SelectItem value="20k+" className="text-[13px] py-2">20k+</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {uniqueDesignations.length > 0 && (
+            <Select value={designationFilter} onValueChange={(v) => { setDesignationFilter(v || "all"); setPage(1); }}>
+              <SelectTrigger className="w-[160px] h-[38px] data-[size=default]:h-[38px] rounded-[6px] bg-header border-border-strong flex items-center text-[13px] px-3 font-medium">
+                <div className="flex items-center gap-2">
+                  <Filter className="w-3.5 h-3.5 text-text-muted" />
+                  <SelectValue placeholder="Designation" />
+                </div>
+              </SelectTrigger>
+              <SelectContent className="bg-header border-border z-[200] min-w-[160px] text-[13px]">
+                <SelectItem value="all" className="text-[13px] py-2">All Designations</SelectItem>
+                {uniqueDesignations.map(d => (
+                  <SelectItem key={d} value={d} className="text-[13px] py-2">{d}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
         
         <div className="text-[13px] text-text-secondary font-medium">

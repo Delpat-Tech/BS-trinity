@@ -25,7 +25,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             </div>
             <div>
               <div className="text-[14px] font-semibold tracking-[-0.01em] text-white leading-tight">Trinity Motors</div>
-              <div className="text-[10.5px] text-[#9BAAB8] mt-[1px] tracking-[0.04em] uppercase font-medium">Garage System</div>
+              <div className="text-[10.5px] text-[#9BAAB8] mt-[1px] tracking-[0.04em] uppercase font-medium">Attendance System</div>
             </div>
           </div>
         </div>

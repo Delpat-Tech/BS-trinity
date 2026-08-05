@@ -26,11 +26,19 @@ export async function runPayrollCycle(periodId: string) {
   const monthStr = period.month.toString().padStart(2, '0');
   const datePrefix = `${period.year}-${monthStr}-`;
 
-  // Fetch leaves for this month
-  const leaves = await LeaveEntry.find({ date: { $regex: `^${datePrefix}` } }).lean();
+  // Fetch approved leaves for this month (or legacy leaves without status field)
+  const leaves = await LeaveEntry.find({ 
+    date: { $regex: `^${datePrefix}` },
+    $or: [{ status: 'approved' }, { status: { $exists: false } }]
+  }).lean();
 
-  // Fetch holidays for this month
-  const holidays = await Holiday.find({ date: { $regex: `^${datePrefix}` } }).lean();
+  // Fetch holidays for this month (and any recurring holidays)
+  const holidays = await Holiday.find({
+    $or: [
+      { date: { $regex: `^${datePrefix}` } },
+      { recurrence: { $in: ['monthly', 'yearly'] } }
+    ]
+  }).lean();
 
   // Fetch ledger entries for employees (up to end of period, or all?)
   // Actually, computePayroll handles ledger processing (opening + advance + deduction).

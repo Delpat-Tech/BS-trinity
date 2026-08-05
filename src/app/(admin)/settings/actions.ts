@@ -14,6 +14,7 @@ export async function updateSettings(data: {
   strikes_per_penalty: number;
   penalty_days_per_trigger: number;
   sandwich_skips_weekly_off: boolean;
+  monthly_paid_leave_quota?: number;
 }) {
   await requireSession();
   await dbConnect();

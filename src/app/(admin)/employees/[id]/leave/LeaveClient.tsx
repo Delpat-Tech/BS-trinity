@@ -13,7 +13,8 @@ import { useRouter } from 'next/navigation';
 
 export default function LeaveClient({ employeeId, leaves, onRefresh }: { employeeId: string, leaves: any[], onRefresh?: () => void }) {
   const router = useRouter();
-  const [date, setDate] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
   const [kind, setKind] = useState<'paid' | 'unpaid' | 'half'>('paid');
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,14 +22,28 @@ export default function LeaveClient({ employeeId, leaves, onRefresh }: { employe
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!date) return;
+    if (!fromDate || !toDate) return;
+    
+    const start = new Date(fromDate);
+    const end = new Date(toDate);
+    if (start > end) {
+      setError('From Date cannot be after To Date');
+      return;
+    }
     
     setLoading(true);
     setError('');
     try {
-      await addLeave(employeeId, date, kind, note);
+      const dates = [];
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        dates.push(d.toISOString().split("T")[0]);
+      }
+      for (const d of dates) {
+        await addLeave(employeeId, d, kind, note);
+      }
       toast.success('Successfully logged leave entry');
-      setDate('');
+      setFromDate('');
+      setToDate('');
       setNote('');
       setKind('paid');
       if (onRefresh) onRefresh();
@@ -62,7 +77,7 @@ export default function LeaveClient({ employeeId, leaves, onRefresh }: { employe
           <CardDescription className="text-[12.5px] text-text-secondary">Add a retroactive leave card off-cycle for this employee.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="grid grid-cols-3 gap-4 items-start">
+          <form onSubmit={handleSubmit} className="grid grid-cols-2 lg:grid-cols-4 gap-4 items-start">
             <div className="space-y-1.5">
               <Label className="text-[12px] font-medium text-text-secondary">Type</Label>
               <Select value={kind} onValueChange={(val: any) => setKind(val)}>
@@ -82,8 +97,13 @@ export default function LeaveClient({ employeeId, leaves, onRefresh }: { employe
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-[12px] font-medium text-text-secondary">Date</Label>
-              <Input type="date" value={date} onChange={e => setDate(e.target.value)} required className="h-[36px] bg-surface border-border-strong font-mono" />
+              <Label className="text-[12px] font-medium text-text-secondary">From Date</Label>
+              <Input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} required className="h-[36px] bg-surface border-border-strong font-mono" />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-[12px] font-medium text-text-secondary">To Date</Label>
+              <Input type="date" value={toDate} onChange={e => setToDate(e.target.value)} required className="h-[36px] bg-surface border-border-strong font-mono" />
             </div>
 
             <div className="space-y-1.5">
@@ -91,10 +111,10 @@ export default function LeaveClient({ employeeId, leaves, onRefresh }: { employe
               <Input placeholder="e.g. Sick leave" value={note} onChange={e => setNote(e.target.value)} className="h-[36px] bg-surface border-border-strong" />
             </div>
 
-            {error && <p className="col-span-3 text-xs text-red-600 font-medium">{error}</p>}
+            {error && <p className="col-span-2 lg:col-span-4 text-xs text-red-600 font-medium">{error}</p>}
 
-            <div className="col-span-3 flex justify-end pt-1">
-              <Button type="submit" disabled={loading || !date} className="h-[36px] bg-[#E8630A] text-white hover:bg-[#C9540A] px-6">
+            <div className="col-span-2 lg:col-span-4 flex justify-end pt-1">
+              <Button type="submit" disabled={loading || !fromDate || !toDate} className="h-[36px] bg-[#E8630A] text-white hover:bg-[#C9540A] px-6">
                 {loading ? 'Logging...' : 'Log Leave Entry'}
               </Button>
             </div>

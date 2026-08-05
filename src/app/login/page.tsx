@@ -101,7 +101,7 @@ export default function LoginPage() {
                 {appSettings?.companyName || "TRINITY MOTORS"}
               </h1>
               <p className="text-xs text-slate-500 max-w-xl font-medium">
-                {appSettings?.tagline || "Garage System — Securely access your payroll & attendance dashboard."}
+                {appSettings?.tagline || "Attendance System — Securely access your payroll & attendance dashboard."}
               </p>
             </div>
           </div>

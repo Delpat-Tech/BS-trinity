@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { CalendarDays, Wallet, Calendar, Users, Settings, LogOut } from "lucide-react";
+import { CalendarDays, Wallet, Calendar, Users, Settings, LogOut, CheckSquare } from "lucide-react";
 import { signOut } from "next-auth/react";
 
 export default function SidebarClient() {
@@ -11,7 +11,8 @@ export default function SidebarClient() {
   
   const isPeriods = pathname === "/" || pathname.startsWith("/period");
   const isEmployees = pathname.startsWith("/employees");
-  const isLeaves = pathname.startsWith("/leaves");
+  const isLeaveApprovals = pathname.startsWith("/leaves/approvals");
+  const isLeavesNew = pathname === "/leaves/new";
   const isLedger = pathname.startsWith("/ledger");
   const isSettings = pathname.startsWith("/settings");
 
@@ -35,8 +36,13 @@ export default function SidebarClient() {
 
       <div className="text-[10px] font-semibold tracking-[0.08em] uppercase text-[#3D4A5C] px-[12px] pt-[18px] pb-[6px]">Actions</div>
 
-      <Link href="/leaves/new" className={cn(linkBase, isLeaves ? linkActive : linkInactive)}>
-        <CalendarDays className={cn("w-4 h-4 shrink-0", isLeaves ? iconActive : iconInactive)} />
+      <Link href="/leaves/approvals" className={cn(linkBase, isLeaveApprovals ? linkActive : linkInactive)}>
+        <CheckSquare className={cn("w-4 h-4 shrink-0", isLeaveApprovals ? iconActive : iconInactive)} />
+        Leave Approvals
+      </Link>
+
+      <Link href="/leaves/new" className={cn(linkBase, isLeavesNew ? linkActive : linkInactive)}>
+        <CalendarDays className={cn("w-4 h-4 shrink-0", isLeavesNew ? iconActive : iconInactive)} />
         Record Leave
       </Link>
 

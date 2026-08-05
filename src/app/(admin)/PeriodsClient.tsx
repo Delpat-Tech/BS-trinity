@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { openPeriod } from './actions';
 
 import { toast } from 'sonner';
@@ -9,13 +9,22 @@ import { useRouter } from 'next/navigation';
 export default function PeriodsClient({ nextMonth, nextYear }: { nextMonth: string, nextYear: number }) {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
+  
+  const initialMonth = new Date().getMonth() + 1;
+  const [month, setMonth] = useState(initialMonth);
+  const [year, setYear] = useState(nextYear);
+  const [divisorDays, setDivisorDays] = useState(new Date(nextYear, initialMonth, 0).getDate());
+
+  useEffect(() => {
+    setDivisorDays(new Date(year, month, 0).getDate());
+  }, [month, year]);
 
   const handleSubmit = async (formData: FormData) => {
     try {
-      await openPeriod(formData);
+      const periodId = await openPeriod(formData);
       toast.success('Period opened successfully');
       setIsOpen(false);
-      router.refresh();
+      router.push(`/period/${periodId}`);
     } catch (err: any) {
       toast.error(err.message || 'Failed to open period');
     }
@@ -45,7 +54,8 @@ export default function PeriodsClient({ nextMonth, nextYear }: { nextMonth: stri
                 <select 
                   id="month" name="month"
                   className="w-full rounded-[6px] border border-border-strong bg-surface px-[10px] py-[8px] font-mono text-[13px] outline-none focus:border-[#E8630A] transition-colors"
-                  defaultValue={new Date().getMonth() + 1}
+                  value={month}
+                  onChange={(e) => setMonth(parseInt(e.target.value))}
                 >
                   {[...Array(12)].map((_, i) => (
                     <option key={i+1} value={i+1}>{new Date(0, i).toLocaleString('default', { month: 'long' })}</option>
@@ -58,7 +68,8 @@ export default function PeriodsClient({ nextMonth, nextYear }: { nextMonth: stri
                 <select 
                   id="year" name="year"
                   className="w-full rounded-[6px] border border-border-strong bg-surface px-[10px] py-[8px] font-mono text-[13px] outline-none focus:border-[#E8630A] transition-colors"
-                  defaultValue={nextYear}
+                  value={year}
+                  onChange={(e) => setYear(parseInt(e.target.value))}
                 >
                   {[2024, 2025, 2026, 2027, 2028].map(y => (
                     <option key={y} value={y}>{y}</option>
@@ -69,7 +80,9 @@ export default function PeriodsClient({ nextMonth, nextYear }: { nextMonth: stri
               <div className="flex flex-col gap-[4px]">
                 <label htmlFor="divisorDays" className="text-[11.5px] font-medium tracking-[0.02em] uppercase text-text-muted">Divisor Days</label>
                 <input 
-                  id="divisorDays" name="divisorDays" type="number" step="0.5" defaultValue="30" required
+                  id="divisorDays" name="divisorDays" type="number" step="0.5" required
+                  value={divisorDays}
+                  onChange={(e) => setDivisorDays(parseFloat(e.target.value))}
                   className="w-full rounded-[6px] border border-border-strong bg-surface px-[10px] py-[8px] font-mono text-[13px] outline-none focus:border-[#E8630A] transition-colors"
                 />
               </div>

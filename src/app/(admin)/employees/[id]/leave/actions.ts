@@ -26,6 +26,7 @@ export async function addLeave(employeeIdStr: string, date: string, kind: 'paid'
       employeeId: emp.machineId,
       date,
       kind,
+      status: 'pending',
       note,
       loggedBy: user._id,
       loggedAt: new Date()

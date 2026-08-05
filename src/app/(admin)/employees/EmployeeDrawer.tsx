@@ -26,7 +26,7 @@ const employeeSchema = z.object({
   dateOfJoining: z.string().min(1, "Date of Joining is required"),
   aadharNumber: z.string().regex(/^[0-9]{12}$/, "Must be exactly 12 digits").or(z.literal('')).optional(),
   panNumber: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/i, "Invalid PAN format (e.g. ABCDE1234F)").or(z.literal('')).optional(),
-  weeklyOff: z.coerce.number().min(0).max(6),
+  weeklyOff: z.string().default('Sunday'),
   fixedSalary: z.coerce.number().min(0, "Salary cannot be negative"),
   effectiveFrom: z.string().min(1, "Effective Date is required"),
   isIgnored: z.boolean(),
@@ -61,7 +61,7 @@ export function EmployeeDrawer({ employee, trigger }: { employee?: any, trigger:
       dateOfJoining: employee?.dateOfJoining || new Date().toISOString().split('T')[0],
       aadharNumber: employee?.aadharNumber || '',
       panNumber: employee?.panNumber || '',
-      weeklyOff: employee?.weeklyOff ?? 0,
+        weeklyOff: typeof employee?.weeklyOff === 'number' ? ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][employee.weeklyOff] : (employee?.weeklyOff || 'Sunday'),
       fixedSalary: latestSalary,
       effectiveFrom: new Date().toISOString().split('T')[0],
       isIgnored: employee?.isIgnored || false,
@@ -102,7 +102,7 @@ export function EmployeeDrawer({ employee, trigger }: { employee?: any, trigger:
         dateOfJoining: employee?.dateOfJoining || new Date().toISOString().split('T')[0],
         aadharNumber: employee?.aadharNumber || '',
         panNumber: employee?.panNumber || '',
-        weeklyOff: employee?.weeklyOff ?? 0,
+          weeklyOff: typeof employee?.weeklyOff === 'number' ? ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][employee.weeklyOff] : (employee?.weeklyOff || 'Sunday'),
         fixedSalary: latestSalary,
         effectiveFrom: new Date().toISOString().split('T')[0],
         isIgnored: employee?.isIgnored || false,
@@ -244,17 +244,17 @@ export function EmployeeDrawer({ employee, trigger }: { employee?: any, trigger:
                     </div>
                     <div className="flex flex-col gap-2 col-span-2">
                       <Label className="text-[12px] font-medium text-text-secondary text-left">Designated Weekly Off</Label>
-                      <Select value={watch("weeklyOff").toString()} onValueChange={v => reset({...watch(), weeklyOff: parseInt(v || "0")})}>
+                      <Select value={watch("weeklyOff")?.toString()} onValueChange={v => reset({...watch(), weeklyOff: v || "Sunday"})}>
                         <SelectTrigger className="w-full h-[36px] data-[size=default]:h-[36px] bg-surface border border-border shadow-sm focus:ring-1 focus:ring-text text-[13px] px-3 font-medium">
                           <SelectValue placeholder="Select day..." />
                         </SelectTrigger>
                         <SelectContent className="bg-surface border-border z-[200] min-w-[240px] text-[13px]">
-                          {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((d, i) => (
-                            <SelectItem key={i} value={i.toString()} className="text-[13px] py-2">{d}</SelectItem>
+                          {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((d) => (
+                            <SelectItem key={d} value={d} className="text-[13px] py-2">{d}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
-                      {errors.weeklyOff && <span className="text-[11px] text-alert-text text-left">{errors.weeklyOff.message}</span>}
+                      {errors.weeklyOff && <span className="text-[11px] text-alert-text text-left">{errors.weeklyOff.message as string}</span>}
                     </div>
                   </div>
 
@@ -319,7 +319,7 @@ export function EmployeeDrawer({ employee, trigger }: { employee?: any, trigger:
             {tab === 'profile' && (
               <div className="p-[20px] border-t border-border bg-header flex justify-end gap-[10px]">
                 <button type="button" onClick={handleClose} className="px-[14px] py-[8px] border border-border-strong bg-surface rounded-[4px] text-[13px] hover:bg-hover">Cancel</button>
-                <button form="employeeForm" type="submit" disabled={loading} className="px-[14px] py-[8px] border border-text bg-[#E8630A] text-white rounded-[6px] text-[13px] font-medium hover:bg-[#C9540A] disabled:opacity-50">
+                <button form="employeeForm" type="submit" disabled={loading} className="px-[14px] py-[8px] border border-text bg-[#E8630A] text-white rounded-[6px] text-[13px] font-medium hover:bg-[#C9540A] disabled:opacity-50 cursor-pointer">
                   {loading ? 'Saving...' : 'Save employee'}
                 </button>
               </div>

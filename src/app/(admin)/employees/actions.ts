@@ -51,7 +51,7 @@ export async function createEmployee(data: {
     panNumber: data.panNumber,
     bankAccount: data.bankAccount,
     ifsc: data.ifsc,
-    weeklyOff: data.weeklyOff !== undefined ? Number(data.weeklyOff) : 0,
+    weeklyOff: data.weeklyOff || 'Sunday',
     salaryRevisions: [{
       fixedSalary: data.fixedSalary,
       effectiveFrom: data.effectiveFrom || data.dateOfJoining
@@ -76,7 +76,7 @@ export async function updateEmployee(id: number, data: {
   panNumber?: string;
   bankAccount?: string;
   ifsc?: string;
-  weeklyOff?: number;
+  weeklyOff?: string;
 }) {
   await requireSession();
   await dbConnect();
@@ -95,7 +95,7 @@ export async function updateEmployee(id: number, data: {
   emp.panNumber = data.panNumber;
   emp.bankAccount = data.bankAccount;
   emp.ifsc = data.ifsc;
-  emp.weeklyOff = data.weeklyOff !== undefined ? Number(data.weeklyOff) : 0;
+  emp.weeklyOff = data.weeklyOff || 'Sunday';
 
   // Check if we need to add a new salary revision
   const latestRev = [...emp.salaryRevisions].sort((a, b) => b.effectiveFrom.localeCompare(a.effectiveFrom))[0];
