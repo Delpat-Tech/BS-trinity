@@ -62,6 +62,30 @@ export default async function DashboardPage(props: { searchParams: Promise<{ [ke
           </h1>
           <div className="text-[13.5px] text-text-secondary mt-[6px] leading-relaxed">One period per month. A locked period cannot be edited.</div>
         </div>
+        <div className="flex items-center gap-3">
+          <FinancialYearFilter />
+          <PeriodsClient nextMonth={nextMonth} nextYear={nextYear} />
+        </div>
+      </div>
+
+      <div className="px-[32px] py-[24px]">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="border-b border-border text-[11px] font-semibold uppercase tracking-[0.05em] text-text-muted">
+              <th className="px-[32px] py-[10px]">Period</th>
+              <th className="px-[12px] py-[10px]">Status</th>
+              <th className="px-[12px] py-[10px] text-right">Divisor</th>
+              <th className="px-[12px] py-[10px] text-right">Employees</th>
+              <th className="px-[12px] py-[10px] text-right">Total Net</th>
+              <th className="px-[12px] py-[10px] pr-[32px] text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {periods.length === 0 && (
+              <tr>
+                <td colSpan={6} className="px-[32px] py-[32px] text-center text-[13px] text-text-muted">
+                  No periods found.
+                </td>
               </tr>
             )}
             {periods.map((period: any) => {
@@ -69,15 +93,15 @@ export default async function DashboardPage(props: { searchParams: Promise<{ [ke
               const monthName = date.toLocaleString('default', { month: 'long' });
               const shortMonth = date.toLocaleString('default', { month: 'short' });
               const isLocked = period.status === 'locked';
-              
+
               const totalNetPayable = netPayableMap.get(period._id.toString());
-              const targetUrl = isLocked 
-                ? `/period/${period._id.toString()}/review` 
+              const targetUrl = isLocked
+                ? `/period/${period._id.toString()}/review`
                 : `/period/${period._id.toString()}`;
-              
+
               return (
-                <tr 
-                  key={period._id.toString()} 
+                <tr
+                  key={period._id.toString()}
                   className="hover:bg-[#FAFAF8] transition-colors duration-100 cursor-pointer"
                 >
                   <td className="px-[32px] py-[14px] border-b border-border-subtle last:border-0">
@@ -86,7 +110,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ [ke
                       <span className="block text-[11px] text-text-muted font-mono mt-[2px]">01–30 {shortMonth}</span>
                     </Link>
                   </td>
-                  
+
                   <td className="px-[12px] py-[14px] border-b border-border-subtle last:border-0">
                     <Link href={targetUrl} className="block">
                       {isLocked ? (
@@ -100,19 +124,19 @@ export default async function DashboardPage(props: { searchParams: Promise<{ [ke
                       )}
                     </Link>
                   </td>
-                  
+
                   <td className="px-[12px] py-[14px] border-b border-border-subtle last:border-0 text-right font-mono text-[14px] text-text-muted">
                     <Link href={targetUrl} className="block">
                       {period.divisorDays}
                     </Link>
                   </td>
-                  
+
                   <td className="px-[12px] py-[14px] border-b border-border-subtle last:border-0 text-right font-mono text-text-secondary">
                     <Link href={targetUrl} className="block">
                       {employeesCount}
                     </Link>
                   </td>
-                  
+
                   <td className="px-[12px] py-[14px] border-b border-border-subtle last:border-0 text-right font-mono">
                     <Link href={targetUrl} className="block">
                       {totalNetPayable !== undefined ? (
@@ -122,7 +146,7 @@ export default async function DashboardPage(props: { searchParams: Promise<{ [ke
                       )}
                     </Link>
                   </td>
-                  
+
                   <td className="px-[12px] py-[14px] pr-[32px] border-b border-border-subtle last:border-0 text-right">
                     <div className="flex justify-end items-center gap-[12px]">
                       {!isLocked ? (
@@ -132,10 +156,10 @@ export default async function DashboardPage(props: { searchParams: Promise<{ [ke
                           </button>
                         </Link>
                       ) : null}
-                      <DeletePeriodButton 
-                        periodId={period._id.toString()} 
-                        monthName={monthName} 
-                        year={period.year} 
+                      <DeletePeriodButton
+                        periodId={period._id.toString()}
+                        monthName={monthName}
+                        year={period.year}
                       />
                     </div>
                   </td>
