@@ -8,15 +8,16 @@ import { signOut } from "next-auth/react";
 
 export default function SidebarClient() {
   const pathname = usePathname();
-  
-  const isPeriods = pathname === "/" || pathname.startsWith("/period");
-  const isEmployees = pathname.startsWith("/employees");
-  const isLeaveApprovals = pathname.startsWith("/leaves/approvals");
-  const isLeavesNew = pathname === "/leaves/new";
-  const isLedger = pathname.startsWith("/ledger");
-  const isSettings = pathname.startsWith("/settings");
 
-  const linkBase = "flex items-center gap-[10px] px-[12px] py-[8px] rounded-[6px] text-[13px] transition-all duration-150";
+  const isDashboard = pathname === "/";
+  const isAttendance = pathname === "/attendance" || pathname.startsWith("/period/");
+  const isEmployees = pathname === "/employees" || pathname.startsWith("/employees/");
+  const isLeaveApprovals = pathname === "/leaves/approvals";
+  const isLeavesNew = pathname === "/leaves/new";
+  const isLedgerNew = pathname === "/ledger/new";
+  const isSettings = pathname === "/settings";
+
+  const linkBase = "flex items-center gap-3 px-3 py-[10px] rounded-[8px] text-[13.5px] font-medium transition-all duration-150 mx-2";
   const linkActive = "bg-[rgba(232,99,10,0.15)] text-white font-medium";
   const linkInactive = "text-[#9BAAB8] hover:bg-[rgba(255,255,255,0.06)] hover:text-[#CBD5E0]";
   const iconActive = "text-[#E8630A]";
@@ -24,8 +25,18 @@ export default function SidebarClient() {
 
   return (
     <div className="flex flex-col w-full gap-[2px]">
-      <Link href="/" className={cn(linkBase, isPeriods ? linkActive : linkInactive)}>
-        <Calendar className={cn("w-4 h-4 shrink-0", isPeriods ? iconActive : iconInactive)} />
+      <Link href="/" className={cn(linkBase, isDashboard ? linkActive : linkInactive)}>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cn("w-4 h-4 shrink-0", isDashboard ? iconActive : iconInactive)}>
+          <rect width="7" height="9" x="3" y="3" rx="1" />
+          <rect width="7" height="5" x="14" y="3" rx="1" />
+          <rect width="7" height="9" x="14" y="12" rx="1" />
+          <rect width="7" height="5" x="3" y="16" rx="1" />
+        </svg>
+        Dashboard
+      </Link>
+
+      <Link href="/attendance" className={cn(linkBase, isAttendance ? linkActive : linkInactive)}>
+        <Calendar className={cn("w-4 h-4 shrink-0", isAttendance ? iconActive : iconInactive)} />
         Attendance
       </Link>
 
@@ -46,8 +57,8 @@ export default function SidebarClient() {
         Record Leave
       </Link>
 
-      <Link href="/ledger/new" className={cn(linkBase, isLedger ? linkActive : linkInactive)}>
-        <Wallet className={cn("w-4 h-4 shrink-0", isLedger ? iconActive : iconInactive)} />
+      <Link href="/ledger/new" className={cn(linkBase, isLedgerNew ? linkActive : linkInactive)}>
+        <Wallet className={cn("w-4 h-4 shrink-0", isLedgerNew ? iconActive : iconInactive)} />
         Record Advance
       </Link>
 

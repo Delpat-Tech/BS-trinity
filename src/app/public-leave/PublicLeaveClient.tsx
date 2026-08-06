@@ -3,14 +3,15 @@
 import { useState } from "react";
 import { submitPublicLeave } from "./actions";
 import { toast } from "sonner";
-import { CalendarDays, ShieldAlert, CheckCircle2, User, Phone, IdCard, FileText } from "lucide-react";
+import { CalendarDays, ShieldAlert, CheckCircle2, User, Phone, IdCard, FileText, Search, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export default function PublicLeaveClient({ employees }: { employees: { _id: string, name: string, mobileNumber: string }[] }) {
+export default function PublicLeaveClient({ employees }: { employees: { _id: string, name: string, mobileNumber: string, machineId?: string }[] }) {
   const [employeeId, setEmployeeId] = useState("");
+  const [search, setSearch] = useState("");
   const [mobile, setMobile] = useState("");
   const [pan, setPan] = useState("");
   const [fromDate, setFromDate] = useState(new Date().toISOString().split("T")[0]);
@@ -20,8 +21,16 @@ export default function PublicLeaveClient({ employees }: { employees: { _id: str
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  const handleEmployeeChange = (id: string) => {
-    setEmployeeId(id);
+  const filteredEmployees = employees.filter((e) =>
+    e.name.toLowerCase().includes(search.toLowerCase()) ||
+    (e.machineId && e.machineId.toString().includes(search))
+  );
+
+  const selectedEmployee = employees.find((e) => e._id.toString() === employeeId);
+  const isSelectionActive = selectedEmployee && search === `${selectedEmployee.name} ${selectedEmployee.machineId ? `(#${selectedEmployee.machineId})` : ''}`.trim();
+
+  const handleEmployeeChange = (id: string | null) => {
+    setEmployeeId(id || "");
     const emp = employees.find(e => e._id.toString() === id);
     if (emp) {
       setMobile(emp.mobileNumber || "");
@@ -130,18 +139,48 @@ export default function PublicLeaveClient({ employees }: { employees: { _id: str
               <User className="w-3.5 h-3.5 text-text-muted" />
               Employee Name *
             </Label>
-            <Select value={employeeId} onValueChange={handleEmployeeChange}>
-              <SelectTrigger className="w-full h-[38px] bg-surface border-border-strong text-[13px]">
-                <SelectValue placeholder="Select your name" />
-              </SelectTrigger>
-              <SelectContent className="max-h-[300px]">
-                {employees.sort((a,b) => a.name.localeCompare(b.name)).map(emp => (
-                  <SelectItem key={emp._id.toString()} value={emp._id.toString()}>
-                    {emp.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            
+            <div className="flex items-center h-[38px] rounded-[6px] bg-surface border border-border-strong focus-within:ring-1 focus-within:ring-[#E8630A] px-3 gap-2">
+              <Search className="w-[14px] h-[14px] text-text-muted shrink-0" />
+              <input
+                type="text"
+                className="search-input flex-1 text-[13px] text-text placeholder:text-text-muted outline-none bg-transparent"
+                placeholder="Search employee by name..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+
+            {!isSelectionActive && search && (
+              <div className="mt-1 max-h-[200px] overflow-y-auto border border-border rounded-md bg-white shadow-lg divide-y divide-border-subtle absolute z-[9999] w-full max-w-[calc(100%-3rem)] sm:max-w-md">
+                {filteredEmployees.length === 0 ? (
+                  <div className="p-3 text-center text-[12.5px] text-text-muted">No active employees found</div>
+                ) : (
+                  filteredEmployees.map((emp) => {
+                    const isSelected = emp._id.toString() === employeeId;
+                    return (
+                      <button
+                        type="button"
+                        key={emp._id.toString()}
+                        onClick={() => {
+                          handleEmployeeChange(emp._id.toString());
+                          setSearch(`${emp.name} ${emp.machineId ? `(#${emp.machineId})` : ''}`.trim());
+                        }}
+                        className={`w-full flex items-center justify-between p-2.5 text-left text-[13px] transition-colors hover:bg-hover ${
+                          isSelected ? "bg-hover font-medium text-text" : "text-text-secondary"
+                        }`}
+                      >
+                        <div>
+                          {emp.machineId && <span className="font-mono text-text-muted mr-2">#{emp.machineId}</span>}
+                          <span className="text-text font-medium">{emp.name}</span>
+                        </div>
+                        {isSelected && <Check className="w-4 h-4 text-text" />}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -201,9 +240,12 @@ export default function PublicLeaveClient({ employees }: { employees: { _id: str
           
           <div className="space-y-1.5">
             <Label className="text-[12.5px] font-medium text-text">Leave Type *</Label>
-            <Select value={kind} onValueChange={(v: "paid" | "unpaid") => setKind(v)}>
+            <Select value={kind} onValueChange={(v: "paid" | "unpaid" | null) => v && setKind(v)}>
               <SelectTrigger className="w-full h-[38px] bg-surface border-border-strong text-[13px]">
-                <SelectValue placeholder="Select leave type" />
+                <span>
+                  {kind === 'paid' && 'Paid Leave'}
+                  {kind === 'unpaid' && 'Unpaid Leave'}
+                </span>
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="paid">Paid Leave</SelectItem>
