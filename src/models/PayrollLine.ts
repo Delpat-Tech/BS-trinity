@@ -20,6 +20,7 @@ const PayrollLineSchema = new mongoose.Schema({
   gross: { type: Number, required: true },
   incentive: { type: Number, required: true },
   bonus: { type: Number, required: true },
+  outstandingAdvance: { type: Number, required: true, default: 0 },
   advanceDeduction: { type: Number, required: true },
   advanceCarried: { type: Number, required: true },
   latePunchAmt: { type: Number, required: true },

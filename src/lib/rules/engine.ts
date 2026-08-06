@@ -114,6 +114,7 @@ export type PayrollLine = {
   gross: number;
   incentive: number;
   bonus: number;
+  outstandingAdvance: number;
   advanceDeduction: number;
   advanceCarried: number;
   latePunchAmt: number;
@@ -427,6 +428,12 @@ export function computePayroll(input: {
                       + Math.floor(earlyStrikes / rules.strikes_per_penalty) * rules.penalty_days_per_trigger;
 
     const empInput = inputsByEmp.get(emp._id) || { ewDays: null, incentive: 0, bonus: 0, advanceDeduction: 0, latePunchAmt: 0, otherDebit: 0, employeeId: emp._id };
+    // Track whether the admin has explicitly saved an advanceDeduction value.
+    // If the input document doesn't exist at all, or exists with advanceDeduction === 0,
+    // we cannot distinguish "admin entered 0" from "admin never entered anything".
+    // The safest heuristic: if the stored value is 0 but there is an outstanding balance,
+    // auto-apply the full outstanding amount so the ledger is reflected in Net by default.
+    const hasManualAdvanceEntry = inputsByEmp.has(emp._id) && (inputsByEmp.get(emp._id)!.advanceDeduction > 0);
     const ewDays = empInput.ewDays ?? ewSuggestion;
     const totalPaidDays = presentDays - penaltyDays + ewDays;
 
@@ -454,7 +461,9 @@ export function computePayroll(input: {
       }
     }
 
-    const requested = empInput.advanceDeduction;
+    // If the admin has explicitly entered a deduction amount, use it.
+    // Otherwise, auto-apply the full outstanding balance (capped to what's available).
+    const requested = hasManualAdvanceEntry ? empInput.advanceDeduction : outstanding;
     const available = gross + empInput.incentive + empInput.bonus - empInput.latePunchAmt - empInput.otherDebit;
     const advanceDeduction = Math.min(requested, Math.max(0, available));
     const advanceCarried = outstanding - advanceDeduction;
@@ -512,6 +521,7 @@ export function computePayroll(input: {
       gross,
       incentive: empInput.incentive,
       bonus: empInput.bonus,
+      outstandingAdvance: outstanding,
       advanceDeduction,
       advanceCarried,
       latePunchAmt: empInput.latePunchAmt,
