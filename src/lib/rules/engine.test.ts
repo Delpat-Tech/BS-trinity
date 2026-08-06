@@ -13,7 +13,7 @@
  * Employee's weekly-off = Sunday (Sundays in Aug: 2, 9, 16, 23, 30).
  */
 
-import { computePayroll, type Employee, type Period, type Holiday, type AttendanceDay, type LeaveEntry } from './engine';
+import { computePayroll, type Employee, type Period, type Holiday, type AttendanceDay, type LeaveEntry, type SettlementNote } from './engine';
 
 // ─── Tiny test harness ───────────────────────────────────────────────────────
 let passed = 0;
@@ -98,7 +98,7 @@ function run(attendance: AttendanceDay[], leaves: LeaveEntry[]) {
     const isSunday = new Date(date).getDay() === 0;
     attendance.push(isSunday ? absAtt(date) : presAtt(date));
   }
-  const result = computePayroll({
+  return computePayroll({
     period: PERIOD,
     employees: [EMP],
     attendance,
@@ -106,8 +106,7 @@ function run(attendance: AttendanceDay[], leaves: LeaveEntry[]) {
     holidays: [HOLIDAY_15],
     ledger: [],
     inputs: [],
-  });
-  return result.lines[0];
+  }).lines[0];
 }
 
 // ─── Scenario 1 ─────────────────────────────────────────────────────────────
@@ -120,9 +119,9 @@ console.log('   Expected: 15=PRESENT(holiday paid), 16=WEEKLY_OFF(paid), 17=PAID
     [absAtt('2026-08-16'), absAtt('2026-08-17')],
     [paidLeave('2026-08-17')],
   );
-  assert('S1: 15 Aug NOT absent', !line.absentDates?.some(d => d.includes('15')), JSON.stringify(line.absentDates));
-  assert('S1: 16 Aug NOT absent', !line.absentDates?.some(d => d.includes('16')), JSON.stringify(line.absentDates));
-  assert('S1: 17 Aug NOT absent (paid leave)', !line.absentDates?.some(d => d.includes('17')), JSON.stringify(line.absentDates));
+  assert('S1: 15 Aug NOT absent', !(line.absentDates?.some(d => d.includes('15')) ?? false), JSON.stringify(line.absentDates));
+  assert('S1: 16 Aug NOT absent', !(line.absentDates?.some(d => d.includes('16')) ?? false), JSON.stringify(line.absentDates));
+  assert('S1: 17 Aug NOT absent (paid leave)', !(line.absentDates?.some(d => d.includes('17')) ?? false), JSON.stringify(line.absentDates));
   assert('S1: paidLeaveDays = 1', line.paidLeaveDays === 1, `paidLeaveDays=${line.paidLeaveDays}`);
 }
 
@@ -136,10 +135,10 @@ console.log('   Expected: all 4 days (14,15,16,17) = ABSENT_UNPAID');
     [absAtt('2026-08-14'), absAtt('2026-08-16'), absAtt('2026-08-17')],
     [unpaidLeave('2026-08-14'), unpaidLeave('2026-08-17')],
   );
-  assert('S2: 14 Aug absent', line.absentDates?.some(d => d.includes('14')), JSON.stringify(line.absentDates));
-  assert('S2: 15 Aug absent (sandwiched)', line.absentDates?.some(d => d.includes('15')), JSON.stringify(line.absentDates));
-  assert('S2: 16 Aug absent (sandwiched)', line.absentDates?.some(d => d.includes('16')), JSON.stringify(line.absentDates));
-  assert('S2: 17 Aug absent', line.absentDates?.some(d => d.includes('17')), JSON.stringify(line.absentDates));
+  assert('S2: 14 Aug absent', line.absentDates?.some(d => d.includes('14')) ?? false, JSON.stringify(line.absentDates));
+  assert('S2: 15 Aug absent (sandwiched)', line.absentDates?.some(d => d.includes('15')) ?? false, JSON.stringify(line.absentDates));
+  assert('S2: 16 Aug absent (sandwiched)', line.absentDates?.some(d => d.includes('16')) ?? false, JSON.stringify(line.absentDates));
+  assert('S2: 17 Aug absent', line.absentDates?.some(d => d.includes('17')) ?? false, JSON.stringify(line.absentDates));
   assert('S2: paidLeaveDays = 0', line.paidLeaveDays === 0, `paidLeaveDays=${line.paidLeaveDays}`);
 }
 
@@ -157,11 +156,11 @@ console.log('   Expected: 14=unpaid, 15=sandwiched(unpaid), 16=unpaid(downgraded
     [absAtt('2026-08-05'), absAtt('2026-08-14'), absAtt('2026-08-16'), absAtt('2026-08-17')],
     [paidLeave('2026-08-05'), unpaidLeave('2026-08-14'), paidLeave('2026-08-16'), unpaidLeave('2026-08-17')],
   );
-  assert('S3: 5 Aug is paid leave (within quota)', line.paidLeaveDatesList?.some(d => d.includes('5')), JSON.stringify(line.paidLeaveDatesList));
-  assert('S3: 14 Aug absent', line.absentDates?.some(d => d.includes('14')), JSON.stringify(line.absentDates));
-  assert('S3: 15 Aug absent (sandwiched)', line.absentDates?.some(d => d.includes('15')), JSON.stringify(line.absentDates));
-  assert('S3: 16 Aug absent (WO+paid leave downgraded)', line.absentDates?.some(d => d.includes('16')), JSON.stringify(line.absentDates));
-  assert('S3: 17 Aug absent', line.absentDates?.some(d => d.includes('17')), JSON.stringify(line.absentDates));
+  assert('S3: 5 Aug is paid leave (within quota)', line.paidLeaveDatesList?.some(d => d.includes('5')) ?? false, JSON.stringify(line.paidLeaveDatesList));
+  assert('S3: 14 Aug absent', line.absentDates?.some(d => d.includes('14')) ?? false, JSON.stringify(line.absentDates));
+  assert('S3: 15 Aug absent (sandwiched)', line.absentDates?.some(d => d.includes('15')) ?? false, JSON.stringify(line.absentDates));
+  assert('S3: 16 Aug absent (WO+paid leave downgraded)', line.absentDates?.some(d => d.includes('16')) ?? false, JSON.stringify(line.absentDates));
+  assert('S3: 17 Aug absent', line.absentDates?.some(d => d.includes('17')) ?? false, JSON.stringify(line.absentDates));
   assert('S3: paidLeaveDays = 1 (only Aug 5)', line.paidLeaveDays === 1, `paidLeaveDays=${line.paidLeaveDays}`);
 }
 
@@ -175,10 +174,10 @@ console.log('   Expected: 15=PRESENT(holiday), 16=WEEKLY_OFF — sandwich does N
     [absAtt('2026-08-14'), absAtt('2026-08-16'), presAtt('2026-08-17')],
     [unpaidLeave('2026-08-14')],
   );
-  assert('S4: 14 Aug absent', line.absentDates?.some(d => d.includes('14')), JSON.stringify(line.absentDates));
-  assert('S4: 15 Aug NOT absent (holiday, no sandwich)', !line.absentDates?.some(d => d.includes('15')), JSON.stringify(line.absentDates));
-  assert('S4: 16 Aug NOT absent (WO, no sandwich)', !line.absentDates?.some(d => d.includes('16')), JSON.stringify(line.absentDates));
-  assert('S4: 17 Aug NOT absent', !line.absentDates?.some(d => d.includes('17')), JSON.stringify(line.absentDates));
+  assert('S4: 14 Aug absent', line.absentDates?.some(d => d.includes('14')) ?? false, JSON.stringify(line.absentDates));
+  assert('S4: 15 Aug NOT absent (holiday, no sandwich)', !(line.absentDates?.some(d => d.includes('15')) ?? false), JSON.stringify(line.absentDates));
+  assert('S4: 16 Aug NOT absent (WO, no sandwich)', !(line.absentDates?.some(d => d.includes('16')) ?? false), JSON.stringify(line.absentDates));
+  assert('S4: 17 Aug NOT absent', !(line.absentDates?.some(d => d.includes('17')) ?? false), JSON.stringify(line.absentDates));
 }
 
 // ─── Scenario 5 ─────────────────────────────────────────────────────────────
@@ -191,10 +190,59 @@ console.log('   Expected: 15=PRESENT, 16=WEEKLY_OFF, 17=PAID_LEAVE — no sandwi
     [presAtt('2026-08-14'), absAtt('2026-08-16'), absAtt('2026-08-17')],
     [paidLeave('2026-08-17')],
   );
-  assert('S5: 15 Aug NOT absent', !line.absentDates?.some(d => d.includes('15')), JSON.stringify(line.absentDates));
-  assert('S5: 16 Aug NOT absent', !line.absentDates?.some(d => d.includes('16')), JSON.stringify(line.absentDates));
-  assert('S5: 17 Aug NOT absent (paid leave)', !line.absentDates?.some(d => d.includes('17')), JSON.stringify(line.absentDates));
+  assert('S5: 15 Aug NOT absent', !(line.absentDates?.some(d => d.includes('15')) ?? false), JSON.stringify(line.absentDates));
+  assert('S5: 16 Aug NOT absent', !(line.absentDates?.some(d => d.includes('16')) ?? false), JSON.stringify(line.absentDates));
+  assert('S5: 17 Aug NOT absent (paid leave)', !(line.absentDates?.some(d => d.includes('17')) ?? false), JSON.stringify(line.absentDates));
   assert('S5: paidLeaveDays = 1', line.paidLeaveDays === 1, `paidLeaveDays=${line.paidLeaveDays}`);
+}
+
+// ─── Scenario 6 ─────────────────────────────────────────────────────────────
+// Sat 8 = absent with unpaid leave entry, Sun 9 = WO but employee works
+// WO-worked settlement should settle Sat 8 → PAID_LEAVE
+console.log('\n📋 S6 — WO-worked settles before-day leave: Absent+UnpaidLeave(Sat 8) + WO_WORKED(Sun 9)');
+console.log('   Expected: 8=PAID_LEAVE (settled), SettlementNote kind=wo_worked_settled for date 8');
+{
+  // Sun 9 is worked (machineStatus P, isWeeklyOff → WEEKLY_OFF_WORKED)
+  const woWorkedAtt: AttendanceDay = { employeeId: 'e1', date: '2026-08-09', inTime: '09:30:00', outTime: '18:30:00', machineStatus: 'P', finalStatus: null };
+  const line = run(
+    [absAtt('2026-08-08'), woWorkedAtt],
+    [unpaidLeave('2026-08-08')],  // unpaid leave → starts as ABSENT_UNPAID → settlement upgrades to PAID_LEAVE
+  );
+  assert('S6: 8 Aug is PAID_LEAVE (settled)', line.paidLeaveDatesList?.some(d => d.includes('8')) ?? false, JSON.stringify(line.paidLeaveDatesList));
+  assert('S6: 8 Aug NOT absent', !(line.absentDates?.some(d => d.includes(' 8') || d.startsWith('8 ')) ?? false), JSON.stringify(line.absentDates));
+  assert('S6: settlementNotes has wo_worked_settled', line.settlementNotes?.some(n => n.kind === 'wo_worked_settled' && n.settledDate === '2026-08-08') ?? false, JSON.stringify(line.settlementNotes));
+}
+
+// ─── Scenario 7 ─────────────────────────────────────────────────────────────
+// Sun 9 = WO but employee works, Mon 10 = absent (leave entry)
+// WO-worked settlement should settle Mon 10 → PAID_LEAVE (after-day preference)
+console.log('\n📋 S7 — WO-worked settles after-day leave: WO_WORKED(Sun 9) + Absent(Mon 10)');
+console.log('   Expected: 10=PAID_LEAVE, SettlementNote kind=wo_worked_settled for date 10');
+{
+  const woWorkedAtt: AttendanceDay = { employeeId: 'e1', date: '2026-08-09', inTime: '09:30:00', outTime: '18:30:00', machineStatus: 'P', finalStatus: null };
+  const line = run(
+    [woWorkedAtt, absAtt('2026-08-10')],
+    [unpaidLeave('2026-08-10')],
+  );
+  assert('S7: 10 Aug is PAID_LEAVE (settled)', line.paidLeaveDatesList?.some(d => d.includes('10')) ?? false, JSON.stringify(line.paidLeaveDatesList));
+  assert('S7: 10 Aug NOT absent', !(line.absentDates?.some(d => d.includes('10')) ?? false), JSON.stringify(line.absentDates));
+  assert('S7: settlementNotes has wo_worked_settled', line.settlementNotes?.some(n => n.kind === 'wo_worked_settled' && n.settledDate === '2026-08-10') ?? false, JSON.stringify(line.settlementNotes));
+}
+
+// ─── Scenario 8 ─────────────────────────────────────────────────────────────
+// quota=1 paid leave. Employee takes paid leave Aug 4 (within quota) AND Aug 5 (excess).
+// Aug 5 should be downgraded → ABSENT_UNPAID, and a quota_downgrade SettlementNote should appear.
+console.log('\n📋 S8 — Quota downgrade notification: 2 paid leaves with quota=1');
+console.log('   Expected: 4=PAID_LEAVE, 5=ABSENT_UNPAID, settlementNote kind=quota_downgrade for date 5');
+{
+  const line = run(
+    [absAtt('2026-08-04'), absAtt('2026-08-05')],
+    [paidLeave('2026-08-04'), paidLeave('2026-08-05')],
+  );
+  assert('S8: 4 Aug is PAID_LEAVE (within quota)', line.paidLeaveDatesList?.some(d => d.includes('4 ')) ?? false, JSON.stringify(line.paidLeaveDatesList));
+  assert('S8: 5 Aug is ABSENT_UNPAID (downgraded)', line.absentDates?.some(d => d.includes('5 ')) ?? false, JSON.stringify(line.absentDates));
+  assert('S8: settlementNotes has quota_downgrade', line.settlementNotes?.some(n => n.kind === 'quota_downgrade' && n.triggerDate === '2026-08-05') ?? false, JSON.stringify(line.settlementNotes));
+  assert('S8: paidLeaveDays = 1', line.paidLeaveDays === 1, `paidLeaveDays=${line.paidLeaveDays}`);
 }
 
 // ─── Summary ─────────────────────────────────────────────────────────────────

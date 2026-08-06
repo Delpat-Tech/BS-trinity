@@ -43,10 +43,10 @@ export default async function DashboardSidebar() {
     ]);
   }
 
-  // Ensure documents are plain objects for React Server Components
-  const plainPast = pastLeaves.map(l => ({ ...l, _id: l._id.toString(), emp: { ...l.emp, _id: l.emp._id.toString() } }));
-  const plainFuture = futureLeaves.map(l => ({ ...l, _id: l._id.toString(), emp: { ...l.emp, _id: l.emp._id.toString() } }));
-  const plainPunctuality = punctuality.map(p => ({ ...p, _id: p._id.toString(), periodId: p.periodId.toString(), emp: { ...p.emp, _id: p.emp._id.toString() } }));
+  // Ensure documents are plain objects for React Server Components (deep serialization to handle ObjectId, Date, Binary fields)
+  const plainPast = JSON.parse(JSON.stringify(pastLeaves));
+  const plainFuture = JSON.parse(JSON.stringify(futureLeaves));
+  const plainPunctuality = JSON.parse(JSON.stringify(punctuality));
 
   return (
     <div className="flex flex-col gap-6">

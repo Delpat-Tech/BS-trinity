@@ -87,6 +87,14 @@ export type Exception = {
   reason: string;
 };
 
+export type SettlementNote = {
+  employeeId: any;
+  kind: 'wo_worked_settled' | 'quota_downgrade';
+  triggerDate: string;  // the WO-worked day, OR the downgraded PAID_LEAVE date
+  settledDate: string;  // the adjacent leave date settled, OR same as triggerDate for quota
+  message: string;      // human-readable explanation
+};
+
 export type PayrollLine = {
   employeeId: any;
   fixedSalary: number;
@@ -116,6 +124,7 @@ export type PayrollLine = {
   halfDatesList?: string[];
   paidLeaveDatesList?: string[];
   ewDatesList?: string[];
+  settlementNotes?: SettlementNote[];
 };
 
 function formatTime(t: string | null): string | null {
@@ -137,9 +146,10 @@ export function computePayroll(input: {
   holidays: Holiday[];
   ledger: LedgerEntry[];
   inputs: PayrollInput[];
-}): { lines: PayrollLine[]; exceptions: Exception[] } {
+}): { lines: PayrollLine[]; exceptions: Exception[]; settlements: SettlementNote[] } {
   const lines: PayrollLine[] = [];
   const exceptions: Exception[] = [];
+  const settlements: SettlementNote[] = [];
   const rules = input.period.ruleset;
   const divisor = input.period.divisorDays;
 
@@ -286,7 +296,56 @@ export function computePayroll(input: {
       const paidLeaveDates = periodDates.filter(d => computedStatuses.get(d) === 'PAID_LEAVE');
       if (paidLeaveDates.length > quota) {
         // Downgrade excess paid leaves (beyond quota, in date order) to unpaid
-        paidLeaveDates.slice(quota).forEach(d => computedStatuses.set(d, 'ABSENT_UNPAID'));
+        paidLeaveDates.slice(quota).forEach(d => {
+          computedStatuses.set(d, 'ABSENT_UNPAID');
+          const note: SettlementNote = {
+            employeeId: emp._id,
+            kind: 'quota_downgrade',
+            triggerDate: d,
+            settledDate: d,
+            message: `Paid leave on ${d} downgraded to unpaid: monthly quota of ${quota} already exhausted.`,
+          };
+          settlements.push(note);
+        });
+      }
+    }
+
+    // WO-WORKED SETTLEMENT PASS
+    // For each WEEKLY_OFF_WORKED day, try to settle one adjacent ABSENT_UNPAID day
+    // (that has a leave entry) into PAID_LEAVE, consuming 1 ewSuggestion credit.
+    const woWorkedDates = periodDates.filter(d => computedStatuses.get(d) === 'WEEKLY_OFF_WORKED');
+    for (const woDate of woWorkedDates) {
+      const beforeDate = getNextDateStr(woDate, -1);
+      const afterDate  = getNextDateStr(woDate,  1);
+
+      let settledDate: string | null = null;
+
+      // Prefer before-day
+      if (
+        periodDates.includes(beforeDate) &&
+        computedStatuses.get(beforeDate) === 'ABSENT_UNPAID' &&
+        leavesByEmpDate.has(`${emp._id}_${beforeDate}`)
+      ) {
+        settledDate = beforeDate;
+      } else if (
+        periodDates.includes(afterDate) &&
+        computedStatuses.get(afterDate) === 'ABSENT_UNPAID' &&
+        leavesByEmpDate.has(`${emp._id}_${afterDate}`)
+      ) {
+        settledDate = afterDate;
+      }
+
+      if (settledDate !== null) {
+        computedStatuses.set(settledDate, 'PAID_LEAVE');
+        ewSuggestion -= 1; // credit consumed by settlement
+        const note: SettlementNote = {
+          employeeId: emp._id,
+          kind: 'wo_worked_settled',
+          triggerDate: woDate,
+          settledDate,
+          message: `Working on weekly-off ${woDate} settled the adjacent unpaid absence on ${settledDate} to PAID_LEAVE.`,
+        };
+        settlements.push(note);
       }
     }
 
@@ -432,6 +491,8 @@ export function computePayroll(input: {
       }
     }
 
+    const empSettlements = settlements.filter(s => String(s.employeeId) === String(emp._id));
+
     lines.push({
       employeeId: emp._id,
       fixedSalary,
@@ -460,9 +521,10 @@ export function computePayroll(input: {
       presentDatesList,
       halfDatesList,
       paidLeaveDatesList,
-      ewDatesList
+      ewDatesList,
+      settlementNotes: empSettlements,
     });
   }
 
-  return { lines, exceptions };
+  return { lines, exceptions, settlements };
 }

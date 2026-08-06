@@ -29,7 +29,16 @@ const PayrollLineSchema = new mongoose.Schema({
   presentDatesList: { type: [String], default: [] },
   halfDatesList: { type: [String], default: [] },
   paidLeaveDatesList: { type: [String], default: [] },
-  ewDatesList: { type: [String], default: [] }
+  ewDatesList: { type: [String], default: [] },
+  settlementNotes: {
+    type: [{
+      kind: { type: String, enum: ['wo_worked_settled', 'quota_downgrade'] },
+      triggerDate: String,
+      settledDate: String,
+      message: String,
+    }],
+    default: [],
+  },
 }, { timestamps: true });
 
 PayrollLineSchema.index({ periodId: 1, employeeId: 1 }, { unique: true });
