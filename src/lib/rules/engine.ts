@@ -238,7 +238,14 @@ export function computePayroll(input: {
       else {
         // Here, it's either P or it's a Weekly Off
         if (machineStatus === 'A' && isWeeklyOff) {
-          status = 'WEEKLY_OFF';
+          // If a paid leave entry exists on a weekly-off day, treat it as PAID_LEAVE
+          // so the quota enforcement pass can downgrade it to ABSENT_UNPAID when the
+          // monthly quota is already exhausted (enables the "bigger sandwich" scenario).
+          if (leave?.kind === 'paid') {
+            status = 'PAID_LEAVE';
+          } else {
+            status = 'WEEKLY_OFF';
+          }
         } else {
           // Employee punched in (machineStatus === 'P')
           const missedFirstHalf = inTime && inTime > rules.half_day_if_in_after;
@@ -271,6 +278,16 @@ export function computePayroll(input: {
       }
 
       computedStatuses.set(date, status);
+    }
+
+    // ENFORCE MONTHLY PAID LEAVE QUOTA
+    const quota = rules.monthly_paid_leave_quota ?? Infinity;
+    if (isFinite(quota)) {
+      const paidLeaveDates = periodDates.filter(d => computedStatuses.get(d) === 'PAID_LEAVE');
+      if (paidLeaveDates.length > quota) {
+        // Downgrade excess paid leaves (beyond quota, in date order) to unpaid
+        paidLeaveDates.slice(quota).forEach(d => computedStatuses.set(d, 'ABSENT_UNPAID'));
+      }
     }
 
     // PRE-PROCESS HOLIDAYS
