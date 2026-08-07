@@ -42,29 +42,12 @@ export default async function PeriodLayout(props: {
   return (
     <div className="flex-1 min-w-0 flex flex-col bg-surface h-full">
       {/* Topbar context */}
-      <div className="px-[28px] pt-[18px] pb-[0] border-b border-border">
-        
-        <div className="flex items-center gap-[16px]">
-          <Link href="/">
-            <button className="bg-transparent border-none text-[12.5px] text-text-secondary cursor-pointer p-0 hover:text-text flex items-center">
-              ← Back
-            </button>
-          </Link>
-          <div className="flex items-baseline gap-[10px]">
-            <h1 className="m-0 text-[18px] font-semibold tracking-[-0.015em]">{monthName} {period.year}</h1>
-            <span className="text-[12px] text-text-muted font-mono">01–30 {shortMonth} · {employeesCount} employees</span>
-            
-            {isLocked ? (
-              <span className="inline-block text-[11.5px] font-medium px-[8px] py-[2px] rounded-[10px] bg-success-bg text-success-text border border-success-border">
-                Locked
-              </span>
-            ) : (
-              <span className="inline-block text-[11.5px] font-medium px-[8px] py-[2px] rounded-[10px] bg-alert-bg text-alert-text border border-alert-border">
-                Open
-              </span>
-            )}
-          </div>
-        </div>
+      <div className="px-[28px] py-[14px] border-b border-border">
+        <Link href="/">
+          <button className="bg-transparent border-none text-[12.5px] text-text-secondary cursor-pointer p-0 hover:text-text flex items-center">
+            ← Back
+          </button>
+        </Link>
       </div>
 
       {/* Main Tab Content */}
@@ -74,6 +57,11 @@ export default async function PeriodLayout(props: {
           exceptionsCount={exceptionsCount} 
           hasBiometrics={hasBiometrics}
           isLocked={isLocked}
+          monthName={monthName}
+          shortMonth={shortMonth}
+          month={period.month}
+          year={period.year}
+          employeesCount={employeesCount}
         />
         {props.children}
       </div>

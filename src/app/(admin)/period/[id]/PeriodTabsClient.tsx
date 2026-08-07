@@ -4,18 +4,39 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Check } from "lucide-react";
+import { 
+  Check, 
+  Calendar, 
+  Users, 
+  Lock, 
+  Unlock, 
+  Clock, 
+  CheckCircle, 
+  AlertCircle, 
+  FileSpreadsheet, 
+  FileText 
+} from "lucide-react";
 
 export default function PeriodTabsClient({ 
   periodId, 
   exceptionsCount,
   hasBiometrics,
-  isLocked
+  isLocked,
+  monthName,
+  shortMonth,
+  month,
+  year,
+  employeesCount
 }: { 
-  periodId: string, 
-  exceptionsCount: number,
-  hasBiometrics: boolean,
-  isLocked: boolean
+  periodId: string;
+  exceptionsCount: number;
+  hasBiometrics: boolean;
+  isLocked: boolean;
+  monthName?: string;
+  shortMonth?: string;
+  month?: number;
+  year?: number;
+  employeesCount?: number;
 }) {
   const pathname = usePathname();
   
@@ -77,8 +98,150 @@ export default function PeriodTabsClient({
     },
   ];
 
+  // Derived values for summary card
+  const currentMonthName = monthName || 'June';
+  const currentYear = year || 2026;
+  const currentMonth = month || 6;
+  const currentShortMonth = shortMonth || 'Jun';
+  const totalEmployees = employeesCount ?? 86;
+
+  const lastDayNum = new Date(currentYear, currentMonth, 0).getDate();
+  const startDateStr = `01 ${currentShortMonth} ${currentYear}`;
+  const endDateStr = `${String(lastDayNum).padStart(2, '0')} ${currentShortMonth} ${currentYear}`;
+
   return (
-    <div className="w-full px-8 py-8">
+    <div className="w-full px-8 pt-8 pb-4 flex flex-col gap-6">
+      {/* Payroll Summary Card */}
+      <div className="bg-surface rounded-xl p-6 shadow-sm border border-border">
+        <div className="flex items-center gap-2 mb-5 pb-3 border-b border-border-subtle">
+          <FileText className="w-4 h-4 text-text-muted" />
+          <h2 className="text-[13px] font-semibold text-text m-0 tracking-tight">Payroll Summary</h2>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-y-5 gap-x-6">
+          {/* Payroll Period */}
+          <div className="flex flex-col">
+            <span className="text-[11px] font-semibold tracking-wider text-text-muted uppercase flex items-center gap-1.5 mb-1.5">
+              <Calendar className="w-3.5 h-3.5 text-text-muted shrink-0" />
+              Payroll Period
+            </span>
+            <span className="text-[14px] font-semibold text-text">
+              {currentMonthName} {currentYear}
+            </span>
+          </div>
+
+          {/* Employees */}
+          <div className="flex flex-col">
+            <span className="text-[11px] font-semibold tracking-wider text-text-muted uppercase flex items-center gap-1.5 mb-1.5">
+              <Users className="w-3.5 h-3.5 text-text-muted shrink-0" />
+              Employees
+            </span>
+            <span className="text-[14px] font-semibold text-text font-mono">
+              {totalEmployees}
+            </span>
+          </div>
+
+          {/* Status */}
+          <div className="flex flex-col items-start">
+            <span className="text-[11px] font-semibold tracking-wider text-text-muted uppercase flex items-center gap-1.5 mb-1.5">
+              {isLocked ? (
+                <Lock className="w-3.5 h-3.5 text-text-muted shrink-0" />
+              ) : (
+                <Unlock className="w-3.5 h-3.5 text-text-muted shrink-0" />
+              )}
+              Status
+            </span>
+            {isLocked ? (
+              <span className="inline-flex items-center text-[11.5px] font-semibold px-2.5 py-0.5 rounded-full bg-success-bg text-success-text border border-success-border">
+                Locked
+              </span>
+            ) : (
+              <span className="inline-flex items-center text-[11.5px] font-semibold px-2.5 py-0.5 rounded-full bg-alert-bg text-alert-text border border-alert-border">
+                Open
+              </span>
+            )}
+          </div>
+
+          {/* Payroll Start */}
+          <div className="flex flex-col">
+            <span className="text-[11px] font-semibold tracking-wider text-text-muted uppercase flex items-center gap-1.5 mb-1.5">
+              <Clock className="w-3.5 h-3.5 text-text-muted shrink-0" />
+              Payroll Start
+            </span>
+            <span className="text-[14px] font-semibold text-text font-mono">
+              {startDateStr}
+            </span>
+          </div>
+
+          {/* Payroll End */}
+          <div className="flex flex-col">
+            <span className="text-[11px] font-semibold tracking-wider text-text-muted uppercase flex items-center gap-1.5 mb-1.5">
+              <Clock className="w-3.5 h-3.5 text-text-muted shrink-0" />
+              Payroll End
+            </span>
+            <span className="text-[14px] font-semibold text-text font-mono">
+              {endDateStr}
+            </span>
+          </div>
+
+          {/* Attendance Uploaded */}
+          <div className="flex flex-col items-start">
+            <span className="text-[11px] font-semibold tracking-wider text-text-muted uppercase flex items-center gap-1.5 mb-1.5">
+              <FileSpreadsheet className="w-3.5 h-3.5 text-text-muted shrink-0" />
+              Attendance Uploaded
+            </span>
+            {hasBiometrics ? (
+              <span className="inline-flex items-center text-[11.5px] font-semibold px-2.5 py-0.5 rounded-full bg-success-bg text-success-text border border-success-border">
+                Yes
+              </span>
+            ) : (
+              <span className="inline-flex items-center text-[11.5px] font-semibold px-2.5 py-0.5 rounded-full bg-alert-bg text-alert-text border border-alert-border">
+                No
+              </span>
+            )}
+          </div>
+
+          {/* Exceptions Pending */}
+          <div className="flex flex-col items-start">
+            <span className="text-[11px] font-semibold tracking-wider text-text-muted uppercase flex items-center gap-1.5 mb-1.5">
+              <AlertCircle className="w-3.5 h-3.5 text-text-muted shrink-0" />
+              Exceptions Pending
+            </span>
+            {exceptionsCount === 0 ? (
+              <span className="inline-flex items-center text-[11.5px] font-semibold px-2.5 py-0.5 rounded-full bg-success-bg text-success-text border border-success-border font-mono">
+                0
+              </span>
+            ) : (
+              <span className="inline-flex items-center text-[11.5px] font-semibold px-2.5 py-0.5 rounded-full bg-alert-bg text-alert-text border border-alert-border font-mono">
+                {exceptionsCount}
+              </span>
+            )}
+          </div>
+
+          {/* Salary Review */}
+          <div className="flex flex-col items-start">
+            <span className="text-[11px] font-semibold tracking-wider text-text-muted uppercase flex items-center gap-1.5 mb-1.5">
+              <CheckCircle className="w-3.5 h-3.5 text-text-muted shrink-0" />
+              Salary Review
+            </span>
+            {step3Status === 'Completed' ? (
+              <span className="inline-flex items-center text-[11.5px] font-semibold px-2.5 py-0.5 rounded-full bg-success-bg text-success-text border border-success-border">
+                Completed
+              </span>
+            ) : step3Status === 'In Progress' ? (
+              <span className="inline-flex items-center text-[11.5px] font-semibold px-2.5 py-0.5 rounded-full bg-[#e5efff] text-[#2c65d1] border border-[#b8d4ff]">
+                In Progress
+              </span>
+            ) : (
+              <span className="inline-flex items-center text-[11.5px] font-semibold px-2.5 py-0.5 rounded-full bg-alert-bg text-alert-text border border-alert-border">
+                Pending
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Stepper Container */}
       <div className="bg-surface rounded-xl p-8 shadow-sm border border-border">
         <div className="flex items-center justify-between w-full relative">
           {/* Background line */}
