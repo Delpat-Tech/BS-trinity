@@ -22,7 +22,14 @@ const PeriodSchema = new mongoose.Schema({
   uploadedFileName: { type: String, default: null },
   lockedAt: { type: Date },
   lockedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  unlockReason: { type: String }
+  unlockReason: { type: String },
+  unlockedAt: { type: Date },
+  unlockedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  unlockHistory: [{
+    reason: { type: String, required: true },
+    unlockedAt: { type: Date, default: Date.now },
+    unlockedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+  }]
 }, { timestamps: true });
 
 PeriodSchema.index({ month: 1, year: 1 }, { unique: true });

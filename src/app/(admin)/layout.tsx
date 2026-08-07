@@ -1,11 +1,15 @@
 import { requireSession } from '@/lib/auth';
 import { Employee } from '@/models/Employee';
 import dbConnect from '@/lib/db';
+import { CompanySettings } from '@/models/CompanySettings';
 import SidebarClient from './SidebarClient';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await requireSession();
   await dbConnect();
+
+  const companySettingsDoc = await CompanySettings.findOne({}).lean();
+  const companySettings = companySettingsDoc ? JSON.parse(JSON.stringify(companySettingsDoc)) : null;
 
   const employeesCount = await Employee.countDocuments({ isIgnored: false, endDate: null });
   const uniqueCodes = (await Employee.distinct('machineId', { isIgnored: false, endDate: null })).length;
@@ -17,14 +21,26 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         {/* Brand header */}
         <div className="px-[20px] py-[18px] border-b border-[rgba(255,255,255,0.07)]">
           <div className="flex items-center gap-[10px]">
-            {/* Wrench icon mark */}
-            <div className="w-[28px] h-[28px] rounded-[6px] bg-[#E8630A] flex items-center justify-center shrink-0">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-              </svg>
-            </div>
+            {/* Company logo or fallback Wrench icon mark */}
+            {companySettings?.logoUrl ? (
+              <div className="w-[32px] h-[32px] rounded-[6px] bg-white flex items-center justify-center shrink-0 overflow-hidden p-0.5 shadow-sm">
+                <img
+                  src={companySettings.logoUrl}
+                  alt={companySettings?.companyName || "Logo"}
+                  className="max-w-full max-h-full object-contain"
+                />
+              </div>
+            ) : (
+              <div className="w-[28px] h-[28px] rounded-[6px] bg-[#E8630A] flex items-center justify-center shrink-0">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                </svg>
+              </div>
+            )}
             <div>
-              <div className="text-[14px] font-semibold tracking-[-0.01em] text-white leading-tight">Trinity Motors</div>
+              <div className="text-[14px] font-semibold tracking-[-0.01em] text-white leading-tight">
+                {companySettings?.companyName || "Trinity Motors"}
+              </div>
               <div className="text-[10.5px] text-[#9BAAB8] mt-[1px] tracking-[0.04em] uppercase font-medium">Attendance System</div>
             </div>
           </div>

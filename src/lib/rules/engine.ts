@@ -89,7 +89,7 @@ export type Exception = {
 
 export type SettlementNote = {
   employeeId: any;
-  kind: 'wo_worked_settled' | 'quota_downgrade';
+  kind: 'wo_worked_settled' | 'wo_worked_noted' | 'quota_downgrade';
   triggerDate: string;  // the WO-worked day, OR the downgraded PAID_LEAVE date
   settledDate: string;  // the adjacent leave date settled, OR same as triggerDate for quota
   message: string;      // human-readable explanation
@@ -311,43 +311,20 @@ export function computePayroll(input: {
       }
     }
 
-    // WO-WORKED SETTLEMENT PASS
-    // For each WEEKLY_OFF_WORKED day, try to settle one adjacent ABSENT_UNPAID day
-    // (that has a leave entry) into PAID_LEAVE, consuming 1 ewSuggestion credit.
+    // WO-WORKED AUDIT NOTE PASS
+    // Do NOT automatically convert adjacent absences to PAID_LEAVE.
+    // Record an audit note indicating that employee worked on weekly-off,
+    // requiring manual HR/admin action for any leave credit or comp-off.
     const woWorkedDates = periodDates.filter(d => computedStatuses.get(d) === 'WEEKLY_OFF_WORKED');
     for (const woDate of woWorkedDates) {
-      const beforeDate = getNextDateStr(woDate, -1);
-      const afterDate  = getNextDateStr(woDate,  1);
-
-      let settledDate: string | null = null;
-
-      // Prefer before-day
-      if (
-        periodDates.includes(beforeDate) &&
-        computedStatuses.get(beforeDate) === 'ABSENT_UNPAID' &&
-        leavesByEmpDate.has(`${emp._id}_${beforeDate}`)
-      ) {
-        settledDate = beforeDate;
-      } else if (
-        periodDates.includes(afterDate) &&
-        computedStatuses.get(afterDate) === 'ABSENT_UNPAID' &&
-        leavesByEmpDate.has(`${emp._id}_${afterDate}`)
-      ) {
-        settledDate = afterDate;
-      }
-
-      if (settledDate !== null) {
-        computedStatuses.set(settledDate, 'PAID_LEAVE');
-        ewSuggestion -= 1; // credit consumed by settlement
-        const note: SettlementNote = {
-          employeeId: emp._id,
-          kind: 'wo_worked_settled',
-          triggerDate: woDate,
-          settledDate,
-          message: `Working on weekly-off ${woDate} settled the adjacent unpaid absence on ${settledDate} to PAID_LEAVE.`,
-        };
-        settlements.push(note);
-      }
+      const note: SettlementNote = {
+        employeeId: emp._id,
+        kind: 'wo_worked_noted',
+        triggerDate: woDate,
+        settledDate: woDate,
+        message: `Employee worked on weekly-off ${woDate}. Absence settlement pending manual HR/admin action.`,
+      };
+      settlements.push(note);
     }
 
     // PRE-PROCESS HOLIDAYS

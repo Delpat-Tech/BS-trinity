@@ -126,6 +126,7 @@ export default async function ReviewGridPage(props: { params: Promise<{ id: stri
       lines={safeLines} 
       exceptionsCount={exceptionsCount}
       status={period.status}
+      unlockReason={period.unlockReason || ''}
     />
   );
 }
