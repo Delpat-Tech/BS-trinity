@@ -90,31 +90,44 @@ export async function lockPeriod(periodId: string) {
 }
 
 export async function unlockPeriod(periodId: string, reason: string) {
-  await requireSession();
+  const session = await requireSession();
   await dbConnect();
 
-  if (!reason) throw new Error('Unlock reason is required');
+  const trimmedReason = reason?.trim();
+  if (!trimmedReason) throw new Error('Unlock reason is required');
+
+  const user = session.user as any;
+  const userId = user?.id || user?._id || null;
 
   const { Period } = await import('@/models/Period');
   const { PayrollLine } = await import('@/models/PayrollLine');
   const { LedgerEntry } = await import('@/models/LedgerEntry');
 
-    // 1. Delete all PayrollLines for this period
-    await PayrollLine.deleteMany({ periodId });
+  // 1. Delete all PayrollLines for this period
+  await PayrollLine.deleteMany({ periodId });
 
-    // 2. Delete all deduction LedgerEntries for this period
-    await LedgerEntry.deleteMany({ periodId, type: 'deduction' });
+  // 2. Delete all deduction LedgerEntries for this period
+  await LedgerEntry.deleteMany({ periodId, type: 'deduction' });
 
-    // 3. Revert Period status
-    await Period.findByIdAndUpdate(
-      periodId,
-      { 
-        $set: { 
-          status: 'review',
-          unlockReason: reason
+  // 3. Revert Period status and save unlock audit details to DB
+  await Period.findByIdAndUpdate(
+    periodId,
+    { 
+      $set: { 
+        status: 'review',
+        unlockReason: trimmedReason,
+        unlockedAt: new Date(),
+        unlockedBy: userId
+      },
+      $push: {
+        unlockHistory: {
+          reason: trimmedReason,
+          unlockedAt: new Date(),
+          unlockedBy: userId
         }
       }
-    );
+    }
+  );
 
   revalidatePath(`/period/${periodId}/review`);
   revalidatePath(`/period/${periodId}`);

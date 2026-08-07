@@ -1,16 +1,41 @@
 'use client';
 import { toast } from 'sonner';
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { updatePayrollInput, lockPeriod, unlockPeriod } from './actions';
 import { useRouter } from 'next/navigation';
 
-export default function ReviewGridClient({ periodId, lines, exceptionsCount, status }: { periodId: string, lines: any[], exceptionsCount: number, status: string }) {
+export default function ReviewGridClient({ periodId, lines, exceptionsCount, status, unlockReason }: { periodId: string, lines: any[], exceptionsCount: number, status: string, unlockReason?: string }) {
   const isLocked = status === 'locked';
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  
+
   const [openRow, setOpenRow] = useState<string | null>(null);
   const [openCell, setOpenCell] = useState<'gross' | 'net' | 'paidDays' | 'penalties' | 'absent' | 'present' | 'half' | 'leave' | 'ew' | null>(null);
+
+  const tableContainerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState<number | null>(null);
+
+  useEffect(() => {
+    const el = tableContainerRef.current;
+    if (!el) return;
+
+    const updateWidth = () => {
+      setContainerWidth(el.clientWidth);
+    };
+
+    updateWidth();
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateWidth();
+    });
+    resizeObserver.observe(el);
+
+    window.addEventListener('resize', updateWidth);
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateWidth);
+    };
+  }, []);
 
   const handleUpdate = async (employeeId: string, field: string, value: number | null) => {
     if (isLocked) return;
@@ -39,10 +64,10 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
 
   const handleUnlock = async () => {
     const reason = prompt('Enter reason for unlocking:');
-    if (!reason) return;
+    if (!reason || !reason.trim()) return;
     setLoading(true);
     try {
-      await unlockPeriod(periodId, reason);
+      await unlockPeriod(periodId, reason.trim());
       toast.success('Period unlocked successfully');
       router.refresh();
     } catch (err: any) {
@@ -58,6 +83,12 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
 
   return (
     <div className="flex flex-col h-full bg-surface">
+      {unlockReason && !isLocked && (
+        <div className="bg-amber-50 border-b border-amber-200 px-[28px] py-[8px] flex items-center gap-2 text-[12px] text-amber-900 font-medium">
+          <span className="font-semibold uppercase tracking-wider text-[10.5px] px-1.5 py-0.5 rounded bg-amber-200/70 text-amber-950">Unlocked</span>
+          <span>Reason stored in DB: <span className="italic font-normal">"{unlockReason}"</span></span>
+        </div>
+      )}
       <div className="px-[28px] py-[9px] border-b border-border-subtle bg-header flex items-center gap-[24px]">
         <div className="text-[12px] text-text-secondary">
           Grey columns are computed. Click a computed figure to see how it was built.
@@ -75,7 +106,7 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
         </div>
       </div>
 
-      <div className="flex-1 overflow-x-auto relative">
+      <div ref={tableContainerRef} className="flex-1 overflow-x-auto relative">
         <table className="border-collapse min-w-[1560px] text-[12.5px] w-full">
           <thead>
             <tr>
@@ -243,8 +274,11 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
 
                 {openRow === r.employeeId && (
                   <tr>
-                    <td colSpan={20} className="p-0 border-b border-border bg-header sticky left-0">
-                      <div className="py-[12px] px-[28px] flex gap-[34px] items-start max-w-[calc(100vw-220px)] overflow-x-auto">
+                    <td colSpan={20} className="p-0 border-b border-border bg-header">
+                      <div 
+                        className="sticky left-0 max-w-full py-[12px] px-[28px] flex gap-[34px] items-start overflow-x-auto bg-header z-10 border-b border-border shadow-sm"
+                        style={{ width: containerWidth ? `${containerWidth}px` : 'calc(100vw - 220px)' }}
+                      >
                         {openCell === 'gross' && (
                           <>
                             <div>

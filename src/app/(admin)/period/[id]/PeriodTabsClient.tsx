@@ -78,7 +78,7 @@ export default function PeriodTabsClient({
   ];
 
   return (
-    <div className="w-full px-8 py-8">
+    <div className="w-full px-8 pt-4 pb-6">
       <div className="bg-surface rounded-xl p-8 shadow-sm border border-border">
         <div className="flex items-center justify-between w-full relative">
           {/* Background line */}

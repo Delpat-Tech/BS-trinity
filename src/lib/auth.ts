@@ -26,10 +26,24 @@ export const authOptions: NextAuthOptions = {
         const isValid = await bcrypt.compare(credentials.password, user.passwordHash);
         if (!isValid) return null;
         
-        return { id: user._id.toString(), name: user.username };
+        return { id: user._id.toString(), name: user.username, role: user.role || 'admin' };
       }
     })
   ],
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.role = user.role;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.role = token.role as string;
+      }
+      return session;
+    }
+  },
   pages: {
     signIn: '/login',
   },

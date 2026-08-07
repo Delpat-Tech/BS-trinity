@@ -73,12 +73,20 @@ async function seed() {
     }
   });
 
-  console.log('Seeding Admin User...');
+  console.log('Seeding Admin and HR Users...');
   await User.deleteMany({});
-  const passwordHash = await bcrypt.hash('admin123', 10);
+  const adminPasswordHash = await bcrypt.hash('admin123', 10);
   await User.create({
     username: 'admin',
-    passwordHash
+    passwordHash: adminPasswordHash,
+    role: 'admin'
+  });
+
+  const hrPasswordHash = await bcrypt.hash('hr123', 10);
+  await User.create({
+    username: 'hr',
+    passwordHash: hrPasswordHash,
+    role: 'hr'
   });
 
   console.log('\n--- Collection Indexes ---');
