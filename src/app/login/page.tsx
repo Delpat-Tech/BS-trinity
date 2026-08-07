@@ -187,10 +187,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-4 border-t border-slate-100 pt-3 text-center text-xs text-slate-400 font-medium flex items-center justify-center gap-1.5">
-            <span>Powered by</span>
-            <span className="font-bold text-slate-600 tracking-wide">BrahmaSuite</span>
-          </div>
+         
         </div>
       </div>
 
