@@ -198,35 +198,37 @@ console.log('   Expected: 15=PRESENT, 16=WEEKLY_OFF, 17=PAID_LEAVE — no sandwi
 
 // ─── Scenario 6 ─────────────────────────────────────────────────────────────
 // Sat 8 = absent with unpaid leave entry, Sun 9 = WO but employee works
-// WO-worked settlement should settle Sat 8 → PAID_LEAVE
-console.log('\n📋 S6 — WO-worked settles before-day leave: Absent+UnpaidLeave(Sat 8) + WO_WORKED(Sun 9)');
-console.log('   Expected: 8=PAID_LEAVE (settled), SettlementNote kind=wo_worked_settled for date 8');
+// Working on WO should NOT auto-settle Sat 8 to PAID_LEAVE. Sat 8 remains ABSENT.
+console.log('\n📋 S6 — WO-worked does NOT auto-settle before-day leave: Absent+UnpaidLeave(Sat 8) + WO_WORKED(Sun 9)');
+console.log('   Expected: 8=ABSENT, 9=WO_WORKED (ewDays=1), SettlementNote kind=wo_worked_noted for date 9');
 {
   // Sun 9 is worked (machineStatus P, isWeeklyOff → WEEKLY_OFF_WORKED)
   const woWorkedAtt: AttendanceDay = { employeeId: 'e1', date: '2026-08-09', inTime: '09:30:00', outTime: '18:30:00', machineStatus: 'P', finalStatus: null };
   const line = run(
     [absAtt('2026-08-08'), woWorkedAtt],
-    [unpaidLeave('2026-08-08')],  // unpaid leave → starts as ABSENT_UNPAID → settlement upgrades to PAID_LEAVE
+    [unpaidLeave('2026-08-08')],
   );
-  assert('S6: 8 Aug is PAID_LEAVE (settled)', line.paidLeaveDatesList?.some(d => d.includes('8')) ?? false, JSON.stringify(line.paidLeaveDatesList));
-  assert('S6: 8 Aug NOT absent', !(line.absentDates?.some(d => d.includes(' 8') || d.startsWith('8 ')) ?? false), JSON.stringify(line.absentDates));
-  assert('S6: settlementNotes has wo_worked_settled', line.settlementNotes?.some(n => n.kind === 'wo_worked_settled' && n.settledDate === '2026-08-08') ?? false, JSON.stringify(line.settlementNotes));
+  assert('S6: 8 Aug remains ABSENT', line.absentDates?.some(d => d.includes('8 ')) ?? false, JSON.stringify(line.absentDates));
+  assert('S6: 8 Aug NOT paid leave', !(line.paidLeaveDatesList?.some(d => d.includes('8 ')) ?? false), JSON.stringify(line.paidLeaveDatesList));
+  assert('S6: ewDays = 1 (recorded WO_WORKED)', line.ewDays === 1, `ewDays=${line.ewDays}`);
+  assert('S6: settlementNotes has wo_worked_noted for date 9', line.settlementNotes?.some(n => n.kind === 'wo_worked_noted' && n.triggerDate === '2026-08-09') ?? false, JSON.stringify(line.settlementNotes));
 }
 
 // ─── Scenario 7 ─────────────────────────────────────────────────────────────
 // Sun 9 = WO but employee works, Mon 10 = absent (leave entry)
-// WO-worked settlement should settle Mon 10 → PAID_LEAVE (after-day preference)
-console.log('\n📋 S7 — WO-worked settles after-day leave: WO_WORKED(Sun 9) + Absent(Mon 10)');
-console.log('   Expected: 10=PAID_LEAVE, SettlementNote kind=wo_worked_settled for date 10');
+// Working on WO should NOT auto-settle Mon 10 to PAID_LEAVE. Mon 10 remains ABSENT.
+console.log('\n📋 S7 — WO-worked does NOT auto-settle after-day leave: WO_WORKED(Sun 9) + Absent(Mon 10)');
+console.log('   Expected: 10=ABSENT, 9=WO_WORKED (ewDays=1), SettlementNote kind=wo_worked_noted for date 9');
 {
   const woWorkedAtt: AttendanceDay = { employeeId: 'e1', date: '2026-08-09', inTime: '09:30:00', outTime: '18:30:00', machineStatus: 'P', finalStatus: null };
   const line = run(
     [woWorkedAtt, absAtt('2026-08-10')],
     [unpaidLeave('2026-08-10')],
   );
-  assert('S7: 10 Aug is PAID_LEAVE (settled)', line.paidLeaveDatesList?.some(d => d.includes('10')) ?? false, JSON.stringify(line.paidLeaveDatesList));
-  assert('S7: 10 Aug NOT absent', !(line.absentDates?.some(d => d.includes('10')) ?? false), JSON.stringify(line.absentDates));
-  assert('S7: settlementNotes has wo_worked_settled', line.settlementNotes?.some(n => n.kind === 'wo_worked_settled' && n.settledDate === '2026-08-10') ?? false, JSON.stringify(line.settlementNotes));
+  assert('S7: 10 Aug remains ABSENT', line.absentDates?.some(d => d.includes('10')) ?? false, JSON.stringify(line.absentDates));
+  assert('S7: 10 Aug NOT paid leave', !(line.paidLeaveDatesList?.some(d => d.includes('10')) ?? false), JSON.stringify(line.paidLeaveDatesList));
+  assert('S7: ewDays = 1 (recorded WO_WORKED)', line.ewDays === 1, `ewDays=${line.ewDays}`);
+  assert('S7: settlementNotes has wo_worked_noted for date 9', line.settlementNotes?.some(n => n.kind === 'wo_worked_noted' && n.triggerDate === '2026-08-09') ?? false, JSON.stringify(line.settlementNotes));
 }
 
 // ─── Scenario 8 ─────────────────────────────────────────────────────────────

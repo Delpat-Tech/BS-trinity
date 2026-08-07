@@ -33,7 +33,7 @@ const PayrollLineSchema = new mongoose.Schema({
   ewDatesList: { type: [String], default: [] },
   settlementNotes: {
     type: [{
-      kind: { type: String, enum: ['wo_worked_settled', 'quota_downgrade'] },
+      kind: { type: String, enum: ['wo_worked_settled', 'quota_downgrade', 'wo_worked_noted'] },
       triggerDate: String,
       settledDate: String,
       message: String,
