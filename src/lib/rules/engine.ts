@@ -283,7 +283,7 @@ export function computePayroll(input: {
         if (inTime && inTime >= rules.late_strike_window[0] && inTime <= rules.late_strike_window[1]) {
           lateStrikes++;
         }
-        if (outTime && outTime >= rules.early_strike_window[0] && outTime <= rules.early_strike_window[1]) {
+        if (outTime && outTime >= rules.early_strike_window[0] && outTime <= rules.early_strike_window[1] && outTime < rules.shift_end) {
           earlyStrikes++;
         }
       }

@@ -59,7 +59,10 @@ export default function GlobalLeaveClient({ employees }: { employees: any[] }) {
       
       // We can await Promise.all, but simple loop works if the range is short
       for (const d of dates) {
-        await addLeave(selectedEmpId, d, kind, note);
+        const res = await addLeave(selectedEmpId, d, kind, note);
+        if (res && res.error) {
+          throw new Error(res.error);
+        }
       }
 
       toast.success(`Leave recorded for ${selectedEmployee?.name || 'employee'}`);

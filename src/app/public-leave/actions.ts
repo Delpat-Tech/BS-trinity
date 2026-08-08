@@ -13,38 +13,38 @@ export async function submitPublicLeave(formData: {
   kind: 'paid' | 'unpaid';
   note?: string;
 }) {
-  await dbConnect();
-
-  const { employeeId, pan, fromDate, toDate, kind, note } = formData;
-
-  if (!employeeId || !pan || !fromDate || !toDate || !kind) {
-    throw new Error('All asterisk (*) fields are required');
-  }
-
-  const employee = await Employee.findOne({ _id: employeeId, endDate: null, isIgnored: false }).lean();
-  if (!employee) {
-    throw new Error('Employee not found or is inactive.');
-  }
-
-  const clean = (val: string) => (val || '').trim().replace(/[\s-]/g, '').toUpperCase();
-  
-  if (clean(employee.panNumber) !== clean(pan)) {
-    throw new Error('Verification failed. The PAN number provided is incorrect.');
-  }
-
-  const start = new Date(fromDate);
-  const end = new Date(toDate);
-  
-  if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) {
-    throw new Error('Invalid date range');
-  }
-
-  const dates = [];
-  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    dates.push(d.toISOString().split('T')[0]);
-  }
-
   try {
+    await dbConnect();
+
+    const { employeeId, pan, fromDate, toDate, kind, note } = formData;
+
+    if (!employeeId || !pan || !fromDate || !toDate || !kind) {
+      return { error: 'All asterisk (*) fields are required' };
+    }
+
+    const employee = await Employee.findOne({ _id: employeeId, endDate: null, isIgnored: false }).lean();
+    if (!employee) {
+      return { error: 'Employee not found or is inactive.' };
+    }
+
+    const clean = (val: string) => (val || '').trim().replace(/[\s-]/g, '').toUpperCase();
+    
+    if (clean(employee.panNumber) !== clean(pan)) {
+      return { error: 'Verification failed. The PAN number provided is incorrect.' };
+    }
+
+    const start = new Date(fromDate);
+    const end = new Date(toDate);
+    
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) {
+      return { error: 'Invalid date range' };
+    }
+
+    const dates = [];
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      dates.push(d.toISOString().split('T')[0]);
+    }
+
     const entries = dates.map(date => ({
       employeeId: employee._id,
       date,
@@ -55,12 +55,14 @@ export async function submitPublicLeave(formData: {
     }));
 
     await LeaveEntry.insertMany(entries, { ordered: false });
+    revalidatePath(`/employees/${employee._id}/leave`);
+    return { success: true };
   } catch (error: any) {
-    // ordered: false allows inserting non-duplicates even if some exist
     if (error.code !== 11000) {
-      throw error;
+      return { error: error.message || 'An unexpected error occurred' };
     }
+    const { employeeId } = formData;
+    revalidatePath(`/employees/${employeeId}/leave`);
+    return { success: true };
   }
-
-  revalidatePath(`/employees/${employee._id}/leave`);
 }

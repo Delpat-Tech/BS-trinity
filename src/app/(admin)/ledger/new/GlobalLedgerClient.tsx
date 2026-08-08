@@ -51,7 +51,10 @@ export default function GlobalLedgerClient({ employees }: { employees: any[] }) 
 
     setLoading(true);
     try {
-      await logLedgerEntry(selectedEmpId, date, type, numAmount, note);
+      const res = await logLedgerEntry(selectedEmpId, date, type, numAmount, note);
+      if (res && res.error) {
+        throw new Error(res.error);
+      }
       toast.success(`${type === 'advance' ? 'Advance' : 'Opening balance'} of ₹${numAmount.toLocaleString()} recorded for ${selectedEmployee?.name}`);
       setAmount("");
       setNote("");
@@ -68,10 +71,13 @@ export default function GlobalLedgerClient({ employees }: { employees: any[] }) 
   const totalUnsettledAll = employees.reduce((sum, e) => sum + (e.unsettledAdvance || 0), 0);
   const [tableSearch, setTableSearch] = useState("");
 
-  const tableFilteredEmployees = employees.filter((e) =>
-    e.name.toLowerCase().includes(tableSearch.toLowerCase()) ||
-    e.machineId.toString().includes(tableSearch)
-  );
+  const tableFilteredEmployees = employees
+    .filter((e) => (e.unsettledAdvance || 0) > 0)
+    .filter((e) =>
+      e.name.toLowerCase().includes(tableSearch.toLowerCase()) ||
+      e.machineId.toString().includes(tableSearch)
+    )
+    .sort((a, b) => (b.unsettledAdvance || 0) - (a.unsettledAdvance || 0));
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-surface">

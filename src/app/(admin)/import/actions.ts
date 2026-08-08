@@ -10,10 +10,9 @@ export async function previewBiometricFile(formData: FormData) {
   const month = parseInt(formData.get('month') as string, 10);
   const year = parseInt(formData.get('year') as string, 10);
 
-  if (!file) throw new Error('No file uploaded');
-  if (isNaN(month) || isNaN(year)) throw new Error('Invalid month or year');
-
   try {
+    if (!file) return { success: false, error: 'No file uploaded' };
+    if (isNaN(month) || isNaN(year)) return { success: false, error: 'Invalid month or year' };
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     

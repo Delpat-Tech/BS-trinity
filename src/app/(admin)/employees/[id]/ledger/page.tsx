@@ -14,7 +14,7 @@ export default async function EmployeeLedgerPage(props: { params: Promise<{ id: 
   const emp = await Employee.findById(id).lean();
   if (!emp) return notFound();
 
-  const entries = await LedgerEntry.find({ employeeId: id }).sort({ date: 1, createdAt: 1 }).lean();
+  const entries = await LedgerEntry.find({ employeeId: Number(id) }).sort({ date: 1, createdAt: 1 }).lean();
 
   const periodIds = [...new Set(entries.map(e => e.periodId?.toString()).filter(Boolean))];
   const periods = await Period.find({ _id: { $in: periodIds } }).lean();

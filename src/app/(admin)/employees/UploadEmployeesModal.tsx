@@ -83,7 +83,7 @@ export default function UploadEmployeesModal({ trigger, open: externalOpen, onOp
               <input
                 id="emp-file-upload"
                 type="file"
-                accept=".xlsx,.xls"
+                accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
                 className="hidden"
                 onChange={(e) => setFile(e.target.files?.[0] || null)}
               />

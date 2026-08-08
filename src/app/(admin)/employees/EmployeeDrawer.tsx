@@ -125,10 +125,12 @@ export function EmployeeDrawer({ employee, trigger }: { employee?: any, trigger:
 
     try {
       if (isEdit) {
-        await updateEmployee(employee._id, payload as any);
+        const res = await updateEmployee(employee._id, payload as any);
+        if (res && res.error) throw new Error(res.error);
         toast.success("Employee updated successfully");
       } else {
-        await createEmployee(payload as any);
+        const res = await createEmployee(payload as any);
+        if (res && res.error) throw new Error(res.error);
         toast.success("Employee created successfully");
       }
       handleClose();

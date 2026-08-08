@@ -21,7 +21,7 @@ export default async function EmployeeHistoryPage(props: { params: Promise<{ id:
   const employee = JSON.parse(JSON.stringify(empDoc));
   
   // Fetch all attendance records for this employee, sort by date desc
-  const attDocs = await AttendanceDay.find({ employeeId: id }).sort({ date: -1 }).lean();
+  const attDocs = await AttendanceDay.find({ employeeId: Number(id) }).sort({ date: -1 }).lean();
   
   // Also load periods to get status (locked/open)
   const periodIds = [...new Set(attDocs.map(d => d.periodId?.toString()).filter(Boolean))];

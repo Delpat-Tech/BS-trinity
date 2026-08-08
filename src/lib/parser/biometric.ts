@@ -36,49 +36,55 @@ export function parseBiometricFile(
     return { ok: false, errors: ['File does not contain enough rows.'] };
   }
 
-  // 1. Build column to date map from row 11 (0-indexed -> 10 or 11?)
-  // Wait, the spec says "row index 11", which usually implies 0-indexed if it says "index 11". Let's assume 0-indexed 11 (the 12th row).
-  // I will check both row 11 and 10 to be safe, but let's strictly use index 11.
-  const daysRowIndex = 11;
-  const daysRow = rows[daysRowIndex] || [];
-  const dateColumns: { col: number; dateStr: string }[] = [];
-  const expectedMonthStr = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'][month - 1];
-  let wrongMonthError = null;
-
-  for (let c = 0; c < daysRow.length; c++) {
-    const val = daysRow[c];
-    if (typeof val === 'string') {
-      const trimmed = val.trim();
-      const match = trimmed.match(/^(\d{1,2})-([A-Za-z]{3})$/);
-      if (match) {
-        // We bypass the strict month check so that users can test other months using the same June file.
-        // The parser will automatically map the days (01, 02) to the current period's month below.
-        
-        // Convert to yyyy-MM-dd
-        const d = parseInt(match[1], 10);
-        const dateObj = new Date(year, month - 1, d);
-        if (dateObj.getMonth() === month - 1) {
-          dateColumns.push({ col: c, dateStr: format(dateObj, 'yyyy-MM-dd') });
-        }
-      } else {
-        // Also check if it happens to be DD-MMM-YYYY or similar
-        const match2 = trimmed.match(/^(\d{1,2})-([A-Za-z]{3})-\d+$/);
-        if (match2) {
-          // Bypassing month check here too for testing
-          
-          const d = parseInt(match2[1], 10);
-          const dateObj = new Date(year, month - 1, d);
-          if (dateObj.getMonth() === month - 1) {
-            dateColumns.push({ col: c, dateStr: format(dateObj, 'yyyy-MM-dd') });
-          }
-        }
+  function extractDay(val: any): number | null {
+    if (val === null || val === undefined) return null;
+    if (typeof val === 'number') {
+      if (val >= 1 && val <= 31) return val;
+      if (val > 20000 && val < 60000) {
+        const date = new Date((val - 25569) * 86400 * 1000);
+        return date.getDate();
       }
     }
+    if (typeof val === 'string') {
+      const trimmed = val.trim();
+      let m = trimmed.match(/^(\d{1,2})-[A-Za-z]{3}/);
+      if (m) return parseInt(m[1], 10);
+      m = trimmed.match(/^(\d{1,2})$/);
+      if (m) return parseInt(m[1], 10);
+      m = trimmed.match(/^(\d{1,2})\/\d{1,2}\/\d{2,4}$/);
+      if (m) return parseInt(m[1], 10);
+      m = trimmed.match(/^\d{1,2}\/(\d{1,2})\/\d{2,4}$/);
+      if (m) return parseInt(m[1], 10);
+      
+      const parsed = new Date(trimmed);
+      if (!isNaN(parsed.getTime())) {
+        return parsed.getDate();
+      }
+    }
+    return null;
   }
 
-  if (wrongMonthError) {
-    errors.push(wrongMonthError);
-    return { ok: false, errors };
+  // 1. Build column to date map dynamically by finding the row with 28-31 dates
+  let dateColumns: { col: number; dateStr: string }[] = [];
+  
+  for (let r = 0; r < Math.min(20, rows.length); r++) {
+    const row = rows[r] || [];
+    const extractedDays: { col: number, day: number }[] = [];
+    for (let c = 0; c < row.length; c++) {
+      const day = extractDay(row[c]);
+      if (day !== null) {
+        extractedDays.push({ col: c, day });
+      }
+    }
+    
+    // Allow for a few empty columns in between, but if we found ~28 days, it's our row
+    if (extractedDays.length >= 28 && extractedDays.length <= 31) {
+      dateColumns = extractedDays.map(ed => {
+        const dateObj = new Date(year, month - 1, ed.day);
+        return { col: ed.col, dateStr: format(dateObj, 'yyyy-MM-dd') };
+      });
+      break;
+    }
   }
 
   if (dateColumns.length < 28 || dateColumns.length > 31) {

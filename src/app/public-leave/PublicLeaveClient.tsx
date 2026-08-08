@@ -59,14 +59,20 @@ export default function PublicLeaveClient({ employees }: { employees: { _id: str
 
     setLoading(true);
     try {
-      await submitPublicLeave({
-        employeeId: parseInt(employeeId), // _id in this project is often Number, wait, let's cast or pass string
+      const res = await submitPublicLeave({
+        employeeId: parseInt(employeeId),
         pan,
         fromDate,
         toDate,
         kind,
         note,
       } as any);
+
+      if (res && res.error) {
+        toast.error(res.error);
+        return;
+      }
+
       setSubmitted(true);
       toast.success("Leave submitted successfully");
     } catch (err: any) {

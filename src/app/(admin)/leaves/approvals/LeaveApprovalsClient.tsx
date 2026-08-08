@@ -103,7 +103,8 @@ export default function LeaveApprovalsClient({ leaves }: { leaves: LeaveItem[] }
   const handleApprove = async (id: string) => {
     setLoading(true);
     try {
-      await approveLeave(id);
+      const res = await approveLeave(id);
+      if (res && res.error) throw new Error(res.error);
       toast.success("Leave request approved");
       router.refresh();
     } catch (err: any) {
@@ -122,7 +123,8 @@ export default function LeaveApprovalsClient({ leaves }: { leaves: LeaveItem[] }
     if (!rejectingLeave) return;
     setLoading(true);
     try {
-      await rejectLeave(rejectingLeave._id, rejectionReason);
+      const res = await rejectLeave(rejectingLeave._id, rejectionReason);
+      if (res && res.error) throw new Error(res.error);
       toast.success("Leave request rejected");
       setRejectingLeave(null);
       router.refresh();
@@ -144,11 +146,12 @@ export default function LeaveApprovalsClient({ leaves }: { leaves: LeaveItem[] }
     if (!editingLeave) return;
     setLoading(true);
     try {
-      await updateAndApproveLeave(editingLeave._id, {
+      const res = await updateAndApproveLeave(editingLeave._id, {
         date: editDate,
         kind: editKind,
         note: editNote
       });
+      if (res && res.error) throw new Error(res.error);
       toast.success("Leave request updated and approved");
       setEditingLeave(null);
       router.refresh();
@@ -163,7 +166,8 @@ export default function LeaveApprovalsClient({ leaves }: { leaves: LeaveItem[] }
     if (selectedIds.length === 0) return;
     setLoading(true);
     try {
-      await bulkApproveLeaves(selectedIds);
+      const res = await bulkApproveLeaves(selectedIds);
+      if (res && res.error) throw new Error(res.error);
       toast.success(`${selectedIds.length} leave requests approved`);
       setSelectedIds([]);
       router.refresh();
@@ -178,7 +182,8 @@ export default function LeaveApprovalsClient({ leaves }: { leaves: LeaveItem[] }
     if (selectedIds.length === 0) return;
     setLoading(true);
     try {
-      await bulkRejectLeaves(selectedIds);
+      const res = await bulkRejectLeaves(selectedIds);
+      if (res && res.error) throw new Error(res.error);
       toast.success(`${selectedIds.length} leave requests rejected`);
       setSelectedIds([]);
       router.refresh();
@@ -394,18 +399,18 @@ export default function LeaveApprovalsClient({ leaves }: { leaves: LeaveItem[] }
                             >
                               <X className="w-4 h-4" />
                             </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleOpenEdit(leave)}
+                              disabled={loading}
+                              className="h-8 text-text-muted hover:text-text px-2"
+                              title="Edit & Adjust"
+                            >
+                              <Edit3 className="w-4 h-4" />
+                            </Button>
                           </>
                         )}
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleOpenEdit(leave)}
-                          disabled={loading}
-                          className="h-8 text-text-muted hover:text-text px-2"
-                          title="Edit & Adjust"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -442,16 +447,15 @@ export default function LeaveApprovalsClient({ leaves }: { leaves: LeaveItem[] }
 
             <div className="space-y-1.5">
               <Label className="text-[12px] text-text-secondary">Leave Kind</Label>
-              <Select value={editKind} onValueChange={(val: any) => setEditKind(val)}>
-                <SelectTrigger className="w-full bg-surface border-border-strong text-[13px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-surface border-border">
-                  <SelectItem value="paid">Paid Leave</SelectItem>
-                  <SelectItem value="half">Half Day</SelectItem>
-                  <SelectItem value="unpaid">Unpaid Leave</SelectItem>
-                </SelectContent>
-              </Select>
+              <select 
+                value={editKind} 
+                onChange={(e) => setEditKind(e.target.value as any)}
+                className="flex h-9 w-full rounded-md border border-border-strong bg-surface px-3 py-1 text-[13px] shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+              >
+                <option value="paid">Paid Leave</option>
+                <option value="half">Half Day</option>
+                <option value="unpaid">Unpaid Leave</option>
+              </select>
             </div>
 
             <div className="space-y-1.5">

@@ -42,6 +42,7 @@ export default function PeriodHubClient({
 
     try {
       const res = await previewBiometrics(periodId, formData);
+      if (res && res.error) throw new Error(res.error);
       setPreviewData(res);
       toast.success('Excel file parsed successfully. Review preview below.');
     } catch (err: any) {
@@ -62,7 +63,8 @@ export default function PeriodHubClient({
     setError('');
 
     try {
-      await uploadBiometrics(periodId, previewData.importId);
+      const res = await uploadBiometrics(periodId, previewData.importId);
+      if (res && res.error) throw new Error(res.error);
       toast.success('Biometrics uploaded and processed successfully.');
       // Let's redirect to step 2 after successful upload
       router.push(`/period/${periodId}/queue`);
@@ -79,7 +81,7 @@ export default function PeriodHubClient({
       <input 
         id="file"
         type="file" 
-        accept=".xls,.xlsx" 
+        accept=".xls,.xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv" 
         onChange={(e) => {
           if (e.target.files?.[0]) handlePreview(e.target.files[0]);
         }}

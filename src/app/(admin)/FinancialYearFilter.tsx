@@ -1,21 +1,25 @@
 "use client";
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Filter } from "lucide-react";
 
 export default function FinancialYearFilter() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const currentFy = searchParams.get('fy') || 'all';
 
   return (
     <Select value={currentFy} onValueChange={(v) => {
+      const params = new URLSearchParams(searchParams.toString());
       if (v === 'all') {
-        router.push('/');
+        params.delete('fy');
       } else {
-        router.push(`/?fy=${v}`);
+        params.set('fy', v);
       }
+      const newQuery = params.toString();
+      router.push(`${pathname}${newQuery ? `?${newQuery}` : ''}`);
     }}>
       <SelectTrigger className="w-[160px] h-[36px] data-[size=default]:h-[36px] rounded-[6px] bg-header border-border-strong flex items-center text-[13px] px-3 font-medium">
         <div className="flex items-center gap-2">

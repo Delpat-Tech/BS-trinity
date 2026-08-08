@@ -5,8 +5,8 @@ import { EmployeeDrawer } from "./EmployeeDrawer";
 import RecordLeaveModal from "./RecordLeaveModal";
 import RecordAdvanceModal from "./RecordAdvanceModal";
 import UploadEmployeesModal from "./UploadEmployeesModal";
-import { updateMachineId } from "./actions";
-import { Pencil, Check, X, MoreHorizontal, Filter, Search, ChevronLeft, ChevronRight, UserPlus, Users } from "lucide-react";
+import { updateMachineId, bulkDeleteEmployees } from "./actions";
+import { Pencil, Check, X, MoreHorizontal, Filter, Search, ChevronLeft, ChevronRight, UserPlus, Users, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel, DropdownMenuGroup } from "@/components/ui/dropdown-menu";
@@ -92,18 +92,42 @@ function MachineIdCell({ emp }: { emp: any }) {
 
 export default function EmployeesListClient({ employees }: { employees: any[] }) {
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("active");
+  const [salaryFilter, setSalaryFilter] = useState("all");
+  const [designationFilter, setDesignationFilter] = useState("all");
+  const [paymentModeFilter, setPaymentModeFilter] = useState("all");
+  const [complianceFilter, setComplianceFilter] = useState("all");
   const [sortField, setSortField] = useState("machineId");
-  const [sortDir, setSortDir] = useState("asc");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [page, setPage] = useState(1);
-  const rowsPerPage = 50;
+  const rowsPerPage = 15;
+
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [leaveModalOpen, setLeaveModalOpen] = useState(false);
   const [advanceModalOpen, setAdvanceModalOpen] = useState(false);
   const [uploadModalOpen, setUploadModalOpen] = useState(false);
 
-  const [salaryFilter, setSalaryFilter] = useState("all");
-  const [designationFilter, setDesignationFilter] = useState("all");
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    if (!confirm(`Are you sure you want to delete ${selectedIds.length} employee(s)? This action cannot be undone.`)) return;
+    
+    setIsDeleting(true);
+    try {
+      const res = await bulkDeleteEmployees(selectedIds);
+      if (res.success) {
+        toast.success("Employees deleted successfully");
+        setSelectedIds([]);
+      } else {
+        toast.error(res.error || "Failed to delete");
+      }
+    } catch (e) {
+      toast.error("An error occurred");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   // Search & Filter
   const filtered = employees.filter((emp) => {
@@ -126,7 +150,12 @@ export default function EmployeesListClient({ employees }: { employees: any[] })
     let matchesDesignation = true;
     if (designationFilter !== 'all') matchesDesignation = emp.designation === designationFilter;
 
-    return matchesSearch && matchesStatus && matchesSalary && matchesDesignation;
+    let matchesCompliance = true;
+    if (complianceFilter === 'missing-pan') matchesCompliance = !emp.panNumber;
+    if (complianceFilter === 'missing-aadhar') matchesCompliance = !emp.aadharNumber;
+    if (complianceFilter === 'missing-bank') matchesCompliance = emp.paymentMode === 'Bank' && (!emp.bankAccount || !emp.ifsc);
+
+    return matchesSearch && matchesStatus && matchesSalary && matchesDesignation && matchesCompliance;
   });
 
   const uniqueDesignations = Array.from(new Set(employees.map(e => e.designation).filter(Boolean))).sort();
@@ -195,6 +224,18 @@ export default function EmployeesListClient({ employees }: { employees: any[] })
 
           <UploadEmployeesModal open={uploadModalOpen} onOpenChange={setUploadModalOpen} />
 
+          {selectedIds.length > 0 && (
+            <Button
+              variant="destructive"
+              onClick={handleBulkDelete}
+              disabled={isDeleting}
+              className="h-[36px] rounded-[6px] shadow-sm bg-red-600 hover:bg-red-700 text-white"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              {isDeleting ? "Deleting..." : `Delete (${selectedIds.length})`}
+            </Button>
+          )}
+
           <EmployeeDrawer trigger={
             <Button className="bg-[#E8630A] text-white hover:bg-[#C9540A] h-[36px] rounded-[6px] shadow-sm">
               <UserPlus className="w-4 h-4 mr-2" />
@@ -221,7 +262,12 @@ export default function EmployeesListClient({ employees }: { employees: any[] })
             <SelectTrigger className="w-[140px] h-[38px] data-[size=default]:h-[38px] rounded-[6px] bg-header border-border-strong flex items-center text-[13px] px-3 font-medium">
               <div className="flex items-center gap-2">
                 <Filter className="w-3.5 h-3.5 text-text-muted" />
-                <SelectValue placeholder="Status" />
+                <span>
+                  {statusFilter === 'all' && 'All Status'}
+                  {statusFilter === 'active' && 'Active Only'}
+                  {statusFilter === 'resigned' && 'Resigned'}
+                  {statusFilter === 'ignored' && 'Ignored'}
+                </span>
               </div>
             </SelectTrigger>
             <SelectContent className="bg-header border-border z-[200] min-w-[140px] text-[13px]">
@@ -236,7 +282,12 @@ export default function EmployeesListClient({ employees }: { employees: any[] })
             <SelectTrigger className="w-[140px] h-[38px] data-[size=default]:h-[38px] rounded-[6px] bg-header border-border-strong flex items-center text-[13px] px-3 font-medium">
               <div className="flex items-center gap-2">
                 <Filter className="w-3.5 h-3.5 text-text-muted" />
-                <SelectValue placeholder="Salary" />
+                <span>
+                  {salaryFilter === 'all' && 'All Salaries'}
+                  {salaryFilter === '0-10k' && '0 - 10k'}
+                  {salaryFilter === '10k-20k' && '10k - 20k'}
+                  {salaryFilter === '20k+' && '20k+'}
+                </span>
               </div>
             </SelectTrigger>
             <SelectContent className="bg-header border-border z-[200] min-w-[140px] text-[13px]">
@@ -252,7 +303,9 @@ export default function EmployeesListClient({ employees }: { employees: any[] })
               <SelectTrigger className="w-[160px] h-[38px] data-[size=default]:h-[38px] rounded-[6px] bg-header border-border-strong flex items-center text-[13px] px-3 font-medium">
                 <div className="flex items-center gap-2">
                   <Filter className="w-3.5 h-3.5 text-text-muted" />
-                  <SelectValue placeholder="Designation" />
+                  <span>
+                    {designationFilter === 'all' ? 'All Designations' : designationFilter}
+                  </span>
                 </div>
               </SelectTrigger>
               <SelectContent className="bg-header border-border z-[200] min-w-[160px] text-[13px]">
@@ -263,6 +316,27 @@ export default function EmployeesListClient({ employees }: { employees: any[] })
               </SelectContent>
             </Select>
           )}
+
+
+          <Select value={complianceFilter} onValueChange={(v) => { setComplianceFilter(v || "all"); setPage(1); }}>
+            <SelectTrigger className="w-[150px] h-[38px] data-[size=default]:h-[38px] rounded-[6px] bg-header border-border-strong flex items-center text-[13px] px-3 font-medium">
+              <div className="flex items-center gap-2">
+                <Filter className="w-3.5 h-3.5 text-text-muted" />
+                <span>
+                  {complianceFilter === 'all' && 'All Compliance'}
+                  {complianceFilter === 'missing-pan' && 'Missing PAN'}
+                  {complianceFilter === 'missing-aadhar' && 'Missing Aadhaar'}
+                  {complianceFilter === 'missing-bank' && 'Missing Bank Info'}
+                </span>
+              </div>
+            </SelectTrigger>
+            <SelectContent className="bg-header border-border z-[200] min-w-[150px] text-[13px]">
+              <SelectItem value="all" className="text-[13px] py-2">All Compliance</SelectItem>
+              <SelectItem value="missing-pan" className="text-[13px] py-2">Missing PAN</SelectItem>
+              <SelectItem value="missing-aadhar" className="text-[13px] py-2">Missing Aadhaar</SelectItem>
+              <SelectItem value="missing-bank" className="text-[13px] py-2">Missing Bank Info</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         
         <div className="text-[13px] text-text-secondary font-medium">
@@ -275,8 +349,22 @@ export default function EmployeesListClient({ employees }: { employees: any[] })
           <Table className="w-full text-[13px] text-left">
             <TableHeader className="bg-header border-b border-border sticky top-0 z-10">
               <TableRow className="hover:bg-transparent border-0">
+                <TableHead className="w-[40px] px-[16px] py-[12px]">
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 rounded border-border-strong text-[#E8630A] focus:ring-[#E8630A]"
+                    checked={paginated.length > 0 && selectedIds.length === paginated.length}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedIds(paginated.map(emp => emp._id.toString()));
+                      } else {
+                        setSelectedIds([]);
+                      }
+                    }}
+                  />
+                </TableHead>
                 <TableHead 
-                  className="px-[28px] py-[12px] font-medium text-[11px] tracking-[0.04em] uppercase text-text-secondary cursor-pointer hover:text-text transition-colors w-[100px]"
+                  className="px-[12px] py-[12px] font-medium text-[11px] tracking-[0.04em] uppercase text-text-secondary cursor-pointer hover:text-text transition-colors w-[100px]"
                   onClick={() => toggleSort('machineId')}
                 >
                   <div className="flex items-center">Mach. ID {getSortIndicator('machineId')}</div>
@@ -315,6 +403,20 @@ export default function EmployeesListClient({ employees }: { employees: any[] })
                 return (
                   <EmployeeDrawer key={emp._id} employee={emp} trigger={
                     <TableRow className="border-b border-border-subtle last:border-0 hover:bg-hover transition-colors cursor-pointer">
+                      <TableCell className="px-[16px] py-[11px] w-[40px]" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          className="w-4 h-4 rounded border-border-strong text-[#E8630A] focus:ring-[#E8630A]"
+                          checked={selectedIds.includes(emp._id.toString())}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedIds([...selectedIds, emp._id.toString()]);
+                            } else {
+                              setSelectedIds(selectedIds.filter(id => id !== emp._id.toString()));
+                            }
+                          }}
+                        />
+                      </TableCell>
                       <MachineIdCell emp={emp} />
                       <TableCell className="px-[28px] py-[11px] font-medium text-text">
                         {emp.name}
@@ -343,7 +445,7 @@ export default function EmployeesListClient({ employees }: { employees: any[] })
               
               {paginated.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="py-[48px] text-center text-text-muted text-[14px]">
+                  <TableCell colSpan={7} className="py-[48px] text-center text-text-muted text-[14px]">
                     No employees found matching the filters.
                   </TableCell>
                 </TableRow>

@@ -40,11 +40,12 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
   const handleUpdate = async (employeeId: string, field: string, value: number | null) => {
     if (isLocked) return;
     try {
-      await updatePayrollInput(periodId, employeeId, field, value);
+      const res = await updatePayrollInput(periodId, employeeId, field, value);
+      if (res && res.error) throw new Error(res.error);
       toast.success(`Successfully saved ${field}`);
       router.refresh();
-    } catch (err) {
-      toast.error('Failed to save input');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to save input');
     }
   };
 
@@ -52,7 +53,8 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
     if (!confirm('Are you sure you want to lock this period?')) return;
     setLoading(true);
     try {
-      await lockPeriod(periodId);
+      const res = await lockPeriod(periodId);
+      if (res && res.error) throw new Error(res.error);
       toast.success('Period locked successfully');
       router.refresh();
     } catch (err: any) {
@@ -67,7 +69,8 @@ export default function ReviewGridClient({ periodId, lines, exceptionsCount, sta
     if (!reason || !reason.trim()) return;
     setLoading(true);
     try {
-      await unlockPeriod(periodId, reason.trim());
+      const res = await unlockPeriod(periodId, reason.trim());
+      if (res && res.error) throw new Error(res.error);
       toast.success('Period unlocked successfully');
       router.refresh();
     } catch (err: any) {

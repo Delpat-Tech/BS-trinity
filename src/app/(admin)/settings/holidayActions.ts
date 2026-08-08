@@ -6,25 +6,28 @@ import { Holiday } from '@/models/Holiday';
 import { revalidatePath } from 'next/cache';
 
 export async function addHoliday(date: string, name: string, sandwichEligible: boolean, recurrence: string = 'none', isHalfDay: boolean = false) {
-  await requireSession();
-  await dbConnect();
-
   try {
+    await requireSession();
+    await dbConnect();
     await Holiday.create({ date, name, sandwichEligible, recurrence, isHalfDay });
+    revalidatePath('/settings');
+    return { success: true };
   } catch (error: any) {
     if (error.code === 11000) {
-      throw new Error('A holiday already exists for this date.');
+      return { error: 'A holiday already exists for this date.' };
     }
-    throw error;
+    return { error: error.message || 'Failed to add holiday' };
   }
-
-  revalidatePath('/settings');
 }
 
 export async function deleteHoliday(id: string) {
-  await requireSession();
-  await dbConnect();
-
-  await Holiday.findByIdAndDelete(id);
-  revalidatePath('/settings');
+  try {
+    await requireSession();
+    await dbConnect();
+    await Holiday.findByIdAndDelete(id);
+    revalidatePath('/settings');
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || 'Failed to delete holiday' };
+  }
 }

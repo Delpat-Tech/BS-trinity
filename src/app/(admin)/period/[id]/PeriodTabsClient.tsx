@@ -260,14 +260,27 @@ export default function PeriodTabsClient({
                 )}
 
                 {/* Step Circle */}
-                <div className={cn(
-                  "flex items-center justify-center w-12 h-12 rounded-full text-sm font-semibold transition-all duration-300 mb-4 shadow-sm",
-                  isCompleted ? "bg-[#1a1a1a] text-white border-4 border-surface" : 
-                  isCurrent ? "bg-[#1a1a1a] text-white border-4 border-surface ring-2 ring-[#1a1a1a]/20" : "bg-surface border-2 border-border-strong text-text-muted"
-                )}>
-                  {isCompleted ? <Check className="w-5 h-5" strokeWidth={3} /> : 
-                   isCurrent ? (idx + 1) : <div className="w-2 h-2 rounded-full bg-border-strong" />}
-                </div>
+                {step.isClickable ? (
+                  <Link href={step.href}>
+                    <div className={cn(
+                      "flex items-center justify-center w-12 h-12 rounded-full text-sm font-semibold transition-all duration-300 mb-4 shadow-sm",
+                      isCompleted ? "bg-[#1a1a1a] text-white border-4 border-surface hover:ring-2 hover:ring-[#1a1a1a]/40" : 
+                      isCurrent ? "bg-[#1a1a1a] text-white border-4 border-surface ring-2 ring-[#1a1a1a]/20" : "bg-surface border-2 border-border-strong text-text-muted hover:border-[#1a1a1a]"
+                    )}>
+                      {isCompleted ? <Check className="w-5 h-5" strokeWidth={3} /> : 
+                       isCurrent ? (idx + 1) : <div className="w-2 h-2 rounded-full bg-border-strong" />}
+                    </div>
+                  </Link>
+                ) : (
+                  <div className={cn(
+                    "flex items-center justify-center w-12 h-12 rounded-full text-sm font-semibold transition-all duration-300 mb-4 shadow-sm opacity-60 cursor-not-allowed",
+                    isCompleted ? "bg-[#1a1a1a] text-white border-4 border-surface" : 
+                    isCurrent ? "bg-[#1a1a1a] text-white border-4 border-surface ring-2 ring-[#1a1a1a]/20" : "bg-surface border-2 border-border-strong text-text-muted"
+                  )}>
+                    {isCompleted ? <Check className="w-5 h-5" strokeWidth={3} /> : 
+                     isCurrent ? (idx + 1) : <div className="w-2 h-2 rounded-full bg-border-strong" />}
+                  </div>
+                )}
 
                 {/* Step Text */}
                 <div className="flex flex-col items-center text-center px-2 bg-surface">

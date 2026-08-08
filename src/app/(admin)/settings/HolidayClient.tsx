@@ -37,7 +37,8 @@ export function HolidayClient({ holidays }: { holidays: any[] }) {
     setError('');
     try {
       const dateStr = format(selectedDate, 'yyyy-MM-dd');
-      await addHoliday(dateStr, name, sandwichEligible, recurrence, isHalfDay);
+      const res = await addHoliday(dateStr, name, sandwichEligible, recurrence, isHalfDay);
+      if (res && res.error) throw new Error(res.error);
       toast.success('Holiday added successfully');
       setSelectedDate(null);
       setName('');
@@ -57,11 +58,12 @@ export function HolidayClient({ holidays }: { holidays: any[] }) {
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this holiday?')) return;
     try {
-      await deleteHoliday(id);
+      const res = await deleteHoliday(id);
+      if (res && res.error) throw new Error(res.error);
       toast.success('Holiday deleted successfully');
       router.refresh();
-    } catch (err) {
-      toast.error('Failed to delete holiday');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to delete holiday');
     }
   };
 

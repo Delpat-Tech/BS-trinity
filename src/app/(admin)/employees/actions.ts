@@ -29,37 +29,41 @@ export async function createEmployee(data: {
   ifsc?: string;
   weeklyOff?: number;
 }) {
-  await requireSession();
-  await dbConnect();
+  try {
+    await requireSession();
+    await dbConnect();
 
-  const existing = await Employee.findOne({ machineId: data.machineId });
-  if (existing) {
-    throw new Error('Employee with this Machine ID already exists');
+    const existing = await Employee.findOne({ machineId: data.machineId });
+    if (existing) {
+      return { error: 'Employee with this Machine ID already exists' };
+    }
+
+    await Employee.create({
+      _id: data.machineId,
+      machineId: data.machineId,
+      name: data.name,
+      designation: data.designation,
+      mobileNumber: data.mobileNumber,
+      paymentMode: data.paymentMode,
+      dateOfJoining: data.dateOfJoining,
+      endDate: data.endDate || null,
+      isIgnored: data.isIgnored,
+      aadharNumber: data.aadharNumber,
+      panNumber: data.panNumber,
+      bankAccount: data.bankAccount,
+      ifsc: data.ifsc,
+      weeklyOff: data.weeklyOff || 'Sunday',
+      salaryRevisions: [{
+        fixedSalary: data.fixedSalary,
+        effectiveFrom: data.effectiveFrom || data.dateOfJoining
+      }]
+    });
+
+    revalidatePath('/employees');
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || 'An unexpected error occurred' };
   }
-
-  await Employee.create({
-    _id: data.machineId,
-    machineId: data.machineId,
-    name: data.name,
-    designation: data.designation,
-    mobileNumber: data.mobileNumber,
-    paymentMode: data.paymentMode,
-    dateOfJoining: data.dateOfJoining,
-    endDate: data.endDate || null,
-    isIgnored: data.isIgnored,
-    aadharNumber: data.aadharNumber,
-    panNumber: data.panNumber,
-    bankAccount: data.bankAccount,
-    ifsc: data.ifsc,
-    weeklyOff: data.weeklyOff || 'Sunday',
-    salaryRevisions: [{
-      fixedSalary: data.fixedSalary,
-      effectiveFrom: data.effectiveFrom || data.dateOfJoining
-    }]
-  });
-
-  revalidatePath('/employees');
-  return { success: true };
 }
 
 export async function updateEmployee(id: number, data: {
@@ -78,44 +82,48 @@ export async function updateEmployee(id: number, data: {
   ifsc?: string;
   weeklyOff?: string;
 }) {
-  await requireSession();
-  await dbConnect();
+  try {
+    await requireSession();
+    await dbConnect();
 
-  const emp = await Employee.findById(id);
-  if (!emp) throw new Error('Employee not found');
+    const emp = await Employee.findById(id);
+    if (!emp) return { error: 'Employee not found' };
 
-  emp.name = data.name;
-  emp.designation = data.designation;
-  emp.mobileNumber = data.mobileNumber;
-  emp.paymentMode = data.paymentMode;
-  emp.dateOfJoining = data.dateOfJoining;
-  emp.endDate = data.endDate || null;
-  emp.isIgnored = data.isIgnored;
-  emp.aadharNumber = data.aadharNumber;
-  emp.panNumber = data.panNumber;
-  emp.bankAccount = data.bankAccount;
-  emp.ifsc = data.ifsc;
-  emp.weeklyOff = data.weeklyOff || 'Sunday';
+    emp.name = data.name;
+    emp.designation = data.designation;
+    emp.mobileNumber = data.mobileNumber;
+    emp.paymentMode = data.paymentMode;
+    emp.dateOfJoining = data.dateOfJoining;
+    emp.endDate = data.endDate || null;
+    emp.isIgnored = data.isIgnored;
+    emp.aadharNumber = data.aadharNumber;
+    emp.panNumber = data.panNumber;
+    emp.bankAccount = data.bankAccount;
+    emp.ifsc = data.ifsc;
+    emp.weeklyOff = data.weeklyOff || 'Sunday';
 
-  // Check if we need to add a new salary revision
-  const latestRev = [...emp.salaryRevisions].sort((a, b) => b.effectiveFrom.localeCompare(a.effectiveFrom))[0];
-  
-  if (!latestRev || latestRev.fixedSalary !== data.fixedSalary) {
-    // If effective date already exists, update it, else append
-    const existingDateRev = emp.salaryRevisions.find((r: any) => r.effectiveFrom === data.effectiveFrom);
-    if (existingDateRev) {
-      existingDateRev.fixedSalary = data.fixedSalary;
-    } else {
-      emp.salaryRevisions.push({
-        fixedSalary: data.fixedSalary,
-        effectiveFrom: data.effectiveFrom || new Date().toISOString().split('T')[0]
-      });
+    const latestRev = [...emp.salaryRevisions].sort((a, b) => b.effectiveFrom.localeCompare(a.effectiveFrom))[0];
+    
+    if (!latestRev || latestRev.fixedSalary !== data.fixedSalary) {
+      // If effective date already exists, update it, else append
+      const existingDateRev = emp.salaryRevisions.find((r: any) => r.effectiveFrom === data.effectiveFrom);
+      if (existingDateRev) {
+        existingDateRev.fixedSalary = data.fixedSalary;
+      } else {
+        emp.salaryRevisions.push({
+          fixedSalary: data.fixedSalary,
+          effectiveFrom: data.effectiveFrom || new Date().toISOString().split('T')[0]
+        });
+      }
     }
-  }
 
-  await emp.save();
-  revalidatePath('/employees');
-  return { success: true };
+    await emp.save();
+    revalidatePath('/employees');
+    revalidatePath(`/employees/${id}`);
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message || 'An unexpected error occurred' };
+  }
 }
 
 export async function addLeave(machineId: number, data: { date: string; kind: 'paid' | 'unpaid' | 'half'; note?: string }) {
@@ -242,10 +250,17 @@ export async function uploadEmployeeMaster(formData: FormData) {
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
       
-      const machineIdStr = row['Machine ID'] || row['Emp ID'] || row['ID'];
-      const name = row['Name'] || row['Employee Name'] || row['Employee'];
-      const dojRaw = row['Date of Joining'] || row['DOJ'] || row['Joining Date'];
-      const salaryRaw = row['Salary'] || row['Base Salary'] || row['Net Salary'];
+      const machineIdStr = row['Machine ID'] || row['Emp ID'] || row['ID'] || row['Emp ID / Machine ID'];
+      const name = row['Name'] || row['Employee Name'] || row['Employee'] || row['Full Name'];
+      const dojRaw = row['Date of Joining'] || row['DOJ'] || row['Joining Date'] || row['Date of Joining (YYYY-MM-DD)'];
+      const salaryRaw = row['Salary'] || row['Base Salary'] || row['Net Salary'] || row['Fixed Salary (₹)'];
+      const designation = row['Designation'];
+      const mobile = row['Mobile Number'] || row['Phone'];
+      const aadhaar = row['Aadhaar Number'] || row['Aadhaar'];
+      const pan = row['PAN Number'] || row['PAN'];
+      const weeklyOffRaw = row['Designated Weekly Off (0=Sun, 1=Mon, ...)'] || row['Weekly Off'];
+      const isIgnoredRaw = row['Is Ignored / Resigned (TRUE/FALSE)'];
+      const endDateRaw = row['Resignation End Date (YYYY-MM-DD)'] || row['End Date'];
 
       if (!name || !dojRaw || !salaryRaw) {
         continue;
@@ -260,7 +275,6 @@ export async function uploadEmployeeMaster(formData: FormData) {
       }
 
       let doj = String(dojRaw).trim();
-      // If it's a number, it's an excel serial date
       if (typeof dojRaw === 'number') {
         const d = XLSX.SSF.parse_date_code(dojRaw);
         if (d) {
@@ -268,8 +282,38 @@ export async function uploadEmployeeMaster(formData: FormData) {
         }
       }
 
+      let endDate = null;
+      if (endDateRaw) {
+        let ed = String(endDateRaw).trim();
+        if (typeof endDateRaw === 'number') {
+          const d = XLSX.SSF.parse_date_code(endDateRaw);
+          if (d) {
+            ed = `${d.y}-${String(d.m).padStart(2, '0')}-${String(d.d).padStart(2, '0')}`;
+          }
+        }
+        endDate = ed;
+      }
+
       const salary = parseFloat(String(salaryRaw).replace(/[^\d.-]/g, ''));
       if (isNaN(salary)) continue;
+
+      let weeklyOff = 0; // Default Sunday
+      if (weeklyOffRaw !== undefined && weeklyOffRaw !== null) {
+        const wo = parseInt(String(weeklyOffRaw).trim(), 10);
+        if (!isNaN(wo) && wo >= 0 && wo <= 6) {
+          weeklyOff = wo;
+        } else if (typeof weeklyOffRaw === 'string') {
+          const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+          const idx = days.findIndex(d => weeklyOffRaw.toLowerCase().startsWith(d));
+          if (idx !== -1) weeklyOff = idx;
+        }
+      }
+
+      let isIgnored = false;
+      if (isIgnoredRaw !== undefined && isIgnoredRaw !== null) {
+        const str = String(isIgnoredRaw).trim().toLowerCase();
+        isIgnored = (str === 'true' || str === 'yes' || str === '1' || str === 'y');
+      }
 
       ops.push({
         updateOne: {
@@ -277,12 +321,17 @@ export async function uploadEmployeeMaster(formData: FormData) {
           update: {
             $set: {
               name,
-              dateOfJoining: doj
+              dateOfJoining: doj,
+              designation: designation || undefined,
+              mobileNumber: mobile || undefined,
+              aadharNumber: aadhaar || undefined,
+              panNumber: pan || undefined,
+              weeklyOff,
+              isIgnored,
+              endDate
             },
             $setOnInsert: {
               _id: machineId,
-              isIgnored: false,
-              weeklyOff: 0,
               salaryRevisions: [{
                 fixedSalary: salary,
                 effectiveFrom: doj
@@ -342,6 +391,23 @@ export async function updateMachineId(employeeId: number, newMachineId: number) 
       { $set: { employeeId: newMachineId } }
     );
 
+    revalidatePath('/employees');
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function bulkDeleteEmployees(employeeIds: string[]) {
+  await requireSession();
+  await dbConnect();
+
+  try {
+    await Employee.deleteMany({ _id: { $in: employeeIds } });
+    await LeaveEntry.deleteMany({ employeeId: { $in: employeeIds } });
+    await LedgerEntry.deleteMany({ employeeId: { $in: employeeIds } });
+    await AttendanceDay.deleteMany({ employeeId: { $in: employeeIds } });
+    
     revalidatePath('/employees');
     return { success: true };
   } catch (err: any) {
