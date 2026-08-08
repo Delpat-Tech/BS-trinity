@@ -12,7 +12,7 @@ export default async function DashboardSidebar() {
 
   // Fetch Past Leaves (last 10)
   const pastLeaves = await LeaveEntry.aggregate([
-    { $match: { date: { $lt: today } } },
+    { $match: { date: { $lt: today }, status: 'approved' } },
     { $sort: { date: -1 } },
     { $limit: 10 },
     { $lookup: { from: 'employees', localField: 'employeeId', foreignField: 'machineId', as: 'emp' } },
@@ -21,7 +21,7 @@ export default async function DashboardSidebar() {
 
   // Fetch Future Leaves (next 10)
   const futureLeaves = await LeaveEntry.aggregate([
-    { $match: { date: { $gte: today } } },
+    { $match: { date: { $gte: today }, status: 'approved' } },
     { $sort: { date: 1 } },
     { $limit: 10 },
     { $lookup: { from: 'employees', localField: 'employeeId', foreignField: 'machineId', as: 'emp' } },
